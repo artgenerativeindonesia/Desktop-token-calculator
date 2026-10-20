@@ -1,0 +1,303 @@
+import React from 'react';
+import { useProjectStore } from '../store/projectStore';
+import {
+  CATEGORY_LABELS,
+  formatCurrencyIdr,
+  formatCurrencyUsd,
+  UI_TEXT,
+} from '../i18n/translations';
+import { StatusBadge } from './StatusBadge';
+import { ProcessCategory } from '../../shared/types/project';
+import {
+  AlertTriangle,
+  BarChart3,
+  CheckCircle2,
+  Coins,
+  FileDown,
+} from 'lucide-react';
+
+const ALL_CATEGORIES: ProcessCategory[] = [
+  'text_to_image',
+  'image_to_video',
+  'video_to_video',
+  'text_to_video',
+  'upscaling',
+];
+
+export const BudgetSummaryView: React.FC = () => {
+  const { project, language, theme, setActiveTab } = useProjectStore();
+  const t = UI_TEXT[language];
+  const isId = language === 'id';
+  const cardClass = theme === 'dark' ? 'glass-card-dark' : 'glass-card-light';
+  const calc = project.calculation;
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className={`${cardClass} rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}>
+        <div>
+          <h1 className="text-xl font-bold flex items-center gap-2.5">
+            <BarChart3 className="w-5 h-5 text-sky-400" />
+            <span>
+              {isId
+                ? 'Ringkasan Anggaran & Audit Kalkulasi (PRD Bab 8 & 11)'
+                : 'Budget Summary & Calculation Audit (PRD Sec 8 & 11)'}
+            </span>
+          </h1>
+          <p className="text-xs opacity-75 mt-1">
+            {isId
+              ? 'Seluruh angka dihitung dengan presisi Decimal.js dan sama persis dengan laporan PDF yang diekspor.'
+              : 'All figures are computed with Decimal.js precision and match the exported PDF report identically.'}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <span
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${
+              calc.is_complete
+                ? 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'
+                : 'bg-amber-500/15 text-amber-300 border-amber-400/30'
+            }`}
+          >
+            {calc.is_complete ? (
+              <CheckCircle2 className="w-4 h-4" />
+            ) : (
+              <AlertTriangle className="w-4 h-4" />
+            )}
+            {calc.is_complete ? t.completeEstimate : t.incompleteEstimate}
+          </span>
+
+          <button
+            onClick={() => setActiveTab('pdf')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-500 hover:bg-indigo-400 text-white shadow-lg shadow-indigo-500/25 transition"
+          >
+            <FileDown className="w-4 h-4" />
+            {t.btnExportPdf}
+          </button>
+        </div>
+      </div>
+
+      {/* Tabel Rekapitulasi Total Anggaran (USD & IDR Rata Kanan) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`${cardClass} rounded-2xl p-6 lg:col-span-2`}>
+          <h2 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-4">
+            {isId
+              ? 'Rekapitulasi Anggaran Utama (USD & IDR)'
+              : 'Primary Budget Summary (USD & IDR)'}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-white/15 opacity-75">
+                  <th className="py-2.5 text-left">
+                    {isId ? 'Komponen Biaya' : 'Cost Component'}
+                  </th>
+                  <th className="py-2.5 text-right">
+                    {isId ? 'Generasi' : 'Generations'}
+                  </th>
+                  <th className="py-2.5 text-right">USD</th>
+                  <th className="py-2.5 text-right">IDR (Rupiah)</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                <tr>
+                  <td className="py-3 font-medium">
+                    {t.baseCost} (B<sub>base</sub>)
+                  </td>
+                  <td className="py-3 text-right tabular-nums">
+                    {calc.planned_generations}
+                  </td>
+                  <td className="py-3 text-right font-semibold tabular-nums">
+                    {formatCurrencyUsd(calc.base_cost_usd, language)}
+                  </td>
+                  <td className="py-3 text-right tabular-nums">
+                    {formatCurrencyIdr(calc.base_cost_idr, language)}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-3 font-medium text-amber-300">
+                    {t.reserveCost} ({calc.effective_reserve_percent}%) (B<sub>reserve</sub>)
+                  </td>
+                  <td className="py-3 text-right tabular-nums text-amber-300">
+                    +{calc.reserve_generations}
+                  </td>
+                  <td className="py-3 text-right font-semibold tabular-nums text-amber-300">
+                    {formatCurrencyUsd(calc.reserve_cost_usd, language)}
+                  </td>
+                  <td className="py-3 text-right tabular-nums text-amber-300">
+                    {formatCurrencyIdr(calc.reserve_cost_idr, language)}
+                  </td>
+                </tr>
+                <tr className="bg-sky-500/10 font-bold text-sm">
+                  <td className="py-3.5 px-2 text-sky-400">
+                    {t.totalBudget} (B<sub>total</sub>)
+                  </td>
+                  <td className="py-3.5 text-right tabular-nums">
+                    {calc.budgeted_generations}
+                  </td>
+                  <td className="py-3.5 text-right tabular-nums text-sky-400">
+                    {formatCurrencyUsd(calc.total_cost_usd, language)}
+                  </td>
+                  <td className="py-3.5 px-2 text-right tabular-nums text-sky-400">
+                    {formatCurrencyIdr(calc.total_cost_idr, language)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Metrik Biaya Unit Final & Total Credit */}
+        <div className={`${cardClass} rounded-2xl p-6 space-y-4`}>
+          <h2 className="text-xs font-bold uppercase tracking-wider opacity-80">
+            {isId
+              ? 'Biaya Unit Output Final & Credit (PRD Bab 8.5 & 8.7)'
+              : 'Final Output Unit Costs & Credits (PRD Sec 8.5 & 8.7)'}
+          </h2>
+
+          <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="text-[11px] opacity-70">
+              {t.costPerVideo} (B<sub>total</sub> / V, V = {project.assumptions.target_videos})
+            </div>
+            <div className="text-lg font-bold tabular-nums text-right mt-1">
+              {formatCurrencyUsd(calc.cost_per_video_usd, language)}
+            </div>
+            <div className="text-xs opacity-75 tabular-nums text-right">
+              {formatCurrencyIdr(calc.cost_per_video_idr, language)}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
+            <div className="text-[11px] opacity-70">
+              {t.costPerMinute} (B<sub>total</sub> / M, M = {project.assumptions.final_duration_minutes} mnt)
+            </div>
+            <div className="text-lg font-bold tabular-nums text-right mt-1">
+              {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
+            </div>
+            <div className="text-xs opacity-75 tabular-nums text-right">
+              {formatCurrencyIdr(calc.cost_per_minute_idr, language)}
+            </div>
+          </div>
+
+          <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-400/30">
+            <div className="flex items-center justify-between text-[11px] text-purple-300">
+              <span>{t.totalCredit} (C<sub>total</sub>)</span>
+              <Coins className="w-3.5 h-3.5" />
+            </div>
+            <div className="text-lg font-bold tabular-nums text-right text-purple-300 mt-1">
+              {calc.total_credit !== null
+                ? `${calc.total_credit.toLocaleString()} Credits`
+                : t.unavailableLabel}
+            </div>
+            <div className="text-[10px] opacity-70 mt-1">
+              {isId
+                ? 'Credit dihitung terpisah dan tidak disamakan otomatis dengan USD.'
+                : 'Credits are tracked separately and not equated automatically with USD.'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Rincian per Baris Pekerjaan */}
+      <div className={`${cardClass} rounded-2xl p-6`}>
+        <h2 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-4">
+          {isId
+            ? 'Rincian Kalkulasi per Baris Pekerjaan'
+            : 'Stage-by-Stage Calculation Breakdown'}
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-white/15 opacity-75">
+                <th className="py-2 text-left">#</th>
+                <th className="py-2 text-left">{isId ? 'Shot / Tahap' : 'Shot / Stage'}</th>
+                <th className="py-2 text-left">{isId ? 'Model & Kategori' : 'Model & Category'}</th>
+                <th className="py-2 text-right">{isId ? 'Generasi (Dasar + Cad)' : 'Gens (Base + Res)'}</th>
+                <th className="py-2 text-right">{isId ? 'Biaya Dasar' : 'Base Cost'}</th>
+                <th className="py-2 text-right">{isId ? 'Biaya Cadangan' : 'Reserve Cost'}</th>
+                <th className="py-2 text-right">{isId ? 'Total (USD)' : 'Total (USD)'}</th>
+                <th className="py-2 text-right">{isId ? 'Total (IDR)' : 'Total (IDR)'}</th>
+                <th className="py-2 text-right">Credit</th>
+                <th className="py-2 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/10">
+              {calc.item_results.map((row, idx) => (
+                <tr key={row.item_id} className="hover:bg-white/5">
+                  <td className="py-2.5">{idx + 1}</td>
+                  <td className="py-2.5 font-semibold">{row.label}</td>
+                  <td className="py-2.5">
+                    <div>{row.model_name}</div>
+                    <div className="text-[10px] opacity-65">
+                      {CATEGORY_LABELS[row.category][language]}
+                    </div>
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums">
+                    {row.planned_generations} + {row.reserve_generations} ={' '}
+                    <strong>{row.budgeted_generations}</strong>
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums">
+                    {formatCurrencyUsd(row.base_cost_usd, language)}
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums text-amber-300">
+                    {formatCurrencyUsd(row.reserve_cost_usd, language)}
+                  </td>
+                  <td className="py-2.5 text-right font-bold tabular-nums text-sky-400">
+                    {formatCurrencyUsd(row.total_cost_usd, language)}
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums">
+                    {formatCurrencyIdr(row.total_cost_idr, language)}
+                  </td>
+                  <td className="py-2.5 text-right tabular-nums text-purple-300">
+                    {row.total_credit !== null ? `${row.total_credit} cr` : '-'}
+                  </td>
+                  <td className="py-2.5 text-center">
+                    <StatusBadge
+                      status={row.pricing_status}
+                      language={language}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Ringkasan per Kategori */}
+      <div className={`${cardClass} rounded-2xl p-6`}>
+        <h2 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-4">
+          {isId
+            ? 'Subtotal per Kategori Proses AI'
+            : 'Subtotals by AI Process Category'}
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          {ALL_CATEGORIES.map((cat) => {
+            const cSum = calc.category_summaries[cat];
+            return (
+              <div
+                key={cat}
+                className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex flex-col justify-between"
+              >
+                <div className="text-xs font-semibold">
+                  {CATEGORY_LABELS[cat][language]}
+                </div>
+                <div className="mt-3 text-right">
+                  <div className="text-base font-bold tabular-nums text-sky-400">
+                    {formatCurrencyUsd(cSum.total_cost_usd, language)}
+                  </div>
+                  <div className="text-[11px] opacity-75 tabular-nums">
+                    {formatCurrencyIdr(cSum.total_cost_idr, language)}
+                  </div>
+                  <div className="text-[10px] opacity-60 mt-1 tabular-nums">
+                    {cSum.item_count} item &bull; {cSum.budgeted_generations} gen
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};

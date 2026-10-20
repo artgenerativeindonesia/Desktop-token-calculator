@@ -1,0 +1,33 @@
+appId: com.higgsfield.aivideobudgetcalculator
+productName: AI Video Budget Calculator
+directories:
+  output: release
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+fileAssociations:
+  - ext: aivbudget
+    name: AI Video Budget Project
+    description: AI Video Budget Calculator Project File
+    role: Editor
+win:
+  target:
+    - target: portable
+      arch:
+        - x64
+    - target: nsis
+      arch:
+        - x64
+  artifactName: "${productName}-${version}-${target}.${ext}"
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+mac:
+  category: public.app-category.finance
+  target:
+    - dmg
+    - zip
+  artifactName: "${productName}-${version}-mac.${ext}"
