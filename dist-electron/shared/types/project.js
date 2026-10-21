@@ -5,4 +5,4 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.APP_VERSION = exports.CURRENT_SCHEMA_VERSION = void 0;
 exports.CURRENT_SCHEMA_VERSION = '1.0.0';
-exports.APP_VERSION = '1.0.2';
+exports.APP_VERSION = '1.0.3';

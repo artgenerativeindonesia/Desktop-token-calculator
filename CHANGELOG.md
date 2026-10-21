@@ -12,6 +12,35 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.0.3] - Tata Letak Berbasis Hierarki Visual, Titik Fokus (Emphasis), Kenyamanan UX, & Jendela Popup Kaca Buram (Frosted Glass)
+- **Tanggal Perubahan**: 22 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.0.3`
+
+### Ditambahkan (Added)
+1. **Sistem Jendela *Popup Kaca Buram* Mewah (`FrostedModal.tsx`)**:
+   - Menambahkan komponen jendela *popup* bergaya kaca buram (*frosted glass*) berlapis dengan efek blur halus (`backdrop-filter: blur(32px)`), kilau tepi kaca (*specular rim*), dan tombol tutup cepat (`Esc`).
+   - Memindahkan rincian tabel panjang, panduan cara kerja, manajemen file proyek, kustomisasi bagian PDF, serta formulir pengeditan adegan lengkap ke dalam jendela *popup* yang rapi agar layar utama selalu lega dan nyaman dipandang.
+2. **Penunjuk Alur Langkah demi Langkah (`StepFlowBar.tsx`)**:
+   - Menambahkan bilah penunjuk langkah di bagian bawah setiap halaman (*"Tahap 1 dari 5"*, *"Tahap 2 dari 5"*, dst.) lengkap dengan tombol kembali dan tombol lanjut yang jelas agar pengguna selalu tahu langkah apa yang harus dilakukan berikutnya.
+3. **3 Tingkatan Hierarki Visual Kartu (*3-Tier Visual Hierarchy*)**:
+   - **Tingkat 1 — Titik Fokus Utama (`.vv-card-hero-*`)**: Hanya 1 per layar dengan pendar cahaya biru studio dan ukuran huruf paling menonjol untuk angka **Total Seluruh Anggaran**.
+   - **Tingkat 2 — Area Kerja Pendukung (`.glass-card-*`)**: Kartu kerja bersih untuk pengaturan dan daftar ringkasan utama.
+   - **Tingkat 3 — Informasi Pelengkap Tenang (`.vv-card-quiet`)**: Kotak informasi lembut untuk rincian tambahan agar tidak berebut perhatian mata pengguna.
+
+### Diubah (Changed)
+1. **Perapian Tata Letak (*Layout*) di Seluruh 6 Halaman**:
+   - **Beranda Proyek (`DashboardView`)**: Mengubah tata letak menjadi fokus ganda (Identitas Proyek di kiri & Total Anggaran Utama di kanan) dilengkapi 3 kartu pendukung yang seimbang, sementara menu buka proyek contoh dan tabel rincian kategori dipindahkan ke jendela *popup frosted glass*.
+   - **Pengaturan & Cadangan (`ProjectSetupView`)**: Menambahkan tombol pilihan cepat cadangan (`10% Hemat`, `20% Standar`, `35% Aman`) dan memindahkan teks penjelasan panjang ke dalam *popup* **"Penjelasan Cara Hitung & Cadangan"**.
+   - **Daftar Pekerjaan AI (`ProductionPlannerView`)**: Mengubah tampilan daftar adegan yang tadinya sangat padat (11 kolom input per baris) menjadi baris kartu ringkas yang mudah dipindai mata, sementara pengaturan lengkap adegan dibuka melalui *popup frosted glass* **"Atur Detail Adegan"**.
+   - **Ringkasan Biaya (`BudgetSummaryView`)**: Menampilkan grafik batang proporsi biaya per jenis AI dan tabel ringkas 5 kolom di layar utama, serta memindahkan tabel audit 10 kolom ke dalam *popup frosted glass*.
+   - **Kurs & Daftar Harga (`DataSettingsView`)**: Menyatukan kartu kurs otomatis dan manual ke dalam 1 tampilan utama yang bersih dengan *popup* khusus untuk pengisian kurs manual dan pengubahan harga acuan model AI.
+   - **Cetak Laporan PDF (`ExportPdfView`)**: Merapikan tinggi pratinjau kertas A4 agar proporsional di layar laptop serta menambahkan *popup* **"Atur Isi Laporan"** dan **"Perbesar Pratinjau"**.
+
+### Diperbaiki (Fixed)
+- Mengatasi masalah kepadatan informasi (*cognitive overload*) pada layar *Production Planner*, *Dashboard*, dan *Budget Summary* tanpa mengurangi kelengkapan informasi sedikit pun.
+
+---
+
 ## Versi [1.0.2] - Pembaruan Tampilan Visual Bergaya Visuvate Studio (Awwwards)
 - **Tanggal Perubahan**: 22 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.0.2`

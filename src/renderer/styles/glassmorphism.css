@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 /* ============================================================================
- * VISUVATE STUDIO DESIGN SYSTEM (Awwwards Honorable Mention Aesthetic)
- * Inspired by https://www.awwwards.com/sites/visuvate-studio & visuvate.com
+ * VISUVATE STUDIO DESIGN SYSTEM + VISUAL HIERARCHY & FROSTED GLASS UX SYSTEM
+ * - 3-Tier Visual Hierarchy Architecture (Tier 1 Hero, Tier 2 Workspace, Tier 3 Quiet)
+ * - Authentic Apple visionOS / macOS Frosted Glass Modals (Spatial Blur + Specular Rim)
  * - Architectural Monochrome (#000000 / #141414 Dark & #F6F6F6 / #FFFFFF Light)
  * - Electric Studio Blue (#0099FF / #0068AD) & Warm Amber (#FFB840) Accents
  * - Editorial Serif Italic Accent (.vv-accent) + Crisp Neo-Grotesk Sans
- * - Hairline Bento Grids, Pill CTAs, & Tabular Monetary Alignment
  * ============================================================================ */
 
 :root,
@@ -32,10 +32,10 @@
   --vv-text-muted: #9a9a9a;
   --vv-text-subtle: #7d7d7d;
   --vv-nav-bg: rgba(0, 0, 0, 0.76);
-  --vv-tint-weak: rgba(255, 255, 255, 0.06);
-  --vv-tint: rgba(255, 255, 255, 0.11);
-  --vv-tint-strong: rgba(255, 255, 255, 0.18);
-  --vv-field: rgba(255, 255, 255, 0.07);
+  --vv-tint-weak: rgba(255, 255, 255, 0.05);
+  --vv-tint: rgba(255, 255, 255, 0.10);
+  --vv-tint-strong: rgba(255, 255, 255, 0.16);
+  --vv-field: rgba(255, 255, 255, 0.06);
   --vv-field-border: rgba(255, 255, 255, 0.14);
   --vv-blue-300: #7acaff;
   --vv-blue-500: #0099ff;
@@ -58,10 +58,10 @@
   --vv-text-muted: #5a5a5a;
   --vv-text-subtle: #767676;
   --vv-nav-bg: rgba(255, 255, 255, 0.84);
-  --vv-tint-weak: rgba(0, 0, 0, 0.045);
-  --vv-tint: rgba(0, 0, 0, 0.08);
-  --vv-tint-strong: rgba(0, 0, 0, 0.14);
-  --vv-field: rgba(0, 0, 0, 0.05);
+  --vv-tint-weak: rgba(0, 0, 0, 0.038);
+  --vv-tint: rgba(0, 0, 0, 0.075);
+  --vv-tint-strong: rgba(0, 0, 0, 0.13);
+  --vv-field: rgba(0, 0, 0, 0.045);
   --vv-field-border: rgba(0, 0, 0, 0.14);
   --vv-blue-300: #49b3fc;
   --vv-blue-500: #0099ff;
@@ -142,15 +142,49 @@ h1, h2, h3, h4 {
   border-right: 1px solid var(--vv-border);
 }
 
-/* Visuvate Bento Cards (Crisp Hairline + Matte-Glass Studio Surface) */
+/* ============================================================================
+ * 3-TIER VISUAL HIERARCHY CARD SYSTEM
+ * - Tier 1 (.vv-card-hero-*): Primary Dominant Focal Point (1 per screen)
+ * - Tier 2 (.glass-card-*): Secondary Scanning / Interactive Workspace
+ * - Tier 3 (.vv-card-quiet): De-emphasized Supporting Metadata & Context
+ * ============================================================================ */
+
+/* TIER 1: Dominant Focal Point Hero Card */
+.vv-card-hero-dark {
+  background:
+    radial-gradient(110% 100% at 100% 0%, rgba(0, 153, 255, 0.22) 0%, rgba(0, 104, 173, 0.06) 48%, transparent 72%),
+    linear-gradient(165deg, rgba(28, 30, 36, 0.95) 0%, rgba(15, 16, 20, 0.98) 100%);
+  backdrop-filter: blur(20px) saturate(185%);
+  -webkit-backdrop-filter: blur(20px) saturate(185%);
+  border: 1px solid rgba(0, 153, 255, 0.42);
+  box-shadow:
+    0 32px 68px -20px rgba(0, 0, 0, 0.92),
+    0 0 36px -12px rgba(0, 153, 255, 0.28),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  transition: border-color 0.22s var(--ease-brand), box-shadow 0.22s var(--ease-brand);
+}
+
+.vv-card-hero-light {
+  background:
+    radial-gradient(110% 100% at 100% 0%, rgba(0, 153, 255, 0.13) 0%, rgba(0, 153, 255, 0.03) 50%, transparent 75%),
+    linear-gradient(165deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(0, 104, 173, 0.32);
+  box-shadow:
+    0 24px 52px -20px rgba(0, 104, 173, 0.16),
+    0 2px 6px 0 rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  transition: border-color 0.22s var(--ease-brand), box-shadow 0.22s var(--ease-brand);
+}
+
+/* TIER 2: Standard Secondary Bento Cards */
 .glass-card-dark {
   background: linear-gradient(165deg, rgba(24, 24, 24, 0.92) 0%, rgba(16, 16, 16, 0.96) 100%);
   backdrop-filter: blur(16px) saturate(175%);
   -webkit-backdrop-filter: blur(16px) saturate(175%);
   border: 1px solid var(--vv-border);
   box-shadow:
-    0 28px 60px -24px rgba(0, 0, 0, 0.85),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    0 24px 50px -24px rgba(0, 0, 0, 0.8),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
   transition: border-color 0.22s var(--ease-brand), transform 0.22s var(--ease-brand);
 }
 
@@ -162,7 +196,7 @@ h1, h2, h3, h4 {
   background: #ffffff;
   border: 1px solid var(--vv-border);
   box-shadow:
-    0 24px 48px -24px rgba(0, 0, 0, 0.07),
+    0 20px 42px -24px rgba(0, 0, 0, 0.06),
     0 1px 2px 0 rgba(0, 0, 0, 0.03);
   transition: border-color 0.22s var(--ease-brand), transform 0.22s var(--ease-brand);
 }
@@ -171,16 +205,89 @@ h1, h2, h3, h4 {
   border-color: var(--vv-border-strong);
 }
 
+/* TIER 3: Quiet Recessed Supporting Surfaces */
+.vv-card-quiet {
+  background: var(--vv-tint-weak);
+  border: 1px solid var(--vv-border);
+  border-radius: 12px;
+  transition: border-color 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+}
+
+/* ============================================================================
+ * FROSTED GLASS POPUP WINDOW (MODAL) SYSTEM (macOS Sequoia / visionOS Luxury)
+ * ============================================================================ */
+
+@keyframes vvModalBackdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes vvModalSurfaceEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.965) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.vv-modal-backdrop-dark {
+  background: rgba(3, 5, 10, 0.68);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  animation: vvModalBackdropFade 0.18s ease-out forwards;
+}
+
+.vv-modal-backdrop-light {
+  background: rgba(15, 23, 42, 0.36);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  animation: vvModalBackdropFade 0.18s ease-out forwards;
+}
+
+.vv-modal-surface-dark {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(0, 153, 255, 0.14) 0%, transparent 65%),
+    linear-gradient(160deg, rgba(28, 30, 36, 0.86) 0%, rgba(14, 15, 19, 0.94) 100%);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 40px 90px -16px rgba(0, 0, 0, 0.92),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset,
+    0 1px 0 0 rgba(255, 255, 255, 0.24) inset;
+  animation: vvModalSurfaceEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.vv-modal-surface-light {
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(0, 153, 255, 0.08) 0%, transparent 65%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.92) 0%, rgba(246, 248, 252, 0.96) 100%);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  box-shadow:
+    0 36px 80px -16px rgba(0, 0, 0, 0.22),
+    0 1px 0 0 rgba(255, 255, 255, 0.95) inset;
+  animation: vvModalSurfaceEnter 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Visuvate Top Editor Header Bar */
 .glass-header-dark {
-  background: rgba(0, 0, 0, 0.76);
+  background: rgba(0, 0, 0, 0.78);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--vv-border);
 }
 
 .glass-header-light {
-  background: rgba(246, 246, 246, 0.84);
+  background: rgba(246, 246, 246, 0.86);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--vv-border);
@@ -257,7 +364,7 @@ h1, h2, h3, h4 {
   letter-spacing: -0.01em;
   border: 1px solid rgba(122, 202, 255, 0.35);
   box-shadow: 0 8px 24px -8px rgba(0, 153, 255, 0.45);
-  transition: background-color 0.2s var(--ease-brand), box-shadow 0.2s var(--ease-brand);
+  transition: background-color 0.2s var(--ease-brand), box-shadow 0.2s var(--ease-brand), transform 0.2s var(--ease-brand);
 }
 .vv-btn-accent:hover {
   background-color: #0099ff;

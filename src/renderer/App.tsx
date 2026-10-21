@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActiveNavTab, useProjectStore } from './store/projectStore';
 import {
   formatCurrencyIdr,
@@ -11,16 +11,23 @@ import { ProductionPlannerView } from './components/ProductionPlannerView';
 import { BudgetSummaryView } from './components/BudgetSummaryView';
 import { DataSettingsView } from './components/DataSettingsView';
 import { ExportPdfView } from './components/ExportPdfView';
+import { FrostedModal } from './components/FrostedModal';
 import {
+  ArrowRight,
   BarChart3,
+  BookOpen,
   CheckCircle2,
   Database,
+  Eye,
   FileDown,
+  FlaskConical,
+  HelpCircle,
   LayoutDashboard,
   Layers,
   Moon,
   Save,
   Sliders,
+  Sparkles,
   Sun,
   X,
 } from 'lucide-react';
@@ -39,7 +46,12 @@ export const App: React.FC = () => {
     clearBanner,
     initApp,
     saveProjectFile,
+    loadCommercialSample,
+    loadPrdSyntheticTest,
   } = useProjectStore();
+
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
+  const [isQuickBudgetModalOpen, setIsQuickBudgetModalOpen] = useState(false);
 
   useEffect(() => {
     initApp();
@@ -49,10 +61,11 @@ export const App: React.FC = () => {
   const isId = language === 'id';
   const calc = project.calculation;
 
-  const navItems: Array<{
+  const coreWorkflowItems: Array<{
     id: ActiveNavTab;
     index: string;
     label: string;
+    stepDesc: string;
     icon: React.ReactNode;
     badge?: string | number;
   }> = [
@@ -60,12 +73,14 @@ export const App: React.FC = () => {
       id: 'dashboard',
       index: '01',
       label: t.navDashboard,
+      stepDesc: isId ? 'Gambaran utama proyek' : 'Project overview',
       icon: <LayoutDashboard className="w-4 h-4" />,
     },
     {
       id: 'setup',
       index: '02',
       label: t.navSetup,
+      stepDesc: isId ? 'Target video & dana cadangan' : 'Targets & reserve',
       icon: <Sliders className="w-4 h-4" />,
       badge: `${calc.effective_reserve_percent}%`,
     },
@@ -73,6 +88,7 @@ export const App: React.FC = () => {
       id: 'planner',
       index: '03',
       label: t.navPlanner,
+      stepDesc: isId ? 'Susun adegan & model AI' : 'Scenes & AI models',
       icon: <Layers className="w-4 h-4" />,
       badge: project.items.length,
     },
@@ -80,24 +96,22 @@ export const App: React.FC = () => {
       id: 'summary',
       index: '04',
       label: t.navSummary,
+      stepDesc: isId ? 'Periksa rincian biaya' : 'Review cost details',
       icon: <BarChart3 className="w-4 h-4" />,
     },
     {
-      id: 'settings',
-      index: '05',
-      label: t.navDataSettings,
-      icon: <Database className="w-4 h-4" />,
-    },
-    {
       id: 'pdf',
-      index: '06',
+      index: '05',
       label: t.navExportPdf,
+      stepDesc: isId ? 'Pratinjau & simpan dokumen' : 'Preview & save PDF',
       icon: <FileDown className="w-4 h-4" />,
     },
   ];
 
   const themeScopeClass =
-    theme === 'dark' ? 'vv-theme-dark apple-bg-dark' : 'vv-theme-light apple-bg-light';
+    theme === 'dark'
+      ? 'vv-theme-dark apple-bg-dark'
+      : 'vv-theme-light apple-bg-light';
   const sidebarClass =
     theme === 'dark' ? 'glass-sidebar-dark' : 'glass-sidebar-light';
   const headerClass =
@@ -107,14 +121,13 @@ export const App: React.FC = () => {
     <div className={`${themeScopeClass} min-h-screen flex flex-col lg:flex-row`}>
       {/* Visuvate Studio Architectural Sidebar Rail */}
       <aside
-        className={`${sidebarClass} w-full lg:w-[268px] shrink-0 flex flex-col justify-between p-4 lg:min-h-screen sticky top-0 z-30 select-none`}
+        className={`${sidebarClass} w-full lg:w-[276px] shrink-0 flex flex-col justify-between p-4 lg:min-h-screen sticky top-0 z-30 select-none`}
       >
         <div>
           {/* Studio Brand Emblem & Header */}
-          <div className="flex items-center justify-between px-2.5 py-2 mb-4 border-b border-[var(--vv-border)] pb-4">
+          <div className="flex items-center justify-between px-2.5 py-2 mb-3 border-b border-[var(--vv-border)] pb-3.5">
             <div className="flex items-center gap-2.5">
               <div className="grid size-8 place-items-center rounded-[7px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)]">
-                {/* Geometric Studio V-Emblem */}
                 <svg
                   className="size-4 text-[var(--vv-text-primary)]"
                   viewBox="0 0 54 54"
@@ -136,8 +149,8 @@ export const App: React.FC = () => {
             <span className="vv-blue-dot" title="Studio Active" />
           </div>
 
-          <div className="px-2.5 mb-5">
-            <div className="text-[15px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)]">
+          <div className="px-2.5 mb-4">
+            <div className="text-[14px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)]">
               {t.appTitle}
             </div>
             <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5 leading-relaxed">
@@ -145,21 +158,20 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Section Caption */}
+          {/* Primary Guided Workflow Section (Steps 01 - 05) */}
           <div className="px-2.5 mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
-            <span>{isId ? 'Navigasi Tahapan' : 'Studio Layers'}</span>
-            <span className="tabular-nums">01 — 06</span>
+            <span>{isId ? 'Alur Langkah Utama' : 'Guided Workflow'}</span>
+            <span className="tabular-nums">01 — 05</span>
           </div>
 
-          {/* Visuvate Studio Layer Navigation Menu */}
           <nav className="space-y-1">
-            {navItems.map((item) => {
+            {coreWorkflowItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[8px] text-[13px] transition-colors ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
                     isActive
                       ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
                       : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
@@ -168,15 +180,26 @@ export const App: React.FC = () => {
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span
                       className={`text-[10px] tabular-nums font-mono ${
-                        isActive ? 'text-white/80' : 'text-[var(--vv-text-subtle)]'
+                        isActive ? 'text-white/85' : 'text-[var(--vv-text-subtle)]'
                       }`}
                     >
                       {item.index}
                     </span>
                     <span className="shrink-0">{item.icon}</span>
-                    <span className="truncate">{item.label}</span>
+                    <div className="min-w-0">
+                      <div className="text-[12.5px] truncate leading-tight">
+                        {item.label}
+                      </div>
+                      <div
+                        className={`text-[10px] truncate mt-0.5 ${
+                          isActive ? 'text-white/75' : 'text-[var(--vv-text-subtle)]'
+                        }`}
+                      >
+                        {item.stepDesc}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
                     {item.badge !== undefined && (
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] tabular-nums ${
@@ -196,24 +219,85 @@ export const App: React.FC = () => {
               );
             })}
           </nav>
+
+          {/* Supporting Reference Section (06: Exchange Rate & Model Catalog) */}
+          <div className="mt-4 pt-3 border-t border-[var(--vv-border)]">
+            <div className="px-2.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
+              <span>{isId ? 'Data & Referensi' : 'Data & Reference'}</span>
+              <span className="tabular-nums">06</span>
+            </div>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
+                activeTab === 'settings'
+                  ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
+                  : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span
+                  className={`text-[10px] tabular-nums font-mono ${
+                    activeTab === 'settings'
+                      ? 'text-white/85'
+                      : 'text-[var(--vv-text-subtle)]'
+                  }`}
+                >
+                  06
+                </span>
+                <Database className="w-4 h-4 shrink-0" />
+                <div className="min-w-0">
+                  <div className="text-[12.5px] truncate leading-tight">
+                    {t.navDataSettings}
+                  </div>
+                  <div
+                    className={`text-[10px] truncate mt-0.5 ${
+                      activeTab === 'settings'
+                        ? 'text-white/75'
+                        : 'text-[var(--vv-text-subtle)]'
+                    }`}
+                  >
+                    {isId ? 'Atur kurs & harga model' : 'FX rate & model prices'}
+                  </div>
+                </div>
+              </div>
+              {activeTab === 'settings' && (
+                <span className="size-1.5 rounded-full bg-[#7acaff]" />
+              )}
+            </button>
+          </div>
         </div>
 
-        {/* Sidebar Bottom Total Box & High-Contrast Pill CTA */}
-        <div className="mt-6 pt-4 border-t border-[var(--vv-border)] space-y-3">
-          <div className="p-3.5 rounded-[12px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] space-y-1.5">
+        {/* Sidebar Bottom Compact Budget Trigger & Save Action */}
+        <div className="mt-5 pt-3.5 border-t border-[var(--vv-border)] space-y-2.5">
+          <button
+            type="button"
+            onClick={() => setIsQuickBudgetModalOpen(true)}
+            title={
+              isId
+                ? 'Klik untuk melihat ringkasan cepat anggaran dalam jendela kaca buram'
+                : 'Click to inspect quick budget breakdown in a frosted glass window'
+            }
+            className="w-full text-left p-3 rounded-[12px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition group"
+          >
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--vv-text-muted)]">
               <span>{t.totalBudget}</span>
-              <span className="tabular-nums">
-                {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+              <span className="inline-flex items-center gap-1 text-[#0099ff] group-hover:underline">
+                <Eye className="w-3 h-3" />
+                <span>{isId ? 'Intip Rincian' : 'Peek'}</span>
               </span>
             </div>
-            <div className="text-lg font-bold tabular-nums text-[#0099ff] text-right">
-              {formatCurrencyUsd(calc.total_cost_usd, language)}
-            </div>
-            <div className="text-xs font-medium tabular-nums text-[var(--vv-text-strong)] text-right">
+            <div className="text-base font-bold tabular-nums text-[#0099ff] text-right mt-1">
               {formatCurrencyIdr(calc.total_cost_idr, language)}
             </div>
-          </div>
+            <div className="flex items-center justify-between text-[11px] tabular-nums text-[var(--vv-text-muted)] mt-0.5">
+              <span>
+                {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+              </span>
+              <span className="font-semibold text-[var(--vv-text-strong)]">
+                {formatCurrencyUsd(calc.total_cost_usd, language)}
+              </span>
+            </div>
+          </button>
 
           <button
             onClick={() => saveProjectFile(false)}
@@ -234,11 +318,12 @@ export const App: React.FC = () => {
         <header
           className={`${headerClass} sticky top-0 z-20 px-6 py-3 flex flex-wrap items-center justify-between gap-3`}
         >
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span className="vv-badge-pill">
               <span className="vv-blue-dot" />
-              <span className="truncate max-w-[260px] font-semibold">
-                {project.project_name || (isId ? 'Proyek Baru' : 'Untitled Project')}
+              <span className="truncate max-w-[240px] font-semibold">
+                {project.project_name ||
+                  (isId ? 'Proyek Baru' : 'Untitled Project')}
               </span>
             </span>
 
@@ -253,8 +338,18 @@ export const App: React.FC = () => {
             </span>
           </div>
 
-          {/* Right Studio Controls: FX Ticker, Segmented Language Switch, & Visuvate Theme Switch */}
-          <div className="flex items-center gap-3">
+          {/* Right Studio Controls: Quick Guide Popup, FX Ticker, Language Switch, & Theme Switch */}
+          <div className="flex items-center gap-2.5">
+            {/* Frosted Glass Quick Guide Button */}
+            <button
+              type="button"
+              onClick={() => setIsGuideModalOpen(true)}
+              className="inline-flex items-center gap-1.5 h-[30px] px-3 rounded-full border border-[#0099ff]/40 bg-[#0099ff]/10 hover:bg-[#0099ff]/20 text-xs font-medium text-[#7acaff] transition"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>{isId ? 'Panduan Cepat' : 'Quick Guide'}</span>
+            </button>
+
             {/* FX Rate Studio Readout */}
             <button
               onClick={() => setActiveTab('settings')}
@@ -327,7 +422,7 @@ export const App: React.FC = () => {
 
         {/* Actionable Notification Banner */}
         {banner && (
-          <div className="px-6 pt-4">
+          <div className="px-6 pt-4 max-w-6xl w-full mx-auto">
             <div
               className={`p-3.5 rounded-[12px] border flex items-center justify-between gap-3 text-xs font-medium shadow-lg ${
                 banner.type === 'error'
@@ -354,7 +449,7 @@ export const App: React.FC = () => {
         )}
 
         {/* Active Page View */}
-        <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-6 max-w-6xl w-full mx-auto">
           {activeTab === 'dashboard' && <DashboardView />}
           {activeTab === 'setup' && <ProjectSetupView />}
           {activeTab === 'planner' && <ProductionPlannerView />}
@@ -363,6 +458,246 @@ export const App: React.FC = () => {
           {activeTab === 'pdf' && <ExportPdfView />}
         </main>
       </div>
+
+      {/* FROSTED GLASS MODAL 1: Panduan Cepat Cara Kerja Aplikasi */}
+      <FrostedModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        theme={theme}
+        maxWidth="2xl"
+        badgeLabel={isId ? 'Panduan Pengguna Awam' : 'Beginner Friendly Guide'}
+        badgeIcon={<BookOpen className="w-3.5 h-3.5 text-[#0099ff]" />}
+        title={
+          isId ? (
+            <>
+              Cara Mudah Menghitung{' '}
+              <span className="vv-accent text-[#0099ff]">Anggaran Video AI</span>
+            </>
+          ) : (
+            <>
+              Easy Guide to{' '}
+              <span className="vv-accent text-[#0099ff]">AI Video Budgeting</span>
+            </>
+          )
+        }
+        subtitle={
+          isId
+            ? 'Bayangkan aplikasi ini seperti kasir pintar untuk rencana produksi video AI Anda. Ikuti 4 langkah berurutan di bawah ini:'
+            : 'Think of this app as a smart cashier for your AI video production plan. Follow the 4 simple steps below:'
+        }
+        footer={
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  loadCommercialSample();
+                  setIsGuideModalOpen(false);
+                }}
+                className="vv-btn-secondary px-3.5 py-2 text-xs"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#0099ff]" />
+                <span>{t.btnLoadCommercialDemo}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  loadPrdSyntheticTest();
+                  setIsGuideModalOpen(false);
+                }}
+                className="vv-btn-secondary px-3.5 py-2 text-xs"
+              >
+                <FlaskConical className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{t.btnLoadPrdTest}</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsGuideModalOpen(false)}
+              className="vv-btn-primary px-5 py-2 text-xs"
+            >
+              <span>{isId ? 'Mengerti, Tutup Panduan' : 'Got It, Close'}</span>
+            </button>
+          </>
+        }
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+          <div className="vv-card-quiet p-4 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] font-bold text-[#0099ff]">
+                LANGKAH 01 — 02
+              </span>
+              <Sliders className="w-4 h-4 text-[#0099ff]" />
+            </div>
+            <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+              {isId
+                ? '1. Tentukan Nama Proyek & Dana Cadangan'
+                : '1. Set Project Name & Redo Reserve'}
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Beri nama proyek Anda, tentukan jumlah video jadi, dan atur persentase cadangan (misal 20%) untuk berjaga-jaga jika hasil AI perlu dibuat ulang.'
+                : 'Name your project, set your target video output, and choose a reserve percentage (e.g. 20%) in case AI scenes need extra tries.'}
+            </p>
+          </div>
+
+          <div className="vv-card-quiet p-4 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] font-bold text-[#0099ff]">
+                LANGKAH 03
+              </span>
+              <Layers className="w-4 h-4 text-[#0099ff]" />
+            </div>
+            <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+              {isId
+                ? '2. Susun Daftar Adegan di Jendela Popup'
+                : '2. Build Your Scene List'}
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Tambahkan tahapan pembuatan (Gambar dari Teks, Video dari Teks, hingga Peningkatan 4K). Klik tombol "Atur Adegan" untuk memilih model AI dengan rapi.'
+                : 'Add production stages (Text to Image, Text to Video, 4K Upscaling). Click "Edit Stage" to configure models cleanly inside a popup.'}
+            </p>
+          </div>
+
+          <div className="vv-card-quiet p-4 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] font-bold text-[#0099ff]">
+                LANGKAH 04
+              </span>
+              <BarChart3 className="w-4 h-4 text-[#0099ff]" />
+            </div>
+            <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+              {isId
+                ? '3. Periksa Ringkasan Biaya (USD & Rupiah)'
+                : '3. Check Complete Cost Summary'}
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Lihat total anggaran keseluruhan, perbandingan biaya utama vs cadangan, serta rata-rata biaya per 1 video jadi dan per 1 menit durasi.'
+                : 'Inspect your total budget in USD and IDR, base vs. reserve share, and average cost per video and per minute.'}
+            </p>
+          </div>
+
+          <div className="vv-card-quiet p-4 space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-[11px] font-bold text-[#0099ff]">
+                LANGKAH 05
+              </span>
+              <FileDown className="w-4 h-4 text-[#0099ff]" />
+            </div>
+            <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+              {isId
+                ? '4. Cetak Laporan Resmi PDF'
+                : '4. Save Print-Ready PDF Report'}
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Pratinjau dokumen laporan ukuran A4 dan simpan sebagai file PDF rapi yang siap dibagikan ke klien atau tim produksi Anda.'
+                : 'Preview your A4 budget document and save a clean PDF report ready to share with clients or your production team.'}
+            </p>
+          </div>
+        </div>
+      </FrostedModal>
+
+      {/* FROSTED GLASS MODAL 2: Intip Ringkasan Cepat Anggaran dari Layar Mana Saja */}
+      <FrostedModal
+        isOpen={isQuickBudgetModalOpen}
+        onClose={() => setIsQuickBudgetModalOpen(false)}
+        theme={theme}
+        maxWidth="lg"
+        badgeLabel={isId ? 'Ringkasan Cepat' : 'Live Budget Peek'}
+        title={
+          isId ? (
+            <>
+              Posisi Anggaran{' '}
+              <span className="vv-accent text-[#0099ff]">Saat Ini</span>
+            </>
+          ) : (
+            <>
+              Current Budget{' '}
+              <span className="vv-accent text-[#0099ff]">Snapshot</span>
+            </>
+          )
+        }
+        subtitle={project.project_name}
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsQuickBudgetModalOpen(false)}
+              className="vv-btn-secondary px-4 py-2 text-xs"
+            >
+              <span>{isId ? 'Tutup' : 'Close'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsQuickBudgetModalOpen(false);
+                setActiveTab('summary');
+              }}
+              className="vv-btn-accent px-4 py-2 text-xs"
+            >
+              <span>{isId ? 'Buka Halaman Ringkasan Biaya' : 'Open Cost Summary'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="p-4 rounded-[14px] bg-[#0099ff]/10 border border-[#0099ff]/35 flex items-center justify-between">
+            <div>
+              <div className="text-[11px] uppercase tracking-wider text-[#7acaff] font-semibold">
+                {t.totalBudget}
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5">
+                {calc.budgeted_generations} {isId ? 'total kali pembuatan AI' : 'total AI generations'}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xl font-bold tabular-nums text-[#0099ff]">
+                {formatCurrencyIdr(calc.total_cost_idr, language)}
+              </div>
+              <div className="text-sm font-semibold tabular-nums text-[var(--vv-text-primary)]">
+                {formatCurrencyUsd(calc.total_cost_usd, language)}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="vv-card-quiet p-3.5">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">{t.baseCost}</div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1">
+                {formatCurrencyIdr(calc.base_cost_idr, language)}
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
+                {formatCurrencyUsd(calc.base_cost_usd, language)} ({calc.planned_generations}x)
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3.5">
+              <div className="text-[11px] text-[#ffb840]">
+                {t.reserveCost} ({calc.effective_reserve_percent}%)
+              </div>
+              <div className="text-sm font-bold tabular-nums text-[#ffb840] text-right mt-1">
+                {formatCurrencyIdr(calc.reserve_cost_idr, language)}
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
+                {formatCurrencyUsd(calc.reserve_cost_usd, language)} (+{calc.reserve_generations}x)
+              </div>
+            </div>
+          </div>
+
+          <div className="vv-card-quiet p-3.5 flex items-center justify-between">
+            <span className="text-[var(--vv-text-muted)]">{t.totalCredit}</span>
+            <span className="font-bold tabular-nums text-[#7acaff]">
+              {calc.total_credit !== null
+                ? `${calc.total_credit.toLocaleString()} Credits`
+                : t.unavailableLabel}
+            </span>
+          </div>
+        </div>
+      </FrostedModal>
     </div>
   );
 };

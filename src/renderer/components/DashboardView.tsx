@@ -1,19 +1,21 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import {
   CATEGORY_LABELS,
   formatCurrencyIdr,
   formatCurrencyUsd,
+  SHORT_CATEGORY_LABELS,
   UI_TEXT,
 } from '../i18n/translations';
 import { StatusBadge } from './StatusBadge';
+import { FrostedModal } from './FrostedModal';
+import { StepFlowBar } from './StepFlowBar';
 import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  Clock,
   Coins,
-  FileDown,
+  Eye,
   FilePlus2,
   Film,
   FlaskConical,
@@ -21,6 +23,8 @@ import {
   Layers,
   RefreshCw,
   Save,
+  ShieldCheck,
+  Sliders,
   Sparkles,
 } from 'lucide-react';
 import { ProcessCategory } from '../../shared/types/project';
@@ -53,10 +57,22 @@ export const DashboardView: React.FC = () => {
   } = useProjectStore();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+
   const t = UI_TEXT[language];
   const isId = language === 'id';
   const cardClass = theme === 'dark' ? 'glass-card-dark' : 'glass-card-light';
+  const heroCardClass =
+    theme === 'dark' ? 'vv-card-hero-dark' : 'vv-card-hero-light';
   const calc = project.calculation;
+
+  const baseSharePercent =
+    calc.total_cost_usd > 0
+      ? Math.round((calc.base_cost_usd / calc.total_cost_usd) * 100)
+      : 100;
+  const reserveSharePercent = Math.max(0, 100 - baseSharePercent);
 
   const handleBrowserFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -65,6 +81,7 @@ export const DashboardView: React.FC = () => {
     reader.onload = () => {
       if (typeof reader.result === 'string') {
         importProjectFromJsonText(reader.result, file.name);
+        setIsProjectModalOpen(false);
       }
     };
     reader.readAsText(file);
@@ -82,19 +99,28 @@ export const DashboardView: React.FC = () => {
         onChange={handleBrowserFileUpload}
       />
 
-      {/* Visuvate Studio Hero Card */}
-      <div className={`${cardClass} rounded-[16px] p-6 md:p-7 relative overflow-hidden`}>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+      {/* =====================================================================
+       * TIER 1: DOMINANT FOCAL POINT — ASYMMETRIC HERO SPLIT (7 cols + 5 cols)
+       * Left: Project Context & Primary Actions
+       * Right: Single Unmistakable Total Budget Anchor Card (.vv-card-hero-*)
+       * ===================================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
+        {/* Left 7 Columns: Project Identity & Clean Action Bar */}
+        <div
+          className={`${cardClass} lg:col-span-7 rounded-[18px] p-6 md:p-7 flex flex-col justify-between`}
+        >
           <div>
-            <div className="flex flex-wrap items-center gap-2.5 mb-3">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <span className="vv-badge-pill">
                 <span className="vv-blue-dot" />
                 <span>
-                  {isId ? 'Katalog Resmi Higgsfield AI' : 'Official Higgsfield AI Catalog'}
+                  {isId
+                    ? 'Langkah 01 • Ringkasan Proyek'
+                    : 'Step 01 • Project Overview'}
                 </span>
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-[11px] font-medium border ${
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
                   hasUnsavedChanges
                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
                     : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
@@ -107,7 +133,10 @@ export const DashboardView: React.FC = () => {
             <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.04em] leading-tight">
               {project.project_name ? (
                 <>
-                  <span>{project.project_name.split(' ').slice(0, -1).join(' ') || project.project_name} </span>
+                  <span>
+                    {project.project_name.split(' ').slice(0, -1).join(' ') ||
+                      project.project_name}{' '}
+                  </span>
                   {project.project_name.split(' ').length > 1 && (
                     <span className="vv-accent text-[#0099ff]">
                       {project.project_name.split(' ').slice(-1)[0]}
@@ -125,381 +154,714 @@ export const DashboardView: React.FC = () => {
               )}
             </h1>
 
-            <p className="text-xs text-[var(--vv-text-muted)] mt-1.5">
-              {currentFilePath
-                ? `${isId ? 'Tersimpan di' : 'Saved at'}: ${currentFilePath}`
-                : isId
-                ? 'Proyek belum disimpan ke komputer Anda'
-                : 'Project has not been saved to your computer yet'}
+            <p className="text-xs text-[var(--vv-text-muted)] mt-2 leading-relaxed max-w-xl">
+              {isId
+                ? `Merencanakan ${project.items.length} tahap pembuatan AI untuk target ${project.assumptions.target_videos} video jadi (${project.assumptions.final_duration_minutes} menit).`
+                : `Planning ${project.items.length} AI production stages for ${project.assumptions.target_videos} final videos (${project.assumptions.final_duration_minutes} min).`}
             </p>
           </div>
 
-          {/* Visuvate Pill Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => createNewBlankProject()}
-              className="vv-btn-secondary px-4 py-2 text-xs"
-            >
-              <FilePlus2 className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>{t.btnNewProject}</span>
-            </button>
+          {/* Focused 3-Button Bar (No Clutter) */}
+          <div className="mt-6 pt-4 border-t border-[var(--vv-border)] flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('planner')}
+                className="vv-btn-accent px-4 py-2.5 text-xs font-semibold"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>
+                  {isId ? 'Susun Daftar Adegan AI' : 'Edit AI Production List'}
+                </span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsProjectModalOpen(true)}
+                className="vv-btn-secondary px-4 py-2.5 text-xs"
+              >
+                <FolderOpen className="w-3.5 h-3.5 text-[#ffb840]" />
+                <span>
+                  {isId ? 'Ganti / Contoh Proyek' : 'Switch / Sample Projects'}
+                </span>
+              </button>
+            </div>
 
             <button
-              onClick={() => {
-                if (window.api) {
-                  openProjectFile();
-                } else {
-                  fileInputRef.current?.click();
-                }
-              }}
-              className="vv-btn-secondary px-4 py-2 text-xs"
-            >
-              <FolderOpen className="w-3.5 h-3.5 text-[#ffb840]" />
-              <span>{t.btnOpenProject}</span>
-            </button>
-
-            <button
+              type="button"
               onClick={() => saveProjectFile(false)}
-              className="vv-btn-primary px-4 py-2 text-xs"
+              className="vv-btn-primary px-4 py-2.5 text-xs"
             >
               <Save className="w-3.5 h-3.5" />
               <span>{t.btnSaveProject}</span>
             </button>
-
-            <button
-              onClick={() => setActiveTab('pdf')}
-              className="vv-btn-accent px-4 py-2 text-xs"
-            >
-              <FileDown className="w-3.5 h-3.5" />
-              <span>{t.btnExportPdf}</span>
-            </button>
           </div>
         </div>
 
-        {/* One-Click Preset Bar */}
-        <div className="mt-6 pt-4 border-t border-[var(--vv-border)] flex flex-wrap items-center justify-between gap-3">
-          <div className="text-xs text-[var(--vv-text-muted)] flex items-center gap-2">
-            <FlaskConical className="w-4 h-4 text-[#0099ff] shrink-0" />
-            <span>
-              {isId
-                ? 'Ingin langsung melihat contoh hitungan tanpa mengetik dari awal?'
-                : 'Want to see a working sample budget right away without typing?'}
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={loadPrdSyntheticTest}
-              className="vv-btn-secondary px-3.5 py-1.5 text-xs"
-            >
-              <FlaskConical className="w-3.5 h-3.5 text-emerald-400" />
-              <span>{t.btnLoadPrdTest}</span>
-            </button>
-            <button
-              onClick={loadCommercialSample}
-              className="vv-btn-secondary px-3.5 py-1.5 text-xs"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>{t.btnLoadCommercialDemo}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Visuvate 4-Column Architectural Bento Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 01: Biaya Utama */}
-        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
-                01
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
-                {t.baseCost}
-              </span>
-            </div>
-            <Layers className="w-4 h-4 text-[var(--vv-text-subtle)]" />
-          </div>
-          <div className="mt-4 text-right">
-            <div className="text-2xl font-semibold tabular-nums tracking-tight">
-              {formatCurrencyUsd(calc.base_cost_usd, language)}
-            </div>
-            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-0.5">
-              {formatCurrencyIdr(calc.base_cost_idr, language)}
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
-            <span>{t.plannedGenerations}</span>
-            <span className="font-semibold tabular-nums text-[var(--vv-text-primary)]">
-              {calc.planned_generations} {isId ? 'kali' : 'tries'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 02: Biaya Cadangan */}
-        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
-                02
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
-                {t.reserveCost} ({calc.effective_reserve_percent}%)
-              </span>
-            </div>
-            <RefreshCw className="w-4 h-4 text-[#ffb840]" />
-          </div>
-          <div className="mt-4 text-right">
-            <div className="text-2xl font-semibold tabular-nums tracking-tight text-[#ffb840]">
-              {formatCurrencyUsd(calc.reserve_cost_usd, language)}
-            </div>
-            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-0.5">
-              {formatCurrencyIdr(calc.reserve_cost_idr, language)}
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
-            <span>{t.reserveGenerations}</span>
-            <span className="font-semibold tabular-nums text-[#ffb840]">
-              +{calc.reserve_generations} {isId ? 'kali' : 'tries'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 03: Total Seluruh Anggaran (Featured Studio Card) */}
+        {/* Right 5 Columns: THE DOMINANT FOCAL POINT (Total Seluruh Anggaran) */}
         <div
-          className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between ring-1 ring-[#0099ff]/45`}
+          className={`${heroCardClass} lg:col-span-5 rounded-[18px] p-6 md:p-7 flex flex-col justify-between`}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="vv-blue-dot" />
-              <span className="text-xs font-semibold text-[#0099ff] uppercase tracking-wider">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0099ff]">
                 {t.totalBudget}
               </span>
             </div>
-            {calc.is_complete ? (
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            ) : (
-              <AlertTriangle className="w-4 h-4 text-[#ffb840]" />
-            )}
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                calc.is_complete
+                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+              }`}
+            >
+              {calc.is_complete ? (
+                <CheckCircle2 className="w-3.5 h-3.5" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {calc.is_complete ? t.completeEstimate : t.incompleteEstimate}
+              </span>
+            </span>
           </div>
-          <div className="mt-4 text-right">
-            <div className="text-2xl font-bold tabular-nums tracking-tight">
-              {formatCurrencyUsd(calc.total_cost_usd, language)}
-            </div>
-            <div className="text-sm font-semibold text-[#0099ff] tabular-nums mt-0.5">
+
+          {/* Dominant Focal Typography */}
+          <div className="my-5 text-right">
+            <div className="text-3xl md:text-4xl font-bold tabular-nums tracking-tight text-[var(--vv-text-primary)]">
               {formatCurrencyIdr(calc.total_cost_idr, language)}
             </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs">
-            <span className="text-[var(--vv-text-muted)]">{t.budgetedGenerations}</span>
-            <span className="font-bold tabular-nums">
-              {calc.budgeted_generations} {isId ? 'kali' : 'tries'}
-            </span>
-          </div>
-        </div>
-
-        {/* Card 04: Pemakaian Credit & Rata-rata */}
-        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
-                04
-              </span>
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
-                {t.totalCredit}
+            <div className="text-lg font-semibold tabular-nums text-[#0099ff] mt-1">
+              {formatCurrencyUsd(calc.total_cost_usd, language)}{' '}
+              <span className="text-xs font-normal text-[var(--vv-text-muted)]">
+                ({calc.budgeted_generations} {isId ? 'kali buat' : 'total tries'})
               </span>
             </div>
-            <Coins className="w-4 h-4 text-[#7acaff]" />
           </div>
-          <div className="mt-4 text-right">
-            <div className="text-xl font-semibold tabular-nums tracking-tight text-[#7acaff]">
-              {calc.total_credit !== null
-                ? `${calc.total_credit.toLocaleString()} Credits`
-                : t.unavailableLabel}
-            </div>
-            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-1">
-              {t.costPerVideo}:{' '}
-              <strong className="text-[var(--vv-text-primary)]">
-                {formatCurrencyUsd(calc.cost_per_video_usd, language)}
-              </strong>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
-            <span>{t.costPerMinute}</span>
-            <span className="font-semibold tabular-nums text-[var(--vv-text-primary)]">
-              {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
-            </span>
-          </div>
-        </div>
-      </div>
 
-      {/* Baris Status Kurs USD/IDR & Ringkasan Kategori */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className={`${cardClass} rounded-[14px] p-6 lg:col-span-2`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
-                05
-              </span>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
-                {isId
-                  ? 'Ringkasan Biaya Berdasarkan Jenis Pembuatan AI'
-                  : 'Cost Breakdown by AI Creation Type'}
-              </h2>
-            </div>
-            <button
-              onClick={() => setActiveTab('planner')}
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#0099ff] hover:underline"
-            >
-              {isId ? 'Atur Daftar Pekerjaan' : 'Edit Production List'}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-[var(--vv-border)] text-[var(--vv-text-muted)]">
-                  <th className="py-2.5 text-left font-medium">{isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}</th>
-                  <th className="py-2.5 text-right font-medium">{isId ? 'Jumlah Tahap' : 'Stages'}</th>
-                  <th className="py-2.5 text-right font-medium">{isId ? 'Total Kali Buat' : 'Total Tries'}</th>
-                  <th className="py-2.5 text-right font-medium">{isId ? 'Subtotal (USD)' : 'Subtotal (USD)'}</th>
-                  <th className="py-2.5 text-right font-medium">{isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--vv-border)]">
-                {ALL_CATEGORIES.map((cat) => {
-                  const sum = calc.category_summaries[cat];
-                  return (
-                    <tr key={cat} className="hover:bg-[var(--vv-tint-weak)] transition-colors">
-                      <td className="py-3 font-medium">
-                        {CATEGORY_LABELS[cat][language]}
-                        {sum.has_incomplete_items && (
-                          <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/25">
-                            {isId ? 'Belum Diisi' : 'Incomplete'}
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">{sum.item_count}</td>
-                      <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
-                        {sum.budgeted_generations}
-                      </td>
-                      <td className="py-3 text-right font-semibold tabular-nums">
-                        {formatCurrencyUsd(sum.total_cost_usd, language)}
-                      </td>
-                      <td className="py-3 text-right text-[var(--vv-text-muted)] tabular-nums">
-                        {formatCurrencyIdr(sum.total_cost_idr, language)}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Status Kurs & Target Video */}
-        <div className={`${cardClass} rounded-[14px] p-6 flex flex-col justify-between space-y-4`}>
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
-                  06
-                </span>
-                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
-                  {t.exchangeRateLabel}
-                </span>
-              </div>
-              <StatusBadge
-                status={project.exchange_rate.status}
-                language={language}
+          {/* Visual Proportion Bar: Base vs Reserve */}
+          <div className="space-y-2 pt-3 border-t border-[var(--vv-border)]">
+            <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden flex">
+              <div
+                style={{ width: `${baseSharePercent}%` }}
+                className="bg-[#0099ff] transition-all duration-300"
+                title={t.baseCost}
+              />
+              <div
+                style={{ width: `${reserveSharePercent}%` }}
+                className="bg-[#ffb840] transition-all duration-300"
+                title={t.reserveCost}
               />
             </div>
-            <div className="text-2xl font-bold tabular-nums text-right my-2.5 tracking-tight">
-              1 USD ={' '}
-              {project.exchange_rate.rate
-                ? formatCurrencyIdr(project.exchange_rate.rate, language)
-                : t.unavailableLabel}
-            </div>
-            <div className="text-[11px] text-[var(--vv-text-muted)] space-y-1">
-              <div>
-                <strong className="text-[var(--vv-text-strong)]">{isId ? 'Sumber:' : 'Source:'}</strong>{' '}
-                {project.exchange_rate.source_name}
-              </div>
-              <div>
-                <strong className="text-[var(--vv-text-strong)]">{isId ? 'Keterangan:' : 'Rate Type:'}</strong>{' '}
-                {project.exchange_rate.rate_type}
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                <span>{project.exchange_rate.retrieved_at.slice(0, 19).replace('T', ' ')}</span>
-              </div>
-            </div>
-            <div className="mt-3.5 flex gap-2">
-              <button
-                onClick={refreshExchangeRateAuto}
-                disabled={isRefreshingFx}
-                className="vv-btn-secondary flex-1 py-1.5 px-3 text-xs"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 ${isRefreshingFx ? 'animate-spin' : ''}`}
-                />
-                <span>{t.refreshRateBtn}</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('settings')}
-                className="vv-btn-secondary py-1.5 px-3 text-xs"
-              >
-                {isId ? 'Ubah Sendiri' : 'Edit Rate'}
-              </button>
-            </div>
-          </div>
-
-          <div className="pt-3.5 border-t border-[var(--vv-border)]">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-2.5">
-              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>{isId ? 'Target Hasil Akhir Proyek' : 'Project Target Output'}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2.5 text-xs">
-              <div className="p-3 rounded-[10px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)]">
-                <div className="text-[var(--vv-text-muted)]">{isId ? 'Target Video Jadi' : 'Final Videos'}</div>
-                <div className="text-base font-bold tabular-nums text-right mt-1">
-                  {project.assumptions.target_videos}
-                </div>
-              </div>
-              <div className="p-3 rounded-[10px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)]">
-                <div className="text-[var(--vv-text-muted)]">{isId ? 'Total Durasi Video' : 'Total Duration'}</div>
-                <div className="text-base font-bold tabular-nums text-right mt-1">
-                  {project.assumptions.final_duration_minutes} {isId ? 'menit' : 'min'}
-                </div>
-              </div>
+            <div className="flex items-center justify-between text-[11px] tabular-nums">
+              <span className="text-[var(--vv-text-strong)] flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-[#0099ff]" />
+                {t.baseCost}:{' '}
+                <strong>{formatCurrencyUsd(calc.base_cost_usd, language)}</strong>
+              </span>
+              <span className="text-[#ffb840] flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-[#ffb840]" />
+                {isId ? 'Cadangan' : 'Reserve'} ({calc.effective_reserve_percent}%):{' '}
+                <strong>+{formatCurrencyUsd(calc.reserve_cost_usd, language)}</strong>
+              </span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Status Kelengkapan Data & Proyek Terakhir */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className={`${cardClass} rounded-[14px] p-6`}>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-3">
-            {isId
-              ? 'Status Kelengkapan Data & Info Penting'
-              : 'Data Completeness & Important Notes'}
-          </h3>
+      {/* =====================================================================
+       * TIER 2: SECONDARY SCANNING ZONE — 3 BALANCED SUPPORTING CARDS
+       * ===================================================================== */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Supporting Card 1: Rencana Awal vs Cadangan Buat Ulang */}
+        <div
+          className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+              {isId ? 'Rincian Kali Pembuatan AI' : 'AI Generation Breakdown'}
+            </span>
+            <Sliders className="w-4 h-4 text-[#ffb840]" />
+          </div>
+
+          <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">
+                {t.plannedGenerations}
+              </div>
+              <div className="text-base font-bold tabular-nums text-right mt-1">
+                {calc.planned_generations}x
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
+                {formatCurrencyIdr(calc.base_cost_idr, language)}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[#ffb840]">
+                {t.reserveGenerations}
+              </div>
+              <div className="text-base font-bold tabular-nums text-[#ffb840] text-right mt-1">
+                +{calc.reserve_generations}x
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
+                {formatCurrencyIdr(calc.reserve_cost_idr, language)}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('setup')}
+            className="text-xs font-medium text-[#0099ff] hover:underline inline-flex items-center justify-end gap-1"
+          >
+            <span>
+              {isId
+                ? `Ubah Dana Cadangan (${calc.effective_reserve_percent}%)`
+                : `Adjust Reserve (${calc.effective_reserve_percent}%)`}
+            </span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        {/* Supporting Card 2: Rata-rata Biaya Hasil Akhir */}
+        <div
+          className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+              {isId ? 'Rata-rata Biaya Output' : 'Average Output Cost'}
+            </span>
+            <Film className="w-4 h-4 text-[#0099ff]" />
+          </div>
+
+          <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">
+                {isId ? 'Per 1 Video Jadi' : 'Per Final Video'}
+              </div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1">
+                {formatCurrencyIdr(calc.cost_per_video_idr, language)}
+              </div>
+              <div className="text-[11px] text-[#0099ff] tabular-nums text-right">
+                {formatCurrencyUsd(calc.cost_per_video_usd, language)}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">
+                {isId ? 'Per 1 Menit Video' : 'Per Video Minute'}
+              </div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1">
+                {formatCurrencyIdr(calc.cost_per_minute_idr, language)}
+              </div>
+              <div className="text-[11px] text-[#0099ff] tabular-nums text-right">
+                {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-[11px] text-[var(--vv-text-muted)] flex items-center justify-between">
+            <span>
+              {isId
+                ? `Target: ${project.assumptions.target_videos} video (${project.assumptions.final_duration_minutes} mnt)`
+                : `Target: ${project.assumptions.target_videos} videos (${project.assumptions.final_duration_minutes} min)`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveTab('setup')}
+              className="text-[#0099ff] font-medium hover:underline"
+            >
+              {isId ? 'Ubah Target' : 'Edit Target'}
+            </button>
+          </div>
+        </div>
+
+        {/* Supporting Card 3: Poin Credit & Kurs Rupiah Aktif */}
+        <div
+          className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+              {isId ? 'Credit AI & Nilai Kurs' : 'AI Credits & FX Rate'}
+            </span>
+            <Coins className="w-4 h-4 text-[#7acaff]" />
+          </div>
+
+          <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">
+                {t.totalCredit}
+              </div>
+              <div className="text-sm font-bold tabular-nums text-[#7acaff] text-right mt-1">
+                {calc.total_credit !== null
+                  ? `${calc.total_credit.toLocaleString()} cr`
+                  : t.unavailableLabel}
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)] text-right mt-0.5">
+                Higgsfield Points
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)]">
+                1 USD = IDR
+              </div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1">
+                {project.exchange_rate.rate
+                  ? formatCurrencyIdr(project.exchange_rate.rate, language)
+                  : t.unavailableLabel}
+              </div>
+              <div className="text-[10px] text-emerald-400 text-right mt-0.5 truncate">
+                {project.exchange_rate.source_name}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 text-xs">
+            <button
+              type="button"
+              onClick={refreshExchangeRateAuto}
+              disabled={isRefreshingFx}
+              className="inline-flex items-center gap-1 text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] transition"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isRefreshingFx ? 'animate-spin' : ''}`}
+              />
+              <span>{isId ? 'Segarkan Kurs' : 'Refresh FX'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('settings')}
+              className="text-[#0099ff] font-medium hover:underline"
+            >
+              {isId ? 'Atur Kurs & Katalog →' : 'FX & Catalog →'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* =====================================================================
+       * TIER 3: COMPACT CATEGORY CHIPS & FROSTED GLASS DETAIL TRIGGERS
+       * Avoids cramming full tables & warning lists onto the main screen
+       * ===================================================================== */}
+      <div className={`${cardClass} rounded-[16px] p-5`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--vv-border)]">
+          <div>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+              {isId
+                ? 'Distribusi Biaya per Jenis Pembuatan AI'
+                : 'Cost Distribution by AI Creation Type'}
+            </h2>
+            <p className="text-xs text-[var(--vv-text-subtle)] mt-0.5">
+              {isId
+                ? 'Ringkasan cepat 5 kategori AI. Klik tombol di kanan untuk melihat rincian tabel penuh dalam jendela popup.'
+                : 'Quick summary of the 5 AI categories. Click the buttons on the right to inspect full details in a popup window.'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setIsCategoryModalOpen(true)}
+              className="vv-btn-secondary px-3.5 py-2 text-xs"
+            >
+              <Eye className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>
+                {isId ? 'Tabel Rincian Kategori' : 'Category Breakdown Table'}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsStatusModalOpen(true)}
+              className="vv-btn-secondary px-3.5 py-2 text-xs"
+            >
+              {calc.warnings.length === 0 ? (
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5 text-[#ffb840]" />
+              )}
+              <span>
+                {isId
+                  ? `Status Data (${calc.warnings.length === 0 ? 'Aman' : `${calc.warnings.length} Catatan`})`
+                  : `Data Status (${calc.warnings.length === 0 ? 'Ready' : `${calc.warnings.length} Notes`})`}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Clean 5-Category Horizontal Bento Pills */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+          {ALL_CATEGORIES.map((cat) => {
+            const sum = calc.category_summaries[cat];
+            const isActiveCat = sum.item_count > 0;
+            return (
+              <div
+                key={cat}
+                className={`p-3.5 rounded-[12px] border transition ${
+                  isActiveCat
+                    ? 'bg-[var(--vv-tint-weak)] border-[var(--vv-border-strong)]'
+                    : 'bg-transparent border-[var(--vv-border)] opacity-60'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-1 text-[11px] font-semibold truncate">
+                  <span className="truncate">
+                    {SHORT_CATEGORY_LABELS[cat][language]}
+                  </span>
+                  <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-[var(--vv-tint)] text-[var(--vv-text-muted)]">
+                    {sum.item_count}
+                  </span>
+                </div>
+                <div className="mt-2.5 text-right">
+                  <div className="text-sm font-bold tabular-nums text-[#0099ff]">
+                    {formatCurrencyIdr(sum.total_cost_idr, language)}
+                  </div>
+                  <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums">
+                    {formatCurrencyUsd(sum.total_cost_usd, language)} &bull;{' '}
+                    {sum.budgeted_generations}x
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Guided Step Flow Footer */}
+      <StepFlowBar
+        currentStepNumber={1}
+        stepTitle={t.navDashboard}
+        nextStepHint={
+          isId
+            ? 'Langkah selanjutnya: Periksa nama proyek, target jumlah video jadi, dan persentase dana cadangan.'
+            : 'Next step: Configure your project name, target video output, and reserve percentage.'
+        }
+        nextTab="setup"
+        nextLabel={
+          isId
+            ? 'Lanjut ke Langkah 2: Pengaturan Proyek'
+            : 'Continue to Step 2: Project Setup'
+        }
+      />
+
+      {/* =====================================================================
+       * FROSTED GLASS MODAL 1: Buka / Ganti Proyek & Contoh Simulasi
+       * ===================================================================== */}
+      <FrostedModal
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        theme={theme}
+        maxWidth="2xl"
+        badgeLabel={isId ? 'Manajemen File Proyek' : 'Project File Manager'}
+        title={
+          isId ? (
+            <>
+              Buat Baru, Buka File, atau{' '}
+              <span className="vv-accent text-[#0099ff]">Muat Contoh Proyek</span>
+            </>
+          ) : (
+            <>
+              Create New, Open File, or{' '}
+              <span className="vv-accent text-[#0099ff]">Load Sample Project</span>
+            </>
+          )
+        }
+        subtitle={
+          isId
+            ? 'Pilih cara memulai perhitungan anggaran Anda. Anda juga dapat langsung mencoba proyek contoh yang sudah terisi lengkap.'
+            : 'Choose how to start your budget calculation, or load a pre-filled sample project with one click.'
+        }
+      >
+        <div className="space-y-5 text-xs">
+          {/* Row 1: New & Open from Computer */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <button
+              type="button"
+              onClick={() => {
+                createNewBlankProject();
+                setIsProjectModalOpen(false);
+              }}
+              className="vv-card-quiet p-4 text-left hover:border-[#0099ff] transition flex items-start gap-3"
+            >
+              <FilePlus2 className="w-5 h-5 text-[#0099ff] shrink-0 mt-0.5" />
+              <div>
+                <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+                  {t.btnNewProject}
+                </div>
+                <p className="text-[var(--vv-text-muted)] mt-1 leading-relaxed">
+                  {isId
+                    ? 'Mulai proyek kosong baru dari awal dengan 1 adegan pembuka.'
+                    : 'Start a fresh blank project with 1 opening scene.'}
+                </p>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (window.api) {
+                  openProjectFile();
+                  setIsProjectModalOpen(false);
+                } else {
+                  fileInputRef.current?.click();
+                }
+              }}
+              className="vv-card-quiet p-4 text-left hover:border-[#ffb840] transition flex items-start gap-3"
+            >
+              <FolderOpen className="w-5 h-5 text-[#ffb840] shrink-0 mt-0.5" />
+              <div>
+                <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
+                  {t.btnOpenProject}
+                </div>
+                <p className="text-[var(--vv-text-muted)] mt-1 leading-relaxed">
+                  {isId
+                    ? 'Buka file proyek (.aivbudget) yang pernah Anda simpan di komputer.'
+                    : 'Open a previously saved project file (.aivbudget) from your computer.'}
+                </p>
+              </div>
+            </button>
+          </div>
+
+          {/* Row 2: One-Click Pre-built Samples */}
+          <div className="vv-card-quiet p-4 space-y-3">
+            <div className="font-semibold uppercase tracking-wider text-[11px] text-[var(--vv-text-muted)]">
+              {isId
+                ? 'Contoh Proyek Siap Pakai (Tanpa Perlu Mengetik dari Awal)'
+                : 'Ready-to-Use Sample Projects (No Typing Needed)'}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  loadCommercialSample();
+                  setIsProjectModalOpen(false);
+                }}
+                className="vv-btn-secondary py-2.5 px-3.5 text-xs justify-start"
+              >
+                <Sparkles className="w-4 h-4 text-[#0099ff] shrink-0" />
+                <span className="truncate">{t.btnLoadCommercialDemo}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  loadPrdSyntheticTest();
+                  setIsProjectModalOpen(false);
+                }}
+                className="vv-btn-secondary py-2.5 px-3.5 text-xs justify-start"
+              >
+                <FlaskConical className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="truncate">{t.btnLoadPrdTest}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Row 3: Recent Saved Projects */}
+          <div className="space-y-2">
+            <div className="font-semibold uppercase tracking-wider text-[11px] text-[var(--vv-text-muted)]">
+              {isId
+                ? 'Proyek yang Terakhir Disimpan di Komputer Ini'
+                : 'Recently Saved Projects on This Computer'}
+            </div>
+            {recentProjects.length === 0 ? (
+              <div className="p-4 text-center border border-dashed border-[var(--vv-border-strong)] rounded-[12px] text-[var(--vv-text-muted)]">
+                {isId
+                  ? 'Belum ada riwayat proyek yang disimpan. Lokasi saat ini: '
+                  : 'No saved project history yet. Current file: '}
+                <span className="font-mono">
+                  {currentFilePath || (isId ? 'Belum disimpan' : 'Unsaved')}
+                </span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {recentProjects.map((rec) => (
+                  <button
+                    key={rec.file_path}
+                    type="button"
+                    onClick={() => {
+                      openProjectFile(rec.file_path);
+                      setIsProjectModalOpen(false);
+                    }}
+                    className="w-full text-left p-3 rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs font-semibold truncate">
+                        {rec.project_name}
+                      </div>
+                      <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
+                        {rec.file_path}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-xs font-bold tabular-nums text-[#0099ff]">
+                        {formatCurrencyUsd(rec.total_cost_usd, language)}
+                      </div>
+                      <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                        {rec.updated_at.slice(0, 10)}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </FrostedModal>
+
+      {/* =====================================================================
+       * FROSTED GLASS MODAL 2: Tabel Lengkap Rincian 5 Kategori AI
+       * ===================================================================== */}
+      <FrostedModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        theme={theme}
+        maxWidth="2xl"
+        badgeLabel={isId ? 'Rincian Kategori AI' : 'Category Breakdown'}
+        title={
+          isId ? (
+            <>
+              Tabel Biaya per{' '}
+              <span className="vv-accent text-[#0099ff]">Jenis Pembuatan AI</span>
+            </>
+          ) : (
+            <>
+              Cost Table by{' '}
+              <span className="vv-accent text-[#0099ff]">AI Creation Type</span>
+            </>
+          )
+        }
+        footer={
+          <>
+            <button
+              type="button"
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="vv-btn-secondary px-4 py-2 text-xs"
+            >
+              {isId ? 'Tutup' : 'Close'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsCategoryModalOpen(false);
+                setActiveTab('planner');
+              }}
+              className="vv-btn-accent px-4 py-2 text-xs"
+            >
+              <span>
+                {isId ? 'Atur Daftar Pekerjaan AI' : 'Edit Production List'}
+              </span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </>
+        }
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-[var(--vv-border)] text-[var(--vv-text-muted)]">
+                <th className="py-2.5 text-left font-medium">
+                  {isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}
+                </th>
+                <th className="py-2.5 text-right font-medium">
+                  {isId ? 'Jumlah Tahap' : 'Stages'}
+                </th>
+                <th className="py-2.5 text-right font-medium">
+                  {isId ? 'Total Kali Buat' : 'Total Tries'}
+                </th>
+                <th className="py-2.5 text-right font-medium">Subtotal (USD)</th>
+                <th className="py-2.5 text-right font-medium">
+                  {isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--vv-border)]">
+              {ALL_CATEGORIES.map((cat) => {
+                const sum = calc.category_summaries[cat];
+                return (
+                  <tr
+                    key={cat}
+                    className="hover:bg-[var(--vv-tint-weak)] transition-colors"
+                  >
+                    <td className="py-3 font-medium">
+                      {CATEGORY_LABELS[cat][language]}
+                      {sum.has_incomplete_items && (
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/25">
+                          {isId ? 'Belum Diisi' : 'Incomplete'}
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
+                      {sum.item_count}
+                    </td>
+                    <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
+                      {sum.budgeted_generations}
+                    </td>
+                    <td className="py-3 text-right font-semibold tabular-nums">
+                      {formatCurrencyUsd(sum.total_cost_usd, language)}
+                    </td>
+                    <td className="py-3 text-right text-[#0099ff] font-semibold tabular-nums">
+                      {formatCurrencyIdr(sum.total_cost_idr, language)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </FrostedModal>
+
+      {/* =====================================================================
+       * FROSTED GLASS MODAL 3: Status Kelengkapan Data & Info Penting
+       * ===================================================================== */}
+      <FrostedModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        theme={theme}
+        maxWidth="lg"
+        badgeLabel={isId ? 'Pemeriksaan Data' : 'Data Health Check'}
+        title={
+          isId ? (
+            <>
+              Status Kelengkapan Data &{' '}
+              <span className="vv-accent text-[#0099ff]">Catatan Penting</span>
+            </>
+          ) : (
+            <>
+              Data Completeness &{' '}
+              <span className="vv-accent text-[#0099ff]">Important Notes</span>
+            </>
+          )
+        }
+      >
+        <div className="space-y-4 text-xs">
+          <div className="vv-card-quiet p-4 flex items-center justify-between">
+            <span className="text-[var(--vv-text-muted)]">
+              {isId ? 'Status Kurs Dolar ke Rupiah:' : 'USD to IDR Rate Status:'}
+            </span>
+            <StatusBadge
+              status={project.exchange_rate.status}
+              language={language}
+            />
+          </div>
+
           {calc.warnings.length === 0 ? (
-            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-[10px] p-3.5">
+            <div className="flex items-center gap-2.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-[12px] p-4">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 {isId
-                  ? 'Semua harga model AI dan kurs Rupiah sudah lengkap dan siap digunakan.'
-                  : 'All AI model prices and exchange rates are complete and ready.'}
+                  ? 'Semua harga model AI dan kurs Rupiah sudah lengkap dan siap digunakan untuk laporan PDF.'
+                  : 'All AI model prices and exchange rates are complete and ready for PDF export.'}
               </span>
             </div>
           ) : (
-            <ul className="space-y-2 text-xs">
+            <ul className="space-y-2.5">
               {calc.warnings.map((w, i) => (
                 <li
                   key={`${w.code}_${i}`}
-                  className={`p-3 rounded-[10px] border flex items-start gap-2 ${
+                  className={`p-3.5 rounded-[12px] border flex items-start gap-2.5 ${
                     w.severity === 'error'
                       ? 'bg-rose-500/10 border-rose-400/30 text-rose-300'
                       : w.severity === 'warning'
@@ -514,49 +876,7 @@ export const DashboardView: React.FC = () => {
             </ul>
           )}
         </div>
-
-        <div className={`${cardClass} rounded-[14px] p-6`}>
-          <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-3">
-            {isId
-              ? 'Proyek yang Terakhir Disimpan / Dibuka'
-              : 'Recently Saved / Opened Projects'}
-          </h3>
-          {recentProjects.length === 0 ? (
-            <div className="text-xs text-[var(--vv-text-muted)] p-5 text-center border border-dashed border-[var(--vv-border-strong)] rounded-[10px]">
-              {isId
-                ? 'Belum ada proyek yang pernah Anda simpan di komputer ini.'
-                : 'No projects saved on this computer yet.'}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {recentProjects.map((rec) => (
-                <button
-                  key={rec.file_path}
-                  onClick={() => openProjectFile(rec.file_path)}
-                  className="w-full text-left p-3 rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold truncate">
-                      {rec.project_name}
-                    </div>
-                    <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
-                      {rec.file_path}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-xs font-bold tabular-nums text-[#0099ff]">
-                      {formatCurrencyUsd(rec.total_cost_usd, language)}
-                    </div>
-                    <div className="text-[10px] text-[var(--vv-text-subtle)]">
-                      {rec.updated_at.slice(0, 10)}
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      </FrostedModal>
     </div>
   );
 };
