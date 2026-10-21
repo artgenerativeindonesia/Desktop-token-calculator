@@ -62,14 +62,14 @@ export const ProductionPlannerView: React.FC = () => {
               <Layers className="w-5 h-5 text-sky-400" />
               <span>
                 {isId
-                  ? 'Perencana Produksi AI (Production Planner)'
-                  : 'AI Production Planner'}
+                  ? 'Daftar Pekerjaan & Tahap Pembuatan AI'
+                  : 'AI Production Stages & Planner'}
               </span>
             </h1>
             <p className="text-xs opacity-75 mt-1">
               {isId
-                ? 'Pilih kategori proses, model Higgsfield, parameter dinamis, jumlah shot/aset, serta asumsi percobaan. Tarif dan credit dapat disesuaikan langsung jika diperlukan.'
-                : 'Select process category, Higgsfield model, dynamic parameters, shot/asset count, and attempt assumptions. Rates and credits can also be customized inline.'}
+                ? 'Tambahkan setiap adegan video atau gambar yang ingin dibuat. Pilih jenis pembuatan, model AI Higgsfield, kualitas, jumlah adegan, serta perkiraan berapa kali coba.'
+                : 'Add each video scene or image asset you want to create. Choose the creation type, Higgsfield AI model, quality settings, quantity, and expected tries.'}
             </p>
           </div>
 
@@ -194,7 +194,7 @@ export const ProductionPlannerView: React.FC = () => {
                   {/* 1. Kategori Proses AI */}
                   <div>
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
-                      {isId ? 'Kategori Proses AI' : 'AI Process Category'}
+                      {isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}
                     </label>
                     <select
                       value={item.category}
@@ -218,8 +218,8 @@ export const ProductionPlannerView: React.FC = () => {
                   <div className="lg:col-span-2">
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
                       {isId
-                        ? 'Model Higgsfield (Dipilih Manual - FR-02)'
-                        : 'Higgsfield Model (Manual Selection - FR-02)'}
+                        ? 'Pilih Model AI Higgsfield'
+                        : 'Select Higgsfield AI Model'}
                     </label>
                     <select
                       value={item.model_selection.model_id}
@@ -243,12 +243,12 @@ export const ProductionPlannerView: React.FC = () => {
                     )}
                   </div>
 
-                  {/* 3. Parameter Dinamis Sesuai Model (PRD Bab 6.1) */}
+                  {/* 3. Pengaturan Kualitas & Format Sesuai Model */}
                   <div>
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
                       {isId
-                        ? 'Parameter Model Dinamis'
-                        : 'Dynamic Model Parameters'}
+                        ? 'Pengaturan Kualitas & Format'
+                        : 'Quality & Format Settings'}
                     </label>
                     <div className="space-y-1.5">
                       {selectedModel?.parameters.map((param) => {
@@ -307,10 +307,10 @@ export const ProductionPlannerView: React.FC = () => {
 
                 {/* Grid Kuantitas, Percobaan, Durasi, Tarif Manual, & Subtotal */}
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-4 pt-4 border-t border-white/10 items-end">
-                  {/* Kuantitas S_i (PRD Bab 8.2: Eksplisit jenis kuantitas) */}
+                  {/* Kuantitas */}
                   <div>
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
-                      {QUANTITY_TYPE_LABELS[item.quantity_type][language]} (S<sub>i</sub>)
+                      {QUANTITY_TYPE_LABELS[item.quantity_type][language]}
                     </label>
                     <input
                       type="number"
@@ -336,10 +336,10 @@ export const ProductionPlannerView: React.FC = () => {
                       )}
                   </div>
 
-                  {/* Percobaan per Shot/Aset A_i */}
+                  {/* Percobaan per Adegan/Aset */}
                   <div>
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
-                      {isId ? 'Percobaan / Shot (Ai)' : 'Attempts / Shot (Ai)'}
+                      {isId ? 'Berapa Kali Coba / Adegan' : 'Tries per Scene/Asset'}
                     </label>
                     <input
                       type="number"
@@ -357,19 +357,20 @@ export const ProductionPlannerView: React.FC = () => {
                       className={`${inputClass} w-full px-3 py-1.5 rounded-xl text-xs font-bold tabular-nums text-right`}
                     />
                     <span className="block text-[10px] opacity-65 mt-0.5 text-right">
-                      Gplanned: {calcRow?.planned_generations} (+
-                      {calcRow?.reserve_generations} cadangan)
+                      {isId
+                        ? `Awal: ${calcRow?.planned_generations}x (+${calcRow?.reserve_generations}x cadangan)`
+                        : `Initial: ${calcRow?.planned_generations}x (+${calcRow?.reserve_generations}x reserve)`}
                     </span>
                   </div>
 
-                  {/* Durasi Klip (Hanya muncul jika model mendukung durasi - PRD Bab 6.1) */}
+                  {/* Durasi Klip */}
                   {selectedModel?.supports_duration ||
                   item.pricing.pricing_unit === 'per_second' ? (
                     <div>
                       <label className="block text-[11px] font-semibold opacity-75 mb-1">
                         {isId
-                          ? 'Durasi Klip (Detik)'
-                          : 'Clip Duration (Seconds)'}
+                          ? 'Durasi per Adegan (Detik)'
+                          : 'Scene Duration (Seconds)'}
                       </label>
                       <input
                         type="number"
@@ -394,7 +395,7 @@ export const ProductionPlannerView: React.FC = () => {
                   ) : (
                     <div>
                       <label className="block text-[11px] font-semibold opacity-50 mb-1">
-                        {isId ? 'Satuan Tarif' : 'Pricing Unit'}
+                        {isId ? 'Cara Hitung Harga' : 'Pricing Basis'}
                       </label>
                       <div className="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs opacity-75 text-right">
                         {PRICING_UNIT_LABELS[item.pricing.pricing_unit][language]}
@@ -402,16 +403,16 @@ export const ProductionPlannerView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Tarif USD per Unit (Dapat diedit manual jika diinginkan) */}
+                  {/* Harga Satuan USD */}
                   <div>
                     <label className="block text-[11px] font-semibold opacity-75 mb-1">
-                      {isId ? 'Tarif Unit (USD)' : 'Unit Rate (USD)'}
+                      {isId ? 'Harga Satuan (USD)' : 'Unit Price (USD)'}
                     </label>
                     <input
                       type="number"
                       min={0}
                       step={0.001}
-                      placeholder={isId ? 'Isi tarif USD' : 'Enter USD rate'}
+                      placeholder={isId ? 'Isi harga USD' : 'Enter USD price'}
                       value={
                         item.pricing.price_value !== null
                           ? item.pricing.price_value

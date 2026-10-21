@@ -39,14 +39,14 @@ export const ProjectSetupView: React.FC = () => {
           <Sliders className="w-5 h-5 text-sky-400" />
           <span>
             {isId
-              ? 'Pengaturan Proyek, Mode Estimasi, & Cadangan Regenerasi'
-              : 'Project Setup, Estimation Mode, & Regeneration Reserve'}
+              ? 'Pengaturan Proyek & Dana Cadangan'
+              : 'Project Settings & Reserve Budget'}
           </span>
         </h1>
         <p className="text-xs opacity-75 mt-1">
           {isId
-            ? 'Atur nama proyek, pilih metode estimasi (Target Video Final atau Detail Per-Shot), dan sesuaikan cadangan regenerasi 2 arah.'
-            : 'Configure project identity, select estimation method (Target Final Video or Per-Shot Detail), and adjust bidirectional regeneration reserve.'}
+            ? 'Atur nama proyek, pilih cara menghitung kebutuhan produksi, dan siapkan cadangan jika ada hasil AI yang perlu dibuat ulang.'
+            : 'Set your project name, choose how to calculate your production needs, and set a reserve for re-generating AI outputs.'}
         </p>
       </div>
 
@@ -57,15 +57,15 @@ export const ProjectSetupView: React.FC = () => {
             <Film className="w-4 h-4 text-sky-400" />
             <span>
               {isId
-                ? '1. Identitas & Target Output Proyek'
-                : '1. Project Identity & Output Targets'}
+                ? '1. Nama Proyek & Target Hasil Akhir'
+                : '1. Project Name & Target Output'}
             </span>
           </h2>
 
-          {/* Nama Proyek (FR-01) */}
+          {/* Nama Proyek */}
           <div>
             <label className="block text-xs font-semibold mb-1.5">
-              {isId ? 'Nama Proyek (Wajib diisi - FR-01)' : 'Project Name (Required - FR-01)'}
+              {isId ? 'Nama Proyek (Wajib diisi)' : 'Project Name (Required)'}
             </label>
             <input
               type="text"
@@ -73,7 +73,7 @@ export const ProjectSetupView: React.FC = () => {
               onChange={(e) => setProjectName(e.target.value)}
               placeholder={
                 isId
-                  ? 'Contoh: Kampanye Video AI Produk Baru'
+                  ? 'Contoh: Iklan Video AI Produk Kopi'
                   : 'e.g., New Product AI Video Campaign'
               }
               className={`${inputClass} w-full px-3.5 py-2.5 rounded-xl text-sm font-medium`}
@@ -81,18 +81,18 @@ export const ProjectSetupView: React.FC = () => {
             {!project.project_name.trim() && (
               <p className="text-xs text-rose-400 mt-1">
                 {isId
-                  ? 'Nama proyek tidak boleh kosong sebelum disimpan atau diekspor.'
+                  ? 'Nama proyek wajib diisi sebelum menyimpan atau membuat laporan PDF.'
                   : 'Project name cannot be empty before saving or exporting.'}
               </p>
             )}
           </div>
 
-          {/* Apple Segmented Pill Control: Mode Estimasi (FR-03 & FR-04) */}
+          {/* Apple Segmented Pill Control: Mode Estimasi */}
           <div>
             <label className="block text-xs font-semibold mb-1.5">
               {isId
-                ? 'Metode Estimasi (PRD Bab 1.1 & Bab 8.8)'
-                : 'Estimation Method (PRD Sec 1.1 & Sec 8.8)'}
+                ? 'Cara Menghitung Kebutuhan Proyek'
+                : 'How to Calculate Project Needs'}
             </label>
             <div className="grid grid-cols-2 p-1 rounded-xl bg-black/20 border border-white/10">
               <button
@@ -105,7 +105,7 @@ export const ProjectSetupView: React.FC = () => {
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                {isId ? 'Mode Detail Per-Shot' : 'Per-Shot Detail Mode'}
+                {isId ? 'Rincian per Adegan' : 'Scene-by-Scene Detail'}
               </button>
               <button
                 type="button"
@@ -117,27 +117,27 @@ export const ProjectSetupView: React.FC = () => {
                 }`}
               >
                 <Target className="w-3.5 h-3.5" />
-                {isId ? 'Mode Target Video Final' : 'Target Final Video Mode'}
+                {isId ? 'Dari Jumlah Video Jadi' : 'By Total Final Videos'}
               </button>
             </div>
             <p className="text-[11px] opacity-70 mt-2">
               {assumptions.estimation_mode === 'target_final'
                 ? isId
-                  ? 'Mode Target Video Final (US-03): Kuantitas shot per tahap dikalikan otomatis dengan Jumlah Video Final (V).'
-                  : 'Target Final Video Mode (US-03): Stage shot quantities are multiplied by Target Final Videos (V).'
+                  ? 'Cocok jika Anda ingin membuat beberapa video dengan pola serupa. Jumlah adegan di daftar pekerjaan akan dikalikan otomatis dengan target jumlah video jadi.'
+                  : 'Ideal when producing multiple videos with a similar structure. Scene counts in the planner are automatically multiplied by your target final videos.'
                 : isId
-                ? 'Mode Detail Per-Shot (US-04): Setiap baris pekerjaan dihitung sesuai jumlah shot/aset spesifik yang Anda masukkan.'
-                : 'Per-Shot Detail Mode (US-04): Each production row is calculated directly from its specific shot/asset count.'}
+                ? 'Cocok jika Anda ingin mencatat setiap adegan video atau gambar satu per satu sesuai kebutuhan spesifik.'
+                : 'Ideal when you want to list each specific scene or image asset individually.'}
             </p>
           </div>
 
-          {/* Target Videos (V) & Final Duration (M) */}
+          {/* Target Videos & Final Duration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold mb-1.5">
                 {isId
-                  ? 'Jumlah Video Final (V)'
-                  : 'Target Final Videos (V)'}
+                  ? 'Target Jumlah Video Jadi'
+                  : 'Target Final Videos'}
               </label>
               <input
                 type="number"
@@ -149,16 +149,16 @@ export const ProjectSetupView: React.FC = () => {
               />
               <span className="text-[11px] opacity-65">
                 {isId
-                  ? 'Digunakan untuk menghitung Biaya per Video Final (Btotal / V).'
-                  : 'Used to compute Cost per Final Video (Btotal / V).'}
+                  ? 'Untuk melihat rata-rata biaya pembuatan per 1 video jadi.'
+                  : 'Used to see the average cost per final video.'}
               </span>
             </div>
 
             <div>
               <label className="block text-xs font-semibold mb-1.5">
                 {isId
-                  ? 'Total Durasi Video Final dalam Menit (M)'
-                  : 'Total Final Duration in Minutes (M)'}
+                  ? 'Total Durasi Video Jadi (Menit)'
+                  : 'Total Final Duration (Minutes)'}
               </label>
               <input
                 type="number"
@@ -170,8 +170,8 @@ export const ProjectSetupView: React.FC = () => {
               />
               <span className="text-[11px] opacity-65">
                 {isId
-                  ? 'Digunakan untuk menghitung Biaya per Menit Final (Btotal / M).'
-                  : 'Used to compute Cost per Final Minute (Btotal / M).'}
+                  ? 'Untuk melihat rata-rata biaya pembuatan per 1 menit video.'
+                  : 'Used to see the average cost per minute of final video.'}
               </span>
             </div>
           </div>
@@ -181,8 +181,8 @@ export const ProjectSetupView: React.FC = () => {
             <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-400/30">
               <label className="block text-xs font-semibold text-sky-300 mb-1.5">
                 {isId
-                  ? 'Asumsi Rata-rata Shot per Video Final (PRD Bab 8.8)'
-                  : 'Assumed Average Shots per Final Video (PRD Sec 8.8)'}
+                  ? 'Rata-rata Jumlah Adegan di Setiap Video'
+                  : 'Average Scenes (Shots) per Final Video'}
               </label>
               <input
                 type="number"
@@ -196,32 +196,32 @@ export const ProjectSetupView: React.FC = () => {
               />
               <p className="text-[11px] opacity-80 mt-1.5">
                 {isId
-                  ? 'Sesuai PRD Bab 8.8, aplikasi tidak menebak keberhasilan AI secara diam-diam. Nilai ini menjadi default saat menambah baris pekerjaan baru.'
-                  : 'Per PRD Sec 8.8, the app never guesses AI success rates silently. This value serves as the default when adding new stages.'}
+                  ? 'Angka ini otomatis menjadi jumlah adegan awal saat Anda menambahkan tahap pekerjaan baru.'
+                  : 'This value serves as the default scene count when adding new production stages.'}
               </p>
             </div>
           )}
         </div>
 
-        {/* Bagian 2: Sinkronisasi 2 Arah Cadangan Regenerasi (R <-> Greserve) */}
+        {/* Bagian 2: Sinkronisasi 2 Arah Cadangan */}
         <div className={`${cardClass} rounded-2xl p-6 space-y-5`}>
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-bold uppercase tracking-wider opacity-80 flex items-center gap-2">
               <ArrowLeftRight className="w-4 h-4 text-amber-400" />
               <span>
                 {isId
-                  ? '2. Cadangan Regenerasi 2 Arah (R ↔ Greserve)'
-                  : '2. Bidirectional Regeneration Reserve (R ↔ Greserve)'}
+                  ? '2. Cadangan Buat Ulang (Otomatis Saling Menyesuaikan)'
+                  : '2. Redo / Regeneration Reserve (Auto-Synced)'}
               </span>
             </h2>
             <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
               {assumptions.reserve_input_mode === 'percent'
                 ? isId
-                  ? 'Input: Persentase (%)'
-                  : 'Mode: Percentage (%)'
+                  ? 'Diatur dari: Persentase (%)'
+                  : 'Set by: Percentage (%)'
                 : isId
-                ? 'Input: Jumlah Generasi'
-                : 'Mode: Generation Count'}
+                ? 'Diatur dari: Jumlah Cadangan'
+                : 'Set by: Reserve Count'}
             </span>
           </div>
 
@@ -229,14 +229,14 @@ export const ProjectSetupView: React.FC = () => {
             <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
             <span>
               {isId
-                ? 'Ketik angka Persentase (%) maka Jumlah Generasi Cadangan akan dihitung otomatis dengan pembulatan ke atas (ceil). Sebaliknya, ketik langsung Jumlah Generasi Cadangan maka Persentase (%) akan menyesuaikan otomatis!'
-                : 'Type a Reserve Percentage (%) to automatically compute Reserve Generations (ceil). Or type Reserve Generations directly and the Percentage (%) updates automatically!'}
+                ? 'Mengapa perlu cadangan? Hasil buatan AI terkadang perlu diulang beberapa kali sampai hasilnya pas. Anda bebas mengisi Persentase (%) atau langsung mengisi Jumlah Cadangan—keduanya otomatis saling menyesuaikan!'
+                : 'Why set a reserve? AI outputs sometimes need extra tries to get right. Type a Percentage (%) or type the Extra Reserve count directly—both adjust automatically!'}
             </span>
           </div>
 
-          {/* Dua Kotak Input yang Saling Terhubung (Bidirectional) */}
+          {/* Dua Kotak Input yang Saling Terhubung */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-            {/* Kotak A: Persentase Cadangan (R) */}
+            {/* Kotak A: Persentase Cadangan */}
             <div
               className={`p-4 rounded-xl border transition ${
                 assumptions.reserve_input_mode === 'percent'
@@ -246,8 +246,8 @@ export const ProjectSetupView: React.FC = () => {
             >
               <label className="block text-xs font-bold mb-1.5">
                 {isId
-                  ? 'Persentase Cadangan (R %)'
-                  : 'Reserve Percentage (R %)'}
+                  ? 'Persentase Cadangan (%)'
+                  : 'Reserve Percentage (%)'}
               </label>
               <div className="relative">
                 <input
@@ -273,7 +273,7 @@ export const ProjectSetupView: React.FC = () => {
               />
             </div>
 
-            {/* Kotak B: Jumlah Generasi Cadangan (Greserve) */}
+            {/* Kotak B: Jumlah Cadangan Buat Ulang */}
             <div
               className={`p-4 rounded-xl border transition ${
                 assumptions.reserve_input_mode === 'count'
@@ -283,8 +283,8 @@ export const ProjectSetupView: React.FC = () => {
             >
               <label className="block text-xs font-bold mb-1.5">
                 {isId
-                  ? 'Jumlah Generasi Cadangan (Greserve)'
-                  : 'Reserve Generations Count (Greserve)'}
+                  ? 'Jumlah Cadangan Buat Ulang'
+                  : 'Extra Reserve Tries'}
               </label>
               <input
                 type="number"
@@ -296,8 +296,8 @@ export const ProjectSetupView: React.FC = () => {
               />
               <div className="text-[11px] opacity-75 mt-3 text-right">
                 {isId
-                  ? `Rumus: Gbudget = ${calculation.planned_generations} dasar + ${calculation.reserve_generations} cadangan = ${calculation.budgeted_generations}`
-                  : `Formula: Gbudget = ${calculation.planned_generations} base + ${calculation.reserve_generations} reserve = ${calculation.budgeted_generations}`}
+                  ? `Total: ${calculation.planned_generations} rencana awal + ${calculation.reserve_generations} cadangan = ${calculation.budgeted_generations} kali buat`
+                  : `Total: ${calculation.planned_generations} initial + ${calculation.reserve_generations} reserve = ${calculation.budgeted_generations} total tries`}
               </div>
             </div>
           </div>
@@ -307,21 +307,21 @@ export const ProjectSetupView: React.FC = () => {
             <div className="flex justify-between">
               <span className="opacity-75">
                 {isId
-                  ? 'Generasi Dasar Direncanakan (Gplanned):'
-                  : 'Planned Base Generations (Gplanned):'}
+                  ? 'Rencana Pembuatan Awal:'
+                  : 'Initial Planned Tries:'}
               </span>
               <span className="font-bold tabular-nums">
-                {calculation.planned_generations}
+                {calculation.planned_generations} {isId ? 'kali buat' : 'tries'}
               </span>
             </div>
             <div className="flex justify-between text-amber-400">
               <span>
                 {isId
-                  ? `Tambahan Generasi Cadangan (${calculation.effective_reserve_percent}%):`
-                  : `Additional Reserve Generations (${calculation.effective_reserve_percent}%):`}
+                  ? `Tambahan Cadangan Buat Ulang (${calculation.effective_reserve_percent}%):`
+                  : `Extra Reserve Tries (${calculation.effective_reserve_percent}%):`}
               </span>
               <span className="font-bold tabular-nums">
-                +{calculation.reserve_generations} (
+                +{calculation.reserve_generations} {isId ? 'kali' : 'tries'} (
                 {formatCurrencyUsd(calculation.reserve_cost_usd, language)} /{' '}
                 {formatCurrencyIdr(calculation.reserve_cost_idr, language)})
               </span>
@@ -329,12 +329,12 @@ export const ProjectSetupView: React.FC = () => {
             <div className="pt-2 border-t border-white/10 flex justify-between text-sm font-bold">
               <span>
                 {isId
-                  ? 'Total Dianggarkan (Gbudget & Btotal):'
-                  : 'Total Budgeted (Gbudget & Btotal):'}
+                  ? 'Total Dianggarkan (Termasuk Cadangan):'
+                  : 'Total Budgeted (Including Reserve):'}
               </span>
               <span className="tabular-nums text-sky-400">
                 {calculation.budgeted_generations}{' '}
-                {isId ? 'generasi' : 'gens'} •{' '}
+                {isId ? 'kali buat' : 'tries'} •{' '}
                 {formatCurrencyUsd(calculation.total_cost_usd, language)}
               </span>
             </div>
@@ -347,8 +347,8 @@ export const ProjectSetupView: React.FC = () => {
               className="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/25 transition"
             >
               {isId
-                ? 'Lanjut ke Tabel Perencana Produksi →'
-                : 'Continue to Production Planner →'}
+                ? 'Lanjut ke Daftar Pekerjaan AI →'
+                : 'Continue to AI Production List →'}
             </button>
           </div>
         </div>

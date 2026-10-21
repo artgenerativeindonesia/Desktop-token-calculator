@@ -88,7 +88,7 @@ export const DashboardView: React.FC = () => {
           <div>
             <div className="flex items-center gap-2.5 mb-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-400/30">
-                PRD v1.0 • Higgsfield AI Catalog
+                {isId ? 'Katalog Resmi Higgsfield AI' : 'Official Higgsfield AI Catalog'}
               </span>
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -105,10 +105,10 @@ export const DashboardView: React.FC = () => {
             </h1>
             <p className="text-xs opacity-70 mt-1">
               {currentFilePath
-                ? `${isId ? 'Lokasi File' : 'File Path'}: ${currentFilePath}`
+                ? `${isId ? 'Tersimpan di' : 'Saved at'}: ${currentFilePath}`
                 : isId
-                ? 'Proyek lokal mandiri (.aivbudget) — belum disimpan ke file disk'
-                : 'Standalone local project (.aivbudget) — not yet saved to disk'}
+                ? 'Proyek belum disimpan ke komputer Anda'
+                : 'Project has not been saved to your computer yet'}
             </p>
           </div>
 
@@ -160,8 +160,8 @@ export const DashboardView: React.FC = () => {
             <FlaskConical className="w-4 h-4 text-emerald-400 shrink-0" />
             <span>
               {isId
-                ? 'Pintasan Testing Cepat (Tanpa Ketik Manual):'
-                : 'Quick Testing Presets (Zero Manual Typing):'}
+                ? 'Ingin langsung melihat contoh hitungan tanpa mengetik dari awal?'
+                : 'Want to see a working sample budget right away without typing?'}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -299,14 +299,14 @@ export const DashboardView: React.FC = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold uppercase tracking-wider opacity-80">
               {isId
-                ? 'Ringkasan Biaya per Kategori Proses AI (PRD Bab 6 & 11.2)'
-                : 'Cost Breakdown by AI Process Category (PRD Sec 6 & 11.2)'}
+                ? 'Ringkasan Biaya Berdasarkan Jenis Pembuatan AI'
+                : 'Cost Breakdown by AI Creation Type'}
             </h2>
             <button
               onClick={() => setActiveTab('planner')}
               className="inline-flex items-center gap-1 text-xs font-semibold text-sky-400 hover:text-sky-300"
             >
-              {isId ? 'Buka Tabel Produksi' : 'Open Production Planner'}
+              {isId ? 'Atur Daftar Pekerjaan' : 'Edit Production List'}
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -314,11 +314,11 @@ export const DashboardView: React.FC = () => {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/10 opacity-70">
-                  <th className="py-2 text-left">{isId ? 'Kategori Proses AI' : 'AI Process Category'}</th>
-                  <th className="py-2 text-right">{isId ? 'Item' : 'Items'}</th>
-                  <th className="py-2 text-right">{isId ? 'Generasi (Gbudget)' : 'Generations'}</th>
+                  <th className="py-2 text-left">{isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}</th>
+                  <th className="py-2 text-right">{isId ? 'Jumlah Tahap' : 'Stages'}</th>
+                  <th className="py-2 text-right">{isId ? 'Total Kali Buat' : 'Total Generations'}</th>
                   <th className="py-2 text-right">{isId ? 'Subtotal (USD)' : 'Subtotal (USD)'}</th>
-                  <th className="py-2 text-right">{isId ? 'Subtotal (IDR)' : 'Subtotal (IDR)'}</th>
+                  <th className="py-2 text-right">{isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
@@ -407,19 +407,19 @@ export const DashboardView: React.FC = () => {
           <div className="pt-3 border-t border-white/10">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-80 mb-2">
               <Film className="w-3.5 h-3.5 text-sky-400" />
-              <span>{isId ? 'Target Output Proyek' : 'Project Output Target'}</span>
+              <span>{isId ? 'Target Hasil Akhir Proyek' : 'Project Target Output'}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="opacity-70">{isId ? 'Video Final (V)' : 'Final Videos (V)'}</div>
+                <div className="opacity-70">{isId ? 'Target Video Jadi' : 'Final Videos'}</div>
                 <div className="text-base font-bold tabular-nums text-right">
                   {project.assumptions.target_videos}
                 </div>
               </div>
               <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="opacity-70">{isId ? 'Durasi Final (M)' : 'Final Duration (M)'}</div>
+                <div className="opacity-70">{isId ? 'Total Durasi Video' : 'Total Duration'}</div>
                 <div className="text-base font-bold tabular-nums text-right">
-                  {project.assumptions.final_duration_minutes} {isId ? 'mnt' : 'min'}
+                  {project.assumptions.final_duration_minutes} {isId ? 'menit' : 'min'}
                 </div>
               </div>
             </div>
@@ -433,16 +433,16 @@ export const DashboardView: React.FC = () => {
         <div className={`${cardClass} rounded-2xl p-5`}>
           <h3 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-3">
             {isId
-              ? 'Peringatan & Transparansi Data (PRD Bab 11.2)'
-              : 'Data Transparency & Warnings (PRD Sec 11.2)'}
+              ? 'Status Kelengkapan Data & Info Penting'
+              : 'Data Completeness & Important Notes'}
           </h3>
           {calc.warnings.length === 0 ? (
             <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 {isId
-                  ? 'Semua tarif model dan nilai tukar telah terverifikasi dan lengkap.'
-                  : 'All model rates and exchange rates are verified and complete.'}
+                  ? 'Semua harga model AI dan kurs Rupiah sudah lengkap dan siap digunakan.'
+                  : 'All AI model prices and exchange rates are complete and ready.'}
               </span>
             </div>
           ) : (
@@ -470,14 +470,14 @@ export const DashboardView: React.FC = () => {
         <div className={`${cardClass} rounded-2xl p-5`}>
           <h3 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-3">
             {isId
-              ? 'File Proyek Terakhir (.aivbudget)'
-              : 'Recent Project Files (.aivbudget)'}
+              ? 'Proyek yang Terakhir Disimpan / Dibuka'
+              : 'Recently Saved / Opened Projects'}
           </h3>
           {recentProjects.length === 0 ? (
             <div className="text-xs opacity-60 p-4 text-center border border-dashed border-white/15 rounded-xl">
               {isId
-                ? 'Belum ada riwayat file .aivbudget lokal yang disimpan pada sesi ini.'
-                : 'No local .aivbudget files saved yet in this session.'}
+                ? 'Belum ada proyek yang pernah Anda simpan di komputer ini.'
+                : 'No projects saved on this computer yet.'}
             </div>
           ) : (
             <div className="space-y-2">

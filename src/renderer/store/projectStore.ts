@@ -327,8 +327,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     });
     get().showBanner(
       'success',
-      'Contoh Uji Matematika Sintetis PRD Bab 8.10 berhasil dimuat: 10 Generasi Dasar + Cadangan 20% (2 Generasi) × USD 2 = USD 20 Dasar + USD 4 Cadangan = USD 24 Total.',
-      'PRD Section 8.10 Synthetic Math Test loaded: 10 Base Generations + 20% Reserve (2 Generations) × USD 2 = USD 20 Base + USD 4 Reserve = USD 24 Total.'
+      'Contoh Simulasi Sederhana berhasil dimuat: 10 rencana buat awal + cadangan 20% (2 kali) × USD 2 = USD 20 biaya utama + USD 4 cadangan = USD 24 total.',
+      'Simple Simulation Sample loaded: 10 initial tries + 20% reserve (2 tries) × USD 2 = USD 20 base + USD 4 reserve = USD 24 total.'
     );
   },
 
@@ -345,8 +345,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     });
     get().showBanner(
       'success',
-      'Proyek contoh komersial dengan 5 kategori proses AI (Text to Image, Image to Video, Text to Video, Video to Video, Upscaling) berhasil dimuat.',
-      'Commercial sample project covering all 5 AI process categories loaded.'
+      'Contoh proyek iklan lengkap berhasil dimuat (mencakup pembuatan gambar, animasi video, hingga peningkatan kualitas 4K).',
+      'Full commercial sample project loaded.'
     );
   },
 
@@ -365,8 +365,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     if (!project.project_name.trim()) {
       get().showBanner(
         'error',
-        'Nama proyek tidak boleh kosong (FR-01). Silakan isi nama proyek terlebih dahulu.',
-        'Project name cannot be empty (FR-01). Please enter a project name first.'
+        'Nama proyek tidak boleh kosong. Silakan isi nama proyek terlebih dahulu.',
+        'Project name cannot be empty. Please enter a project name first.'
       );
       return;
     }

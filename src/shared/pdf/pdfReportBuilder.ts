@@ -389,35 +389,35 @@ export function generatePdfReportHtml(
   </div>
 
   <!-- 3. ASUMSI PRODUKSI (PRD Bab 12.2) -->
-  <h2>2. ${isId ? 'Asumsi Produksi & Cadangan Regenerasi' : 'Production Assumptions & Regeneration Reserve'}</h2>
+  <h2>2. ${isId ? 'Pengaturan Proyek & Dana Cadangan' : 'Project Settings & Reserve Budget'}</h2>
   <table>
     <tbody>
       <tr>
-        <th>${isId ? 'Mode Estimasi' : 'Estimation Mode'}</th>
+        <th>${isId ? 'Cara Hitung Proyek' : 'Calculation Method'}</th>
         <td>${
           project.assumptions.estimation_mode === 'target_final'
             ? isId
-              ? 'Mode Target Video Final'
-              : 'Target Final Video Mode'
+              ? 'Dari Jumlah Video Jadi'
+              : 'By Total Final Videos'
             : isId
-            ? 'Mode Detail Per-Shot'
-            : 'Per-Shot Detail Mode'
+            ? 'Rincian per Adegan'
+            : 'Scene-by-Scene Detail'
         }</td>
-        <th>${isId ? 'Jumlah Video Final (V)' : 'Target Final Videos (V)'}</th>
+        <th>${isId ? 'Target Jumlah Video Jadi' : 'Target Final Videos'}</th>
         <td class="num">${project.assumptions.target_videos}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Durasi Video Final (M)' : 'Total Final Duration (M)'}</th>
+        <th>${isId ? 'Total Durasi Video Jadi' : 'Total Final Duration'}</th>
         <td class="num">${project.assumptions.final_duration_minutes} ${isId ? 'menit' : 'minutes'}</td>
-        <th>${isId ? 'Generasi Dasar Direncanakan (Gplanned)' : 'Planned Base Generations (Gplanned)'}</th>
+        <th>${isId ? 'Rencana Pembuatan Awal' : 'Initial Planned Generations'}</th>
         <td class="num">${calc.planned_generations}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Cadangan Regenerasi (R / Greserve)' : 'Regeneration Reserve (R / Greserve)'}</th>
+        <th>${isId ? 'Cadangan Buat Ulang' : 'Redo / Regeneration Reserve'}</th>
         <td class="num">${calc.effective_reserve_percent}% (+${calc.reserve_generations} ${
-    isId ? 'generasi' : 'generations'
+    isId ? 'kali buat' : 'generations'
   })</td>
-        <th>${isId ? 'Total Generasi Dianggarkan (Gbudget)' : 'Total Budgeted Generations (Gbudget)'}</th>
+        <th>${isId ? 'Total Kali Pembuatan AI' : 'Total Budgeted Generations'}</th>
         <td class="num"><strong>${calc.budgeted_generations}</strong></td>
       </tr>
     </tbody>
@@ -429,11 +429,11 @@ export function generatePdfReportHtml(
     <thead>
       <tr>
         <th style="width:28px;text-align:center;">No</th>
-        <th>${isId ? 'Tahap / Shot & Kategori' : 'Stage / Shot & Category'}</th>
-        <th>${isId ? 'Model Higgsfield & Parameter' : 'Higgsfield Model & Parameters'}</th>
-        <th class="num">${isId ? 'Generasi (Dasar + Cadangan)' : 'Generations (Base + Reserve)'}</th>
-        <th>${isId ? 'Satuan & Tarif' : 'Unit & Rate'}</th>
-        <th class="num">${isId ? 'Biaya Dasar' : 'Base Cost'}</th>
+        <th>${isId ? 'Nama Adegan / Tahap & Jenis AI' : 'Stage / Scene & AI Type'}</th>
+        <th>${isId ? 'Model AI & Pengaturan Kualitas' : 'Higgsfield Model & Settings'}</th>
+        <th class="num">${isId ? 'Kali Buat (Awal + Cadangan)' : 'Generations (Base + Reserve)'}</th>
+        <th>${isId ? 'Satuan & Harga' : 'Unit & Price'}</th>
+        <th class="num">${isId ? 'Biaya Utama' : 'Base Cost'}</th>
         <th class="num">${isId ? 'Cadangan' : 'Reserve'}</th>
         <th class="num">${isId ? 'Subtotal (USD / IDR)' : 'Subtotal (USD / IDR)'}</th>
         <th>${isId ? 'Status Data' : 'Data Status'}</th>
@@ -445,22 +445,22 @@ export function generatePdfReportHtml(
   </table>
 
   <!-- 5. RINCIAN CREDIT (PRD Bab 12.2) -->
-  <h2>4. ${isId ? 'Rincian Konsumsi Credit' : 'Credit Consumption Breakdown'}</h2>
+  <h2>4. ${isId ? 'Rincian Pemakaian Credit' : 'Credit Consumption Breakdown'}</h2>
   <p style="font-size:10px;color:#64748b;margin-top:0;">
     ${
       isId
-        ? 'Catatan PRD Bab 8.5: Credit dihitung terpisah berdasarkan mekanisme konsumsi model dan tidak disamakan otomatis dengan USD.'
-        : 'PRD Section 8.5 Note: Credits are calculated separately based on model consumption rules and are never equated automatically with USD.'
+        ? 'Catatan: Credit adalah poin pemakaian di platform AI yang dihitung terpisah dari harga Dolar/Rupiah.'
+        : 'Note: Credits represent platform usage points and are tracked separately from USD/IDR costs.'
     }
   </p>
   <table>
     <thead>
       <tr>
         <th style="width:28px;text-align:center;">No</th>
-        <th>${isId ? 'Nama Shot / Tahap' : 'Shot / Stage'}</th>
-        <th>${isId ? 'Model' : 'Model'}</th>
-        <th class="num">${isId ? 'Generasi Dianggarkan (Gbudget)' : 'Budgeted Generations (Gbudget)'}</th>
-        <th class="num">${isId ? 'Credit per Unit' : 'Credit per Unit'}</th>
+        <th>${isId ? 'Nama Adegan / Tahap' : 'Shot / Stage'}</th>
+        <th>${isId ? 'Model AI' : 'Model'}</th>
+        <th class="num">${isId ? 'Total Kali Buat' : 'Total Generations'}</th>
+        <th class="num">${isId ? 'Credit per Satuan' : 'Credit per Unit'}</th>
         <th class="num">${isId ? 'Total Credit' : 'Total Credits'}</th>
       </tr>
     </thead>
@@ -470,29 +470,29 @@ export function generatePdfReportHtml(
   </table>
 
   <!-- 6. KURS DAN SUMBER (PRD Bab 12.2) -->
-  <h2>5. ${isId ? 'Informasi Nilai Tukar (Kurs USD/IDR) & Sumber Data' : 'Exchange Rate (USD/IDR) & Data Source'}</h2>
+  <h2>5. ${isId ? 'Informasi Kurs Dolar ke Rupiah & Sumber Data' : 'Exchange Rate (USD/IDR) & Data Source'}</h2>
   <table>
     <tbody>
       <tr>
-        <th>${isId ? 'Pasangan Mata Uang' : 'Currency Pair'}</th>
-        <td>USD &rarr; IDR</td>
-        <th>${isId ? 'Nilai Kurs (X)' : 'Exchange Rate (X)'}</th>
+        <th>${isId ? 'Mata Uang' : 'Currency Pair'}</th>
+        <td>USD &rarr; IDR (Rupiah)</td>
+        <th>${isId ? 'Nilai Kurs Saat Ini' : 'Current Exchange Rate'}</th>
         <td class="num"><strong>${
           project.exchange_rate.rate !== null
             ? `1 USD = ${formatIdr(project.exchange_rate.rate, lang)}`
             : isId
-            ? 'Belum Tersedia'
+            ? 'Belum Diisi'
             : 'Unavailable'
         }</strong></td>
       </tr>
       <tr>
-        <th>${isId ? 'Jenis & Sumber Kurs' : 'Rate Type & Source'}</th>
+        <th>${isId ? 'Keterangan & Sumber Kurs' : 'Rate Type & Source'}</th>
         <td>${escapeHtml(project.exchange_rate.rate_type)} &mdash; ${escapeHtml(
     project.exchange_rate.source_name
   )}</td>
-        <th>${isId ? 'Waktu Pembaruan & Status' : 'Retrieved At & Status'}</th>
+        <th>${isId ? 'Waktu Diperbarui & Status' : 'Last Updated & Status'}</th>
         <td>
-          ${escapeHtml(project.exchange_rate.retrieved_at)}
+          ${escapeHtml(project.exchange_rate.retrieved_at.slice(0, 19).replace('T', ' '))}
           (<span class="status-pill status-${project.exchange_rate.status}">${escapeHtml(
     STATUS_LABELS[project.exchange_rate.status][lang]
   )}</span>)
@@ -502,31 +502,31 @@ export function generatePdfReportHtml(
   </table>
 
   <!-- 7. TOTAL ANGGARAN & BIAYA UNIT (PRD Bab 12.2 Bagian 8 & 9) -->
-  <h2>6. ${isId ? 'Total Anggaran & Biaya Unit Output Final' : 'Total Budget & Final Output Unit Costs'}</h2>
+  <h2>6. ${isId ? 'Total Anggaran & Rata-rata Biaya Hasil Akhir' : 'Total Budget & Average Output Costs'}</h2>
   <table>
     <tbody>
       <tr>
-        <th>${isId ? 'Total Biaya Dasar (Base Cost)' : 'Total Base Cost'}</th>
+        <th>${isId ? 'Total Biaya Utama (Awal)' : 'Total Initial Base Cost'}</th>
         <td class="num">${formatUsd(calc.base_cost_usd, lang)}</td>
         <td class="num">${formatIdr(calc.base_cost_idr, lang)}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Biaya Cadangan Regenerasi (Reserve Cost)' : 'Total Regeneration Reserve Cost'}</th>
+        <th>${isId ? 'Total Biaya Cadangan (Buat Ulang)' : 'Total Redo Reserve Cost'}</th>
         <td class="num">${formatUsd(calc.reserve_cost_usd, lang)}</td>
         <td class="num">${formatIdr(calc.reserve_cost_idr, lang)}</td>
       </tr>
       <tr style="background:#eff6ff;font-size:13px;">
-        <th><strong>${isId ? 'TOTAL ANGGARAN AKHIR (Btotal)' : 'GRAND TOTAL BUDGET (Btotal)'}</strong></th>
+        <th><strong>${isId ? 'TOTAL SELURUH ANGGARAN' : 'GRAND TOTAL BUDGET'}</strong></th>
         <td class="num"><strong>${formatUsd(calc.total_cost_usd, lang)}</strong></td>
         <td class="num"><strong>${formatIdr(calc.total_cost_idr, lang)}</strong></td>
       </tr>
       <tr>
-        <th>${isId ? 'Biaya per Video Final (Bvideo = Btotal / V)' : 'Cost per Final Video (Bvideo = Btotal / V)'}</th>
+        <th>${isId ? 'Rata-rata Biaya per 1 Video Jadi' : 'Average Cost per Final Video'}</th>
         <td class="num">${formatUsd(calc.cost_per_video_usd, lang)}</td>
         <td class="num">${formatIdr(calc.cost_per_video_idr, lang)}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Biaya per Menit Video Final (Bminute = Btotal / M)' : 'Cost per Final Minute (Bminute = Btotal / M)'}</th>
+        <th>${isId ? 'Rata-rata Biaya per 1 Menit Video Jadi' : 'Average Cost per Final Video Minute'}</th>
         <td class="num">${formatUsd(calc.cost_per_minute_usd, lang)}</td>
         <td class="num">${formatIdr(calc.cost_per_minute_idr, lang)}</td>
       </tr>
@@ -534,7 +534,7 @@ export function generatePdfReportHtml(
   </table>
 
   <!-- 8. ASUMSI DAN PERINGATAN AUDIT (PRD Bab 12.2 Bagian 7) -->
-  <h2>7. ${isId ? 'Catatan Transparansi, Asumsi, & Peringatan Audit' : 'Transparency Notes, Assumptions, & Audit Warnings'}</h2>
+  <h2>7. ${isId ? 'Catatan & Status Kelengkapan Data' : 'Notes & Data Completeness Status'}</h2>
   <ul style="margin:0;padding-left:18px;color:#334155;">
     ${warningsListHtml}
   </ul>

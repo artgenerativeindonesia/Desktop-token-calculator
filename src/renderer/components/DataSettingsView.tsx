@@ -49,18 +49,18 @@ export const DataSettingsView: React.FC = () => {
           <Database className="w-5 h-5 text-sky-400" />
           <span>
             {isId
-              ? 'Pengaturan Kurs USD/IDR & Katalog Model Higgsfield (PRD Bab 9)'
-              : 'USD/IDR Exchange Rate & Higgsfield Model Catalog (PRD Sec 9)'}
+              ? 'Pengaturan Kurs Rupiah & Daftar Harga Model AI'
+              : 'Exchange Rate Settings & AI Model Price List'}
           </span>
         </h1>
         <p className="text-xs opacity-75 mt-1">
           {isId
-            ? 'Kelola sumber nilai tukar USD/IDR gratis dan tinjau status verifikasi katalog model Higgsfield tanpa perlu memasukkan API Key teknis.'
-            : 'Manage free USD/IDR exchange rate sources and inspect verified Higgsfield model catalog status without technical API keys.'}
+            ? 'Perbarui nilai tukar Dolar ke Rupiah secara otomatis dari internet, atau isi kurs sendiri jika sedang bekerja tanpa koneksi internet.'
+            : 'Update the USD to IDR exchange rate automatically from the internet, or enter your own rate when working offline.'}
         </p>
       </div>
 
-      {/* Bagian 1: Kurs USD/IDR Otomatis & Fallback Manual */}
+      {/* Bagian 1: Kurs USD/IDR Otomatis & Manual */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className={`${cardClass} rounded-2xl p-6 space-y-4`}>
           <div className="flex items-center justify-between">
@@ -68,8 +68,8 @@ export const DataSettingsView: React.FC = () => {
               <Globe className="w-4 h-4 text-sky-400" />
               <span>
                 {isId
-                  ? '1. Sumber Kurs USD/IDR Otomatis (Gratis)'
-                  : '1. Automatic Free USD/IDR Exchange Rate'}
+                  ? '1. Kurs Dolar ke Rupiah Otomatis'
+                  : '1. Automatic USD to IDR Exchange Rate'}
               </span>
             </h2>
             <StatusBadge status={fx.status} language={language} />
@@ -77,7 +77,7 @@ export const DataSettingsView: React.FC = () => {
 
           <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
             <div className="text-xs opacity-70">
-              {isId ? 'Nilai Kurs Aktif (X):' : 'Active Exchange Rate (X):'}
+              {isId ? 'Nilai Kurs Saat Ini:' : 'Current Exchange Rate:'}
             </div>
             <div className="text-2xl font-extrabold tabular-nums text-sky-400 text-right">
               1 USD ={' '}
@@ -85,15 +85,15 @@ export const DataSettingsView: React.FC = () => {
             </div>
             <div className="text-xs opacity-75 space-y-1 pt-2 border-t border-white/10">
               <div>
-                <strong>{isId ? 'Sumber:' : 'Source:'}</strong> {fx.source_name}
+                <strong>{isId ? 'Sumber Data:' : 'Source:'}</strong> {fx.source_name}
               </div>
               <div>
-                <strong>{isId ? 'Jenis Kurs:' : 'Rate Type:'}</strong>{' '}
+                <strong>{isId ? 'Keterangan:' : 'Rate Type:'}</strong>{' '}
                 {fx.rate_type}
               </div>
               <div>
-                <strong>{isId ? 'Waktu Pengambilan:' : 'Retrieved At:'}</strong>{' '}
-                {fx.retrieved_at}
+                <strong>{isId ? 'Terakhir Diperbarui:' : 'Last Updated:'}</strong>{' '}
+                {fx.retrieved_at.slice(0, 19).replace('T', ' ')}
               </div>
             </div>
           </div>
@@ -108,28 +108,28 @@ export const DataSettingsView: React.FC = () => {
               className={`w-4 h-4 ${isRefreshingFx ? 'animate-spin' : ''}`}
             />
             {isId
-              ? 'Perbarui Kurs Otomatis (Frankfurter ECB / Open ER-API)'
-              : 'Refresh Rate Automatically (Frankfurter ECB / Open ER-API)'}
+              ? 'Perbarui Kurs Otomatis dari Internet'
+              : 'Update Exchange Rate from Internet'}
           </button>
         </div>
 
-        {/* Input Kurs Manual (Fallback PRD FR-08) */}
+        {/* Input Kurs Manual */}
         <div className={`${cardClass} rounded-2xl p-6 space-y-4`}>
           <h2 className="text-sm font-bold uppercase tracking-wider opacity-80">
             {isId
-              ? '2. Input Kurs Manual (Fallback Offline / Kebijakan Tim)'
-              : '2. Manual Exchange Rate Input (Offline Fallback)'}
+              ? '2. Isi Kurs Sendiri (Saat Tanpa Internet / Kurs Perusahaan)'
+              : '2. Enter Custom Rate (Offline / Company Rate)'}
           </h2>
           <p className="text-xs opacity-75">
             {isId
-              ? 'Jika Anda sedang bekerja tanpa koneksi internet atau ingin menggunakan kurs anggaran internal perusahaan, ketik angka kurs di bawah ini. Sistem otomatis menandainya dengan label Manual.'
-              : 'If working offline or using an internal company budget rate, enter your custom USD to IDR rate below. It will be clearly labeled as Manual.'}
+              ? 'Jika sedang tidak terhubung ke internet atau ingin memakai patokan kurs sendiri, silakan ketik nilai Rupiah untuk 1 Dolar di bawah ini.'
+              : 'If working offline or using an internal company budget rate, enter your custom IDR value per 1 USD below.'}
           </p>
 
           <div className="flex items-center gap-3">
             <div className="flex-1">
               <label className="block text-xs font-semibold mb-1">
-                {isId ? 'Nilai IDR per 1 USD' : 'IDR Value per 1 USD'}
+                {isId ? 'Nilai Rupiah untuk 1 USD' : 'IDR Value per 1 USD'}
               </label>
               <input
                 type="number"
@@ -145,7 +145,7 @@ export const DataSettingsView: React.FC = () => {
               onClick={() => setManualExchangeRate(Number(manualFxInput))}
               className="mt-5 px-4 py-2.5 rounded-xl text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 transition"
             >
-              {isId ? 'Terapkan Kurs Manual' : 'Apply Manual Rate'}
+              {isId ? 'Gunakan Kurs Ini' : 'Use This Rate'}
             </button>
           </div>
         </div>
@@ -159,14 +159,14 @@ export const DataSettingsView: React.FC = () => {
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span>
                 {isId
-                  ? '3. Katalog Model & Parameter Resmi Higgsfield (PRD Bab 6 & 9.1)'
-                  : '3. Official Higgsfield Model & Parameter Catalog (PRD Sec 6 & 9.1)'}
+                  ? '3. Daftar Model & Harga Referensi Resmi Higgsfield AI'
+                  : '3. Official Higgsfield AI Model & Reference Price List'}
               </span>
             </h2>
             <p className="text-xs opacity-70 mt-0.5">
               {isId
-                ? 'Menampilkan daftar model, kategori yang didukung, satuan tarif, nilai referensi, dan status verifikasi.'
-                : 'Displays model entries, supported categories, pricing units, reference values, and verification status.'}
+                ? 'Daftar model AI yang tersedia beserta jenis pembuatan yang didukung dan harga acuannya.'
+                : 'List of available AI models along with supported creation types and reference prices.'}
             </p>
           </div>
 
@@ -182,7 +182,7 @@ export const DataSettingsView: React.FC = () => {
                   isRefreshingCatalog ? 'animate-spin' : ''
                 }`}
               />
-              {isId ? 'Cek Sinkronisasi Katalog' : 'Verify Catalog Sync'}
+              {isId ? 'Muat Ulang Daftar Harga' : 'Refresh Price List'}
             </button>
 
             <button
@@ -191,7 +191,7 @@ export const DataSettingsView: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/15 border border-white/10 transition"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              {isId ? 'Reset Default' : 'Reset Defaults'}
+              {isId ? 'Kembalikan ke Harga Awal' : 'Reset to Default Prices'}
             </button>
           </div>
         </div>

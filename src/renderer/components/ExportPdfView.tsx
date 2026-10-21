@@ -55,14 +55,14 @@ export const ExportPdfView: React.FC = () => {
               <FileText className="w-5 h-5 text-sky-400" />
               <span>
                 {isId
-                  ? 'Pratinjau & Ekspor Laporan PDF (PRD Bab 12)'
-                  : 'PDF Report Preview & Export (PRD Sec 12)'}
+                  ? 'Pratinjau & Simpan Laporan PDF'
+                  : 'Preview & Save PDF Report'}
               </span>
             </h1>
             <p className="text-xs opacity-75 mt-1">
               {isId
-                ? 'Laporan PDF mengambil angka langsung dari Calculation Engine yang sama dengan UI (NFR-02) dan mencakup 9 bagian wajib.'
-                : 'The PDF report pulls figures directly from the shared Calculation Engine (NFR-02) and includes all 9 required sections.'}
+                ? 'Periksa tampilan laporan anggaran Anda di bawah ini sebelum menyimpannya menjadi file dokumen PDF.'
+                : 'Review your budget report layout below before saving it as a PDF document.'}
             </p>
           </div>
 
@@ -106,8 +106,8 @@ export const ExportPdfView: React.FC = () => {
               <FileDown className="w-4 h-4" />
               {isExportingPdf
                 ? isId
-                  ? 'Mengekspor PDF...'
-                  : 'Exporting PDF...'
+                  ? 'Menyimpan PDF...'
+                  : 'Saving PDF...'
                 : t.btnExportPdf}
             </button>
           </div>
@@ -146,8 +146,8 @@ export const ExportPdfView: React.FC = () => {
           <div>
             <label className="block text-xs font-semibold mb-1">
               {isId
-                ? 'Rekomendasi Nama File (PRD Bab 12.3)'
-                : 'Recommended Filename (PRD Sec 12.3)'}
+                ? 'Nama File PDF Otomatis'
+                : 'Automatic PDF Filename'}
             </label>
             <div className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-mono truncate">
               {safeFileName}
@@ -155,15 +155,15 @@ export const ExportPdfView: React.FC = () => {
           </div>
         </div>
 
-        {/* Peringatan & Konfirmasi Wajib jika Estimasi Belum Lengkap (PRD Bab 11.3) */}
+        {/* Peringatan & Konfirmasi Wajib jika Estimasi Belum Lengkap */}
         {!calc.is_complete ? (
           <div className="p-4 rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-200 text-xs space-y-2">
             <div className="flex items-center gap-2 font-bold">
               <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
               <span>
                 {isId
-                  ? 'Perhatian (PRD Bab 11.3): Proyek memiliki data tarif atau kurs yang belum lengkap (Estimasi Parsial).'
-                  : 'Warning (PRD Sec 11.3): Project has incomplete rate or FX data (Partial Estimate).'}
+                  ? 'Perhatian: Masih ada harga model atau kurs yang belum terisi lengkap.'
+                  : 'Note: Some model prices or exchange rates are not yet filled in.'}
               </span>
             </div>
             <label className="flex items-center gap-2 cursor-pointer pt-1">
@@ -175,8 +175,8 @@ export const ExportPdfView: React.FC = () => {
               />
               <span>
                 {isId
-                  ? 'Saya memahami laporan ini akan diberi label "ESTIMASI PARSIAL / BELUM LENGKAP" dan ingin tetap mengekspor PDF.'
-                  : 'I understand this report will be labeled "PARTIAL / INCOMPLETE ESTIMATE" and wish to export anyway.'}
+                  ? 'Saya mengerti masih ada data yang kosong dan tetap ingin menyimpan laporan PDF ini.'
+                  : 'I understand some data is incomplete and wish to save this PDF report anyway.'}
               </span>
             </label>
           </div>
@@ -185,8 +185,8 @@ export const ExportPdfView: React.FC = () => {
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             <span>
               {isId
-                ? 'Seluruh perhitungan lengkap dan siap diekspor ke PDF.'
-                : 'All calculations are complete and ready for PDF export.'}
+                ? 'Seluruh hitungan sudah lengkap dan siap disimpan menjadi file PDF.'
+                : 'All calculations are complete and ready to be saved as a PDF.'}
             </span>
           </div>
         )}
@@ -199,12 +199,12 @@ export const ExportPdfView: React.FC = () => {
             <Eye className="w-4 h-4 text-sky-400" />
             <span>
               {isId
-                ? 'Pratinjau Dokumen Laporan PDF (9 Bagian Wajib PRD Bab 12.2)'
-                : 'Live PDF Report Document Preview (All 9 Mandatory PRD Sec 12.2 Sections)'}
+                ? 'Pratinjau Dokumen Laporan PDF'
+                : 'Live PDF Report Preview'}
             </span>
           </div>
           <span className="text-[11px] opacity-65">
-            {isId ? 'Ukuran Kertas: A4 Portrait' : 'Paper Size: A4 Portrait'}
+            {isId ? 'Ukuran Kertas: A4 Tegak' : 'Paper Size: A4 Portrait'}
           </span>
         </div>
 

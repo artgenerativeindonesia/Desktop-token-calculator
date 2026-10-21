@@ -406,8 +406,8 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         warnings.push({
             code: 'ZERO_DIVISOR_VIDEO',
             severity: 'info',
-            message_id: 'Biaya per video final tidak dihitung karena jumlah video final (V) bernilai 0 atau kosong.',
-            message_en: 'Cost per final video is not calculated because target video count (V) is 0 or empty.',
+            message_id: 'Rata-rata biaya per video jadi tidak dihitung karena target jumlah video jadi masih bernilai 0.',
+            message_en: 'Average cost per final video is not calculated because the target video count is 0.',
         });
     }
     let costPerMinuteUsd = null;
@@ -431,8 +431,8 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         warnings.push({
             code: 'ZERO_DIVISOR_MINUTE',
             severity: 'info',
-            message_id: 'Biaya per menit final tidak dihitung karena durasi video final (M) bernilai 0 atau kosong.',
-            message_en: 'Cost per final minute is not calculated because final video duration (M) is 0 or empty.',
+            message_id: 'Rata-rata biaya per menit video tidak dihitung karena target durasi video masih bernilai 0.',
+            message_en: 'Average cost per final minute is not calculated because the final video duration is 0.',
         });
     }
     const isComplete = items.length > 0 && incompleteItemCount === 0 && hasValidExchangeRate;

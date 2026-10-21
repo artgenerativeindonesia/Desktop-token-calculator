@@ -40,14 +40,14 @@ export const BudgetSummaryView: React.FC = () => {
             <BarChart3 className="w-5 h-5 text-sky-400" />
             <span>
               {isId
-                ? 'Ringkasan Anggaran & Audit Kalkulasi (PRD Bab 8 & 11)'
-                : 'Budget Summary & Calculation Audit (PRD Sec 8 & 11)'}
+                ? 'Ringkasan Lengkap Biaya Produksi'
+                : 'Complete Production Cost Summary'}
             </span>
           </h1>
           <p className="text-xs opacity-75 mt-1">
             {isId
-              ? 'Seluruh angka dihitung dengan presisi Decimal.js dan sama persis dengan laporan PDF yang diekspor.'
-              : 'All figures are computed with Decimal.js precision and match the exported PDF report identically.'}
+              ? 'Seluruh rincian biaya di halaman ini dihitung secara otomatis dan sama persis dengan laporan PDF yang akan Anda simpan.'
+              : 'All cost details on this page are calculated automatically and match the PDF report you save.'}
           </p>
         </div>
 
@@ -82,7 +82,7 @@ export const BudgetSummaryView: React.FC = () => {
         <div className={`${cardClass} rounded-2xl p-6 lg:col-span-2`}>
           <h2 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-4">
             {isId
-              ? 'Rekapitulasi Anggaran Utama (USD & IDR)'
+              ? 'Rekapitulasi Anggaran Utama (Dolar USD & Rupiah)'
               : 'Primary Budget Summary (USD & IDR)'}
           </h2>
           <div className="overflow-x-auto">
@@ -93,7 +93,7 @@ export const BudgetSummaryView: React.FC = () => {
                     {isId ? 'Komponen Biaya' : 'Cost Component'}
                   </th>
                   <th className="py-2.5 text-right">
-                    {isId ? 'Generasi' : 'Generations'}
+                    {isId ? 'Jumlah Kali Buat' : 'Generations'}
                   </th>
                   <th className="py-2.5 text-right">USD</th>
                   <th className="py-2.5 text-right">IDR (Rupiah)</th>
@@ -102,7 +102,7 @@ export const BudgetSummaryView: React.FC = () => {
               <tbody className="divide-y divide-white/10">
                 <tr>
                   <td className="py-3 font-medium">
-                    {t.baseCost} (B<sub>base</sub>)
+                    {t.baseCost}
                   </td>
                   <td className="py-3 text-right tabular-nums">
                     {calc.planned_generations}
@@ -116,7 +116,7 @@ export const BudgetSummaryView: React.FC = () => {
                 </tr>
                 <tr>
                   <td className="py-3 font-medium text-amber-300">
-                    {t.reserveCost} ({calc.effective_reserve_percent}%) (B<sub>reserve</sub>)
+                    {t.reserveCost} ({calc.effective_reserve_percent}%)
                   </td>
                   <td className="py-3 text-right tabular-nums text-amber-300">
                     +{calc.reserve_generations}
@@ -130,7 +130,7 @@ export const BudgetSummaryView: React.FC = () => {
                 </tr>
                 <tr className="bg-sky-500/10 font-bold text-sm">
                   <td className="py-3.5 px-2 text-sky-400">
-                    {t.totalBudget} (B<sub>total</sub>)
+                    {t.totalBudget}
                   </td>
                   <td className="py-3.5 text-right tabular-nums">
                     {calc.budgeted_generations}
@@ -151,13 +151,16 @@ export const BudgetSummaryView: React.FC = () => {
         <div className={`${cardClass} rounded-2xl p-6 space-y-4`}>
           <h2 className="text-xs font-bold uppercase tracking-wider opacity-80">
             {isId
-              ? 'Biaya Unit Output Final & Credit (PRD Bab 8.5 & 8.7)'
-              : 'Final Output Unit Costs & Credits (PRD Sec 8.5 & 8.7)'}
+              ? 'Rata-rata Biaya Hasil Akhir & Total Credit'
+              : 'Average Output Costs & Total Credits'}
           </h2>
 
           <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
             <div className="text-[11px] opacity-70">
-              {t.costPerVideo} (B<sub>total</sub> / V, V = {project.assumptions.target_videos})
+              {t.costPerVideo}{' '}
+              ({isId
+                ? `untuk ${project.assumptions.target_videos} video jadi`
+                : `for ${project.assumptions.target_videos} final videos`})
             </div>
             <div className="text-lg font-bold tabular-nums text-right mt-1">
               {formatCurrencyUsd(calc.cost_per_video_usd, language)}
@@ -169,7 +172,10 @@ export const BudgetSummaryView: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
             <div className="text-[11px] opacity-70">
-              {t.costPerMinute} (B<sub>total</sub> / M, M = {project.assumptions.final_duration_minutes} mnt)
+              {t.costPerMinute}{' '}
+              ({isId
+                ? `untuk total ${project.assumptions.final_duration_minutes} menit`
+                : `for ${project.assumptions.final_duration_minutes} total min`})
             </div>
             <div className="text-lg font-bold tabular-nums text-right mt-1">
               {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
@@ -181,7 +187,7 @@ export const BudgetSummaryView: React.FC = () => {
 
           <div className="p-3.5 rounded-xl bg-purple-500/10 border border-purple-400/30">
             <div className="flex items-center justify-between text-[11px] text-purple-300">
-              <span>{t.totalCredit} (C<sub>total</sub>)</span>
+              <span>{t.totalCredit}</span>
               <Coins className="w-3.5 h-3.5" />
             </div>
             <div className="text-lg font-bold tabular-nums text-right text-purple-300 mt-1">
@@ -191,8 +197,8 @@ export const BudgetSummaryView: React.FC = () => {
             </div>
             <div className="text-[10px] opacity-70 mt-1">
               {isId
-                ? 'Credit dihitung terpisah dan tidak disamakan otomatis dengan USD.'
-                : 'Credits are tracked separately and not equated automatically with USD.'}
+                ? 'Credit adalah poin pemakaian di platform AI (dihitung terpisah dari harga Dolar/Rupiah).'
+                : 'Credits represent platform usage points (tracked separately from USD/IDR costs).'}
             </div>
           </div>
         </div>
@@ -202,21 +208,21 @@ export const BudgetSummaryView: React.FC = () => {
       <div className={`${cardClass} rounded-2xl p-6`}>
         <h2 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-4">
           {isId
-            ? 'Rincian Kalkulasi per Baris Pekerjaan'
-            : 'Stage-by-Stage Calculation Breakdown'}
+            ? 'Rincian Biaya untuk Setiap Tahap Pekerjaan'
+            : 'Cost Breakdown for Each Production Stage'}
         </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/15 opacity-75">
                 <th className="py-2 text-left">#</th>
-                <th className="py-2 text-left">{isId ? 'Shot / Tahap' : 'Shot / Stage'}</th>
-                <th className="py-2 text-left">{isId ? 'Model & Kategori' : 'Model & Category'}</th>
-                <th className="py-2 text-right">{isId ? 'Generasi (Dasar + Cad)' : 'Gens (Base + Res)'}</th>
-                <th className="py-2 text-right">{isId ? 'Biaya Dasar' : 'Base Cost'}</th>
+                <th className="py-2 text-left">{isId ? 'Nama Adegan / Tahap' : 'Scene / Stage Name'}</th>
+                <th className="py-2 text-left">{isId ? 'Model & Jenis AI' : 'Model & AI Type'}</th>
+                <th className="py-2 text-right">{isId ? 'Kali Buat (Awal + Cadangan)' : 'Tries (Initial + Reserve)'}</th>
+                <th className="py-2 text-right">{isId ? 'Biaya Utama' : 'Base Cost'}</th>
                 <th className="py-2 text-right">{isId ? 'Biaya Cadangan' : 'Reserve Cost'}</th>
                 <th className="py-2 text-right">{isId ? 'Total (USD)' : 'Total (USD)'}</th>
-                <th className="py-2 text-right">{isId ? 'Total (IDR)' : 'Total (IDR)'}</th>
+                <th className="py-2 text-right">{isId ? 'Total (Rupiah)' : 'Total (IDR)'}</th>
                 <th className="py-2 text-right">Credit</th>
                 <th className="py-2 text-center">Status</th>
               </tr>
