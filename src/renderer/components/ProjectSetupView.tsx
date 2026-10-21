@@ -34,16 +34,27 @@ export const ProjectSetupView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className={`${cardClass} rounded-2xl p-6`}>
-        <h1 className="text-xl font-bold flex items-center gap-2.5">
-          <Sliders className="w-5 h-5 text-sky-400" />
-          <span>
-            {isId
-              ? 'Pengaturan Proyek & Dana Cadangan'
-              : 'Project Settings & Reserve Budget'}
+      <div className={`${cardClass} rounded-[16px] p-6`}>
+        <div className="flex items-center gap-2 mb-2">
+          <span className="vv-badge-pill">
+            <Sliders className="w-3.5 h-3.5 text-[#0099ff]" />
+            <span>{isId ? 'Konfigurasi Proyek' : 'Project Configuration'}</span>
           </span>
+        </div>
+        <h1 className="text-2xl font-medium tracking-[-0.035em]">
+          {isId ? (
+            <>
+              Pengaturan Proyek &{' '}
+              <span className="vv-accent text-[#0099ff]">Dana Cadangan</span>
+            </>
+          ) : (
+            <>
+              Project Settings &{' '}
+              <span className="vv-accent text-[#0099ff]">Reserve Budget</span>
+            </>
+          )}
         </h1>
-        <p className="text-xs opacity-75 mt-1">
+        <p className="text-xs text-[var(--vv-text-muted)] mt-1">
           {isId
             ? 'Atur nama proyek, pilih cara menghitung kebutuhan produksi, dan siapkan cadangan jika ada hasil AI yang perlu dibuat ulang.'
             : 'Set your project name, choose how to calculate your production needs, and set a reserve for re-generating AI outputs.'}
@@ -52,19 +63,22 @@ export const ProjectSetupView: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Bagian 1: Identitas Proyek & Mode Estimasi */}
-        <div className={`${cardClass} rounded-2xl p-6 space-y-5`}>
-          <h2 className="text-sm font-bold uppercase tracking-wider opacity-80 flex items-center gap-2">
-            <Film className="w-4 h-4 text-sky-400" />
-            <span>
-              {isId
-                ? '1. Nama Proyek & Target Hasil Akhir'
-                : '1. Project Name & Target Output'}
-            </span>
-          </h2>
+        <div className={`${cardClass} rounded-[16px] p-6 space-y-5`}>
+          <div className="flex items-center justify-between border-b border-[var(--vv-border)] pb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] flex items-center gap-2">
+              <span className="font-mono text-[10px] text-[var(--vv-text-subtle)]">01</span>
+              <Film className="w-4 h-4 text-[#0099ff]" />
+              <span>
+                {isId
+                  ? 'Nama Proyek & Target Hasil Akhir'
+                  : 'Project Name & Target Output'}
+              </span>
+            </h2>
+          </div>
 
           {/* Nama Proyek */}
           <div>
-            <label className="block text-xs font-semibold mb-1.5">
+            <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
               {isId ? 'Nama Proyek (Wajib diisi)' : 'Project Name (Required)'}
             </label>
             <input
@@ -76,7 +90,7 @@ export const ProjectSetupView: React.FC = () => {
                   ? 'Contoh: Iklan Video AI Produk Kopi'
                   : 'e.g., New Product AI Video Campaign'
               }
-              className={`${inputClass} w-full px-3.5 py-2.5 rounded-xl text-sm font-medium`}
+              className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-sm font-medium`}
             />
             {!project.project_name.trim() && (
               <p className="text-xs text-rose-400 mt-1">
@@ -87,21 +101,21 @@ export const ProjectSetupView: React.FC = () => {
             )}
           </div>
 
-          {/* Apple Segmented Pill Control: Mode Estimasi */}
+          {/* Visuvate Segmented Control: Mode Estimasi */}
           <div>
-            <label className="block text-xs font-semibold mb-1.5">
+            <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
               {isId
                 ? 'Cara Menghitung Kebutuhan Proyek'
                 : 'How to Calculate Project Needs'}
             </label>
-            <div className="grid grid-cols-2 p-1 rounded-xl bg-black/20 border border-white/10">
+            <div className="grid grid-cols-2 p-1 rounded-[10px] bg-[var(--vv-field)] border border-[var(--vv-border)]">
               <button
                 type="button"
                 onClick={() => setEstimationMode('per_shot')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[7px] text-xs font-medium transition flex items-center justify-center gap-1.5 ${
                   assumptions.estimation_mode === 'per_shot'
-                    ? 'bg-sky-500 text-white shadow-md'
-                    : 'opacity-70 hover:opacity-100'
+                    ? 'bg-[#0068ad] text-white shadow-sm'
+                    : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -110,17 +124,17 @@ export const ProjectSetupView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setEstimationMode('target_final')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 ${
+                className={`py-2 px-3 rounded-[7px] text-xs font-medium transition flex items-center justify-center gap-1.5 ${
                   assumptions.estimation_mode === 'target_final'
-                    ? 'bg-sky-500 text-white shadow-md'
-                    : 'opacity-70 hover:opacity-100'
+                    ? 'bg-[#0068ad] text-white shadow-sm'
+                    : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
                 }`}
               >
                 <Target className="w-3.5 h-3.5" />
                 {isId ? 'Dari Jumlah Video Jadi' : 'By Total Final Videos'}
               </button>
             </div>
-            <p className="text-[11px] opacity-70 mt-2">
+            <p className="text-[11px] text-[var(--vv-text-muted)] mt-2 leading-relaxed">
               {assumptions.estimation_mode === 'target_final'
                 ? isId
                   ? 'Cocok jika Anda ingin membuat beberapa video dengan pola serupa. Jumlah adegan di daftar pekerjaan akan dikalikan otomatis dengan target jumlah video jadi.'
@@ -134,7 +148,7 @@ export const ProjectSetupView: React.FC = () => {
           {/* Target Videos & Final Duration */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5">
+              <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
                 {isId
                   ? 'Target Jumlah Video Jadi'
                   : 'Target Final Videos'}
@@ -145,9 +159,9 @@ export const ProjectSetupView: React.FC = () => {
                 step={1}
                 value={assumptions.target_videos}
                 onChange={(e) => setTargetVideos(Number(e.target.value))}
-                className={`${inputClass} w-full px-3.5 py-2 rounded-xl text-sm font-semibold tabular-nums text-right`}
+                className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-semibold tabular-nums text-right`}
               />
-              <span className="text-[11px] opacity-65">
+              <span className="text-[11px] text-[var(--vv-text-muted)]">
                 {isId
                   ? 'Untuk melihat rata-rata biaya pembuatan per 1 video jadi.'
                   : 'Used to see the average cost per final video.'}
@@ -155,7 +169,7 @@ export const ProjectSetupView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1.5">
+              <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
                 {isId
                   ? 'Total Durasi Video Jadi (Menit)'
                   : 'Total Final Duration (Minutes)'}
@@ -166,9 +180,9 @@ export const ProjectSetupView: React.FC = () => {
                 step={0.25}
                 value={assumptions.final_duration_minutes}
                 onChange={(e) => setFinalDurationMinutes(Number(e.target.value))}
-                className={`${inputClass} w-full px-3.5 py-2 rounded-xl text-sm font-semibold tabular-nums text-right`}
+                className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-semibold tabular-nums text-right`}
               />
-              <span className="text-[11px] opacity-65">
+              <span className="text-[11px] text-[var(--vv-text-muted)]">
                 {isId
                   ? 'Untuk melihat rata-rata biaya pembuatan per 1 menit video.'
                   : 'Used to see the average cost per minute of final video.'}
@@ -178,8 +192,8 @@ export const ProjectSetupView: React.FC = () => {
 
           {/* Asumsi Shot per Video untuk Mode Target Final */}
           {assumptions.estimation_mode === 'target_final' && (
-            <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-400/30">
-              <label className="block text-xs font-semibold text-sky-300 mb-1.5">
+            <div className="p-4 rounded-[12px] bg-[#0099ff]/10 border border-[#0099ff]/30">
+              <label className="block text-xs font-semibold text-[#7acaff] mb-1.5">
                 {isId
                   ? 'Rata-rata Jumlah Adegan di Setiap Video'
                   : 'Average Scenes (Shots) per Final Video'}
@@ -192,9 +206,9 @@ export const ProjectSetupView: React.FC = () => {
                 onChange={(e) =>
                   setDefaultShotsPerVideo(Number(e.target.value))
                 }
-                className={`${inputClass} w-full px-3.5 py-2 rounded-xl text-sm font-semibold tabular-nums text-right`}
+                className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-semibold tabular-nums text-right`}
               />
-              <p className="text-[11px] opacity-80 mt-1.5">
+              <p className="text-[11px] text-[var(--vv-text-muted)] mt-1.5">
                 {isId
                   ? 'Angka ini otomatis menjadi jumlah adegan awal saat Anda menambahkan tahap pekerjaan baru.'
                   : 'This value serves as the default scene count when adding new production stages.'}
@@ -204,29 +218,33 @@ export const ProjectSetupView: React.FC = () => {
         </div>
 
         {/* Bagian 2: Sinkronisasi 2 Arah Cadangan */}
-        <div className={`${cardClass} rounded-2xl p-6 space-y-5`}>
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider opacity-80 flex items-center gap-2">
-              <ArrowLeftRight className="w-4 h-4 text-amber-400" />
+        <div className={`${cardClass} rounded-[16px] p-6 space-y-5`}>
+          <div className="flex items-center justify-between border-b border-[var(--vv-border)] pb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] flex items-center gap-2">
+              <span className="font-mono text-[10px] text-[var(--vv-text-subtle)]">02</span>
+              <ArrowLeftRight className="w-4 h-4 text-[#ffb840]" />
               <span>
                 {isId
-                  ? '2. Cadangan Buat Ulang (Otomatis Saling Menyesuaikan)'
-                  : '2. Redo / Regeneration Reserve (Auto-Synced)'}
+                  ? 'Cadangan Buat Ulang (Otomatis Saling Menyesuaikan)'
+                  : 'Redo / Regeneration Reserve (Auto-Synced)'}
               </span>
             </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-              {assumptions.reserve_input_mode === 'percent'
-                ? isId
-                  ? 'Diatur dari: Persentase (%)'
-                  : 'Set by: Percentage (%)'
-                : isId
-                ? 'Diatur dari: Jumlah Cadangan'
-                : 'Set by: Reserve Count'}
+            <span className="vv-badge-pill">
+              <span className="size-1.5 rounded-full bg-[#ffb840]" />
+              <span>
+                {assumptions.reserve_input_mode === 'percent'
+                  ? isId
+                    ? 'Persentase (%)'
+                    : 'Percentage (%)'
+                  : isId
+                  ? 'Jumlah Cadangan'
+                  : 'Reserve Count'}
+              </span>
             </span>
           </div>
 
-          <div className="p-3.5 rounded-xl bg-white/5 border border-white/10 text-xs flex items-start gap-2.5">
-            <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+          <div className="p-3.5 rounded-[12px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] text-xs flex items-start gap-2.5 text-[var(--vv-text-strong)]">
+            <Info className="w-4 h-4 text-[#0099ff] shrink-0 mt-0.5" />
             <span>
               {isId
                 ? 'Mengapa perlu cadangan? Hasil buatan AI terkadang perlu diulang beberapa kali sampai hasilnya pas. Anda bebas mengisi Persentase (%) atau langsung mengisi Jumlah Cadangan—keduanya otomatis saling menyesuaikan!'
@@ -238,13 +256,13 @@ export const ProjectSetupView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
             {/* Kotak A: Persentase Cadangan */}
             <div
-              className={`p-4 rounded-xl border transition ${
+              className={`p-4 rounded-[12px] border transition ${
                 assumptions.reserve_input_mode === 'percent'
-                  ? 'bg-amber-500/15 border-amber-400/50'
-                  : 'bg-white/5 border-white/10'
+                  ? 'bg-[#ffb840]/10 border-[#ffb840]/50'
+                  : 'bg-[var(--vv-tint-weak)] border-[var(--vv-border)]'
               }`}
             >
-              <label className="block text-xs font-bold mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5">
                 {isId
                   ? 'Persentase Cadangan (%)'
                   : 'Reserve Percentage (%)'}
@@ -256,9 +274,9 @@ export const ProjectSetupView: React.FC = () => {
                   step={1}
                   value={assumptions.reserve_percent}
                   onChange={(e) => setReserveByPercent(Number(e.target.value))}
-                  className={`${inputClass} w-full pr-8 pl-3.5 py-2.5 rounded-xl text-lg font-bold tabular-nums text-right`}
+                  className={`${inputClass} w-full pr-8 pl-3.5 py-2.5 rounded-[10px] text-lg font-bold tabular-nums text-right`}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold opacity-70">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--vv-text-muted)]">
                   %
                 </span>
               </div>
@@ -269,19 +287,19 @@ export const ProjectSetupView: React.FC = () => {
                 step={5}
                 value={Math.min(100, assumptions.reserve_percent)}
                 onChange={(e) => setReserveByPercent(Number(e.target.value))}
-                className="w-full mt-3 accent-amber-400 cursor-pointer"
+                className="w-full mt-3 accent-[#ffb840] cursor-pointer"
               />
             </div>
 
             {/* Kotak B: Jumlah Cadangan Buat Ulang */}
             <div
-              className={`p-4 rounded-xl border transition ${
+              className={`p-4 rounded-[12px] border transition ${
                 assumptions.reserve_input_mode === 'count'
-                  ? 'bg-sky-500/15 border-sky-400/50'
-                  : 'bg-white/5 border-white/10'
+                  ? 'bg-[#0099ff]/10 border-[#0099ff]/50'
+                  : 'bg-[var(--vv-tint-weak)] border-[var(--vv-border)]'
               }`}
             >
-              <label className="block text-xs font-bold mb-1.5">
+              <label className="block text-xs font-semibold mb-1.5">
                 {isId
                   ? 'Jumlah Cadangan Buat Ulang'
                   : 'Extra Reserve Tries'}
@@ -292,9 +310,9 @@ export const ProjectSetupView: React.FC = () => {
                 step={1}
                 value={calculation.reserve_generations}
                 onChange={(e) => setReserveByCount(Number(e.target.value))}
-                className={`${inputClass} w-full px-3.5 py-2.5 rounded-xl text-lg font-bold tabular-nums text-right`}
+                className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-lg font-bold tabular-nums text-right`}
               />
-              <div className="text-[11px] opacity-75 mt-3 text-right">
+              <div className="text-[11px] text-[var(--vv-text-muted)] mt-3 text-right">
                 {isId
                   ? `Total: ${calculation.planned_generations} rencana awal + ${calculation.reserve_generations} cadangan = ${calculation.budgeted_generations} kali buat`
                   : `Total: ${calculation.planned_generations} initial + ${calculation.reserve_generations} reserve = ${calculation.budgeted_generations} total tries`}
@@ -303,36 +321,36 @@ export const ProjectSetupView: React.FC = () => {
           </div>
 
           {/* Ringkasan Dampak Biaya Cadangan */}
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2 text-xs">
+          <div className="p-4 rounded-[12px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] space-y-2 text-xs">
             <div className="flex justify-between">
-              <span className="opacity-75">
+              <span className="text-[var(--vv-text-muted)]">
                 {isId
                   ? 'Rencana Pembuatan Awal:'
                   : 'Initial Planned Tries:'}
               </span>
-              <span className="font-bold tabular-nums">
+              <span className="font-semibold tabular-nums">
                 {calculation.planned_generations} {isId ? 'kali buat' : 'tries'}
               </span>
             </div>
-            <div className="flex justify-between text-amber-400">
+            <div className="flex justify-between text-[#ffb840]">
               <span>
                 {isId
                   ? `Tambahan Cadangan Buat Ulang (${calculation.effective_reserve_percent}%):`
                   : `Extra Reserve Tries (${calculation.effective_reserve_percent}%):`}
               </span>
-              <span className="font-bold tabular-nums">
+              <span className="font-semibold tabular-nums">
                 +{calculation.reserve_generations} {isId ? 'kali' : 'tries'} (
                 {formatCurrencyUsd(calculation.reserve_cost_usd, language)} /{' '}
                 {formatCurrencyIdr(calculation.reserve_cost_idr, language)})
               </span>
             </div>
-            <div className="pt-2 border-t border-white/10 flex justify-between text-sm font-bold">
+            <div className="pt-2.5 border-t border-[var(--vv-border)] flex justify-between text-sm font-bold">
               <span>
                 {isId
                   ? 'Total Dianggarkan (Termasuk Cadangan):'
                   : 'Total Budgeted (Including Reserve):'}
               </span>
-              <span className="tabular-nums text-sky-400">
+              <span className="tabular-nums text-[#0099ff]">
                 {calculation.budgeted_generations}{' '}
                 {isId ? 'kali buat' : 'tries'} •{' '}
                 {formatCurrencyUsd(calculation.total_cost_usd, language)}
@@ -344,7 +362,7 @@ export const ProjectSetupView: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveTab('planner')}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/25 transition"
+              className="vv-btn-primary px-5 py-2.5 text-xs"
             >
               {isId
                 ? 'Lanjut ke Daftar Pekerjaan AI →'

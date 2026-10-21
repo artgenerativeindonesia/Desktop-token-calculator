@@ -12,6 +12,24 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.0.2] - Pembaruan Tampilan Visual Bergaya Visuvate Studio (Awwwards)
+- **Tanggal Perubahan**: 22 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.0.2`
+
+### Ditambahkan (Added)
+1. **Sistem Desain Visual *Visuvate Studio* (`awwwards.com/sites/visuvate-studio`)**:
+   - **Aksen Tipografi Serif Miring Editorial (`.vv-accent`)**: Menggabungkan huruf modern yang tegas dengan kata aksen *serif miring* khas Visuvate Studio pada judul halaman utama.
+   - **Penomoran Urutan Studio (`01` s/d `06`)**: Menambahkan nomor urut rapi (`01`, `02`, `03`...) pada menu samping (*sidebar*), kartu ringkasan *bento*, dan baris pekerjaan, lengkap dengan titik indikator menyala biru elektrik (`#0099FF`).
+   - **Latar Belakang *Architectural Ribs* & Sakelar Tema Khas Visuvate**: Menambahkan garis-garis vertikal tipis berjarak rapi di latar belakang serta tombol sakelar geser (*pill switch*) untuk berpindah antara **Mode Gelap Hitam Pekat (`#000000` & `#141414`)** dan **Mode Terang Abu-abu Arsitektural (`#F6F6F6` & `#FFFFFF`)**.
+
+### Diubah (Changed)
+- **Gaya Tombol & Kartu *Bento* (`vv-btn-primary`, `vv-btn-accent`, `vv-badge-pill`)**: Mengubah tombol utama menjadi kapsul kontras tinggi (putih bersih dengan teks hitam pekat saat mode gelap, dan hitam pekat dengan teks putih saat mode terang) serta mempertegas garis tepi tipis (*hairline border*) pada seluruh kartu dan tabel.
+
+### Diperbaiki (Fixed)
+- Menjaga kontras warna teks dan kolom input agar tetap tajam dan mudah dibaca baik pada mode gelap maupun mode terang.
+
+---
+
 ## Versi [1.0.1] - Perbaikan Teks & Bahasa Tampilan Agar Lebih Ramah Awam
 - **Tanggal Perubahan**: 22 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.0.1`

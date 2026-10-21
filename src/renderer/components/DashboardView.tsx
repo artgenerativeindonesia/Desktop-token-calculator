@@ -82,28 +82,50 @@ export const DashboardView: React.FC = () => {
         onChange={handleBrowserFileUpload}
       />
 
-      {/* Hero Welcome & Quick Actions Card */}
-      <div className={`${cardClass} rounded-2xl p-6`}>
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+      {/* Visuvate Studio Hero Card */}
+      <div className={`${cardClass} rounded-[16px] p-6 md:p-7 relative overflow-hidden`}>
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2.5 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-400 border border-sky-400/30">
-                {isId ? 'Katalog Resmi Higgsfield AI' : 'Official Higgsfield AI Catalog'}
+            <div className="flex flex-wrap items-center gap-2.5 mb-3">
+              <span className="vv-badge-pill">
+                <span className="vv-blue-dot" />
+                <span>
+                  {isId ? 'Katalog Resmi Higgsfield AI' : 'Official Higgsfield AI Catalog'}
+                </span>
               </span>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                className={`px-3 py-1 rounded-full text-[11px] font-medium border ${
                   hasUnsavedChanges
-                    ? 'bg-amber-500/15 text-amber-400 border-amber-400/30'
-                    : 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
                 }`}
               >
                 {hasUnsavedChanges ? t.unsavedBadge : t.savedBadge}
               </span>
             </div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              {project.project_name || (isId ? 'Proyek Tanpa Nama' : 'Untitled Project')}
+
+            <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.04em] leading-tight">
+              {project.project_name ? (
+                <>
+                  <span>{project.project_name.split(' ').slice(0, -1).join(' ') || project.project_name} </span>
+                  {project.project_name.split(' ').length > 1 && (
+                    <span className="vv-accent text-[#0099ff]">
+                      {project.project_name.split(' ').slice(-1)[0]}
+                    </span>
+                  )}
+                </>
+              ) : isId ? (
+                <>
+                  Proyek <span className="vv-accent text-[#0099ff]">Tanpa Nama</span>
+                </>
+              ) : (
+                <>
+                  Untitled <span className="vv-accent text-[#0099ff]">Project</span>
+                </>
+              )}
             </h1>
-            <p className="text-xs opacity-70 mt-1">
+
+            <p className="text-xs text-[var(--vv-text-muted)] mt-1.5">
               {currentFilePath
                 ? `${isId ? 'Tersimpan di' : 'Saved at'}: ${currentFilePath}`
                 : isId
@@ -112,14 +134,14 @@ export const DashboardView: React.FC = () => {
             </p>
           </div>
 
-          {/* Action Buttons */}
+          {/* Visuvate Pill Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => createNewBlankProject()}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/15 transition"
+              className="vv-btn-secondary px-4 py-2 text-xs"
             >
-              <FilePlus2 className="w-4 h-4 text-sky-400" />
-              {t.btnNewProject}
+              <FilePlus2 className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>{t.btnNewProject}</span>
             </button>
 
             <button
@@ -130,181 +152,204 @@ export const DashboardView: React.FC = () => {
                   fileInputRef.current?.click();
                 }
               }}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/15 transition"
+              className="vv-btn-secondary px-4 py-2 text-xs"
             >
-              <FolderOpen className="w-4 h-4 text-amber-400" />
-              {t.btnOpenProject}
+              <FolderOpen className="w-3.5 h-3.5 text-[#ffb840]" />
+              <span>{t.btnOpenProject}</span>
             </button>
 
             <button
               onClick={() => saveProjectFile(false)}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/25 transition"
+              className="vv-btn-primary px-4 py-2 text-xs"
             >
-              <Save className="w-4 h-4" />
-              {t.btnSaveProject}
+              <Save className="w-3.5 h-3.5" />
+              <span>{t.btnSaveProject}</span>
             </button>
 
             <button
               onClick={() => setActiveTab('pdf')}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-500 hover:bg-indigo-400 text-white shadow-lg shadow-indigo-500/25 transition"
+              className="vv-btn-accent px-4 py-2 text-xs"
             >
-              <FileDown className="w-4 h-4" />
-              {t.btnExportPdf}
+              <FileDown className="w-3.5 h-3.5" />
+              <span>{t.btnExportPdf}</span>
             </button>
           </div>
         </div>
 
-        {/* One-Click Preset Bar for No-Code Testing */}
-        <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap items-center justify-between gap-3">
-          <div className="text-xs opacity-80 flex items-center gap-2">
-            <FlaskConical className="w-4 h-4 text-emerald-400 shrink-0" />
+        {/* One-Click Preset Bar */}
+        <div className="mt-6 pt-4 border-t border-[var(--vv-border)] flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-[var(--vv-text-muted)] flex items-center gap-2">
+            <FlaskConical className="w-4 h-4 text-[#0099ff] shrink-0" />
             <span>
               {isId
                 ? 'Ingin langsung melihat contoh hitungan tanpa mengetik dari awal?'
                 : 'Want to see a working sample budget right away without typing?'}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={loadPrdSyntheticTest}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-400/30 transition"
+              className="vv-btn-secondary px-3.5 py-1.5 text-xs"
             >
-              <FlaskConical className="w-3.5 h-3.5" />
-              {t.btnLoadPrdTest}
+              <FlaskConical className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{t.btnLoadPrdTest}</span>
             </button>
             <button
               onClick={loadCommercialSample}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-400/30 transition"
+              className="vv-btn-secondary px-3.5 py-1.5 text-xs"
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              {t.btnLoadCommercialDemo}
+              <Sparkles className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>{t.btnLoadCommercialDemo}</span>
             </button>
           </div>
         </div>
       </div>
 
-      {/* Ringkasan Eksekutif Dashboard (PRD Bab 11.2) */}
+      {/* Visuvate 4-Column Architectural Bento Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Biaya Dasar */}
-        <div className={`${cardClass} rounded-2xl p-5 flex flex-col justify-between`}>
+        {/* Card 01: Biaya Utama */}
+        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium opacity-70 uppercase tracking-wider">
-              {t.baseCost}
-            </span>
-            <Layers className="w-4 h-4 text-sky-400" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
+                01
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
+                {t.baseCost}
+              </span>
+            </div>
+            <Layers className="w-4 h-4 text-[var(--vv-text-subtle)]" />
           </div>
-          <div className="mt-3 text-right">
-            <div className="text-2xl font-bold tabular-nums">
+          <div className="mt-4 text-right">
+            <div className="text-2xl font-semibold tabular-nums tracking-tight">
               {formatCurrencyUsd(calc.base_cost_usd, language)}
             </div>
-            <div className="text-xs opacity-75 tabular-nums mt-0.5">
+            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-0.5">
               {formatCurrencyIdr(calc.base_cost_idr, language)}
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between text-xs opacity-75">
+          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
             <span>{t.plannedGenerations}</span>
-            <span className="font-semibold tabular-nums">
-              {calc.planned_generations}
+            <span className="font-semibold tabular-nums text-[var(--vv-text-primary)]">
+              {calc.planned_generations} {isId ? 'kali' : 'tries'}
             </span>
           </div>
         </div>
 
-        {/* Card 2: Biaya Cadangan */}
-        <div className={`${cardClass} rounded-2xl p-5 flex flex-col justify-between`}>
+        {/* Card 02: Biaya Cadangan */}
+        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium opacity-70 uppercase tracking-wider">
-              {t.reserveCost} ({calc.effective_reserve_percent}%)
-            </span>
-            <RefreshCw className="w-4 h-4 text-amber-400" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
+                02
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
+                {t.reserveCost} ({calc.effective_reserve_percent}%)
+              </span>
+            </div>
+            <RefreshCw className="w-4 h-4 text-[#ffb840]" />
           </div>
-          <div className="mt-3 text-right">
-            <div className="text-2xl font-bold tabular-nums text-amber-400">
+          <div className="mt-4 text-right">
+            <div className="text-2xl font-semibold tabular-nums tracking-tight text-[#ffb840]">
               {formatCurrencyUsd(calc.reserve_cost_usd, language)}
             </div>
-            <div className="text-xs opacity-75 tabular-nums mt-0.5">
+            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-0.5">
               {formatCurrencyIdr(calc.reserve_cost_idr, language)}
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between text-xs opacity-75">
+          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
             <span>{t.reserveGenerations}</span>
-            <span className="font-semibold tabular-nums">
-              +{calc.reserve_generations}
+            <span className="font-semibold tabular-nums text-[#ffb840]">
+              +{calc.reserve_generations} {isId ? 'kali' : 'tries'}
             </span>
           </div>
         </div>
 
-        {/* Card 3: Total Anggaran Akhir */}
+        {/* Card 03: Total Seluruh Anggaran (Featured Studio Card) */}
         <div
-          className={`${cardClass} rounded-2xl p-5 flex flex-col justify-between ring-1 ring-sky-400/40`}
+          className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between ring-1 ring-[#0099ff]/45`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">
-              {t.totalBudget}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="vv-blue-dot" />
+              <span className="text-xs font-semibold text-[#0099ff] uppercase tracking-wider">
+                {t.totalBudget}
+              </span>
+            </div>
             {calc.is_complete ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             ) : (
-              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <AlertTriangle className="w-4 h-4 text-[#ffb840]" />
             )}
           </div>
-          <div className="mt-3 text-right">
-            <div className="text-2xl font-extrabold tabular-nums">
+          <div className="mt-4 text-right">
+            <div className="text-2xl font-bold tabular-nums tracking-tight">
               {formatCurrencyUsd(calc.total_cost_usd, language)}
             </div>
-            <div className="text-sm font-semibold text-sky-400 tabular-nums mt-0.5">
+            <div className="text-sm font-semibold text-[#0099ff] tabular-nums mt-0.5">
               {formatCurrencyIdr(calc.total_cost_idr, language)}
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between text-xs">
-            <span className="opacity-75">{t.budgetedGenerations}</span>
+          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs">
+            <span className="text-[var(--vv-text-muted)]">{t.budgetedGenerations}</span>
             <span className="font-bold tabular-nums">
-              {calc.budgeted_generations}
+              {calc.budgeted_generations} {isId ? 'kali' : 'tries'}
             </span>
           </div>
         </div>
 
-        {/* Card 4: Biaya Unit & Credit */}
-        <div className={`${cardClass} rounded-2xl p-5 flex flex-col justify-between`}>
+        {/* Card 04: Pemakaian Credit & Rata-rata */}
+        <div className={`${cardClass} rounded-[14px] p-5 flex flex-col justify-between`}>
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium opacity-70 uppercase tracking-wider">
-              {t.totalCredit} & Unit
-            </span>
-            <Coins className="w-4 h-4 text-purple-400" />
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
+                04
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wider text-[var(--vv-text-muted)]">
+                {t.totalCredit}
+              </span>
+            </div>
+            <Coins className="w-4 h-4 text-[#7acaff]" />
           </div>
-          <div className="mt-3 text-right">
-            <div className="text-xl font-bold tabular-nums text-purple-300">
+          <div className="mt-4 text-right">
+            <div className="text-xl font-semibold tabular-nums tracking-tight text-[#7acaff]">
               {calc.total_credit !== null
                 ? `${calc.total_credit.toLocaleString()} Credits`
                 : t.unavailableLabel}
             </div>
-            <div className="text-xs opacity-75 tabular-nums mt-1">
+            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums mt-1">
               {t.costPerVideo}:{' '}
-              <strong>
+              <strong className="text-[var(--vv-text-primary)]">
                 {formatCurrencyUsd(calc.cost_per_video_usd, language)}
               </strong>
             </div>
           </div>
-          <div className="mt-3 pt-2.5 border-t border-white/10 flex justify-between text-xs opacity-75">
+          <div className="mt-4 pt-3 border-t border-[var(--vv-border)] flex justify-between text-xs text-[var(--vv-text-muted)]">
             <span>{t.costPerMinute}</span>
-            <span className="font-semibold tabular-nums">
+            <span className="font-semibold tabular-nums text-[var(--vv-text-primary)]">
               {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Baris Status Kurs USD/IDR & Target Output */}
+      {/* Baris Status Kurs USD/IDR & Ringkasan Kategori */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className={`${cardClass} rounded-2xl p-5 lg:col-span-2`}>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold uppercase tracking-wider opacity-80">
-              {isId
-                ? 'Ringkasan Biaya Berdasarkan Jenis Pembuatan AI'
-                : 'Cost Breakdown by AI Creation Type'}
-            </h2>
+        <div className={`${cardClass} rounded-[14px] p-6 lg:col-span-2`}>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
+                05
+              </span>
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+                {isId
+                  ? 'Ringkasan Biaya Berdasarkan Jenis Pembuatan AI'
+                  : 'Cost Breakdown by AI Creation Type'}
+              </h2>
+            </div>
             <button
               onClick={() => setActiveTab('planner')}
-              className="inline-flex items-center gap-1 text-xs font-semibold text-sky-400 hover:text-sky-300"
+              className="inline-flex items-center gap-1 text-xs font-medium text-[#0099ff] hover:underline"
             >
               {isId ? 'Atur Daftar Pekerjaan' : 'Edit Production List'}
               <ArrowRight className="w-3.5 h-3.5" />
@@ -313,35 +358,35 @@ export const DashboardView: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-white/10 opacity-70">
-                  <th className="py-2 text-left">{isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}</th>
-                  <th className="py-2 text-right">{isId ? 'Jumlah Tahap' : 'Stages'}</th>
-                  <th className="py-2 text-right">{isId ? 'Total Kali Buat' : 'Total Generations'}</th>
-                  <th className="py-2 text-right">{isId ? 'Subtotal (USD)' : 'Subtotal (USD)'}</th>
-                  <th className="py-2 text-right">{isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}</th>
+                <tr className="border-b border-[var(--vv-border)] text-[var(--vv-text-muted)]">
+                  <th className="py-2.5 text-left font-medium">{isId ? 'Jenis Pembuatan AI' : 'AI Creation Type'}</th>
+                  <th className="py-2.5 text-right font-medium">{isId ? 'Jumlah Tahap' : 'Stages'}</th>
+                  <th className="py-2.5 text-right font-medium">{isId ? 'Total Kali Buat' : 'Total Tries'}</th>
+                  <th className="py-2.5 text-right font-medium">{isId ? 'Subtotal (USD)' : 'Subtotal (USD)'}</th>
+                  <th className="py-2.5 text-right font-medium">{isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5">
+              <tbody className="divide-y divide-[var(--vv-border)]">
                 {ALL_CATEGORIES.map((cat) => {
                   const sum = calc.category_summaries[cat];
                   return (
-                    <tr key={cat} className="hover:bg-white/5">
-                      <td className="py-2.5 font-medium">
+                    <tr key={cat} className="hover:bg-[var(--vv-tint-weak)] transition-colors">
+                      <td className="py-3 font-medium">
                         {CATEGORY_LABELS[cat][language]}
                         {sum.has_incomplete_items && (
-                          <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300">
-                            {isId ? 'Belum Lengkap' : 'Incomplete'}
+                          <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/25">
+                            {isId ? 'Belum Diisi' : 'Incomplete'}
                           </span>
                         )}
                       </td>
-                      <td className="py-2.5 text-right tabular-nums">{sum.item_count}</td>
-                      <td className="py-2.5 text-right tabular-nums">
+                      <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">{sum.item_count}</td>
+                      <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
                         {sum.budgeted_generations}
                       </td>
-                      <td className="py-2.5 text-right font-semibold tabular-nums">
+                      <td className="py-3 text-right font-semibold tabular-nums">
                         {formatCurrencyUsd(sum.total_cost_usd, language)}
                       </td>
-                      <td className="py-2.5 text-right opacity-80 tabular-nums">
+                      <td className="py-3 text-right text-[var(--vv-text-muted)] tabular-nums">
                         {formatCurrencyIdr(sum.total_cost_idr, language)}
                       </td>
                     </tr>
@@ -353,30 +398,35 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Status Kurs & Target Video */}
-        <div className={`${cardClass} rounded-2xl p-5 flex flex-col justify-between space-y-4`}>
+        <div className={`${cardClass} rounded-[14px] p-6 flex flex-col justify-between space-y-4`}>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider opacity-80">
-                {t.exchangeRateLabel}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono tabular-nums text-[var(--vv-text-subtle)]">
+                  06
+                </span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+                  {t.exchangeRateLabel}
+                </span>
+              </div>
               <StatusBadge
                 status={project.exchange_rate.status}
                 language={language}
               />
             </div>
-            <div className="text-2xl font-bold tabular-nums text-right my-2">
+            <div className="text-2xl font-bold tabular-nums text-right my-2.5 tracking-tight">
               1 USD ={' '}
               {project.exchange_rate.rate
                 ? formatCurrencyIdr(project.exchange_rate.rate, language)
                 : t.unavailableLabel}
             </div>
-            <div className="text-[11px] opacity-70 space-y-1">
+            <div className="text-[11px] text-[var(--vv-text-muted)] space-y-1">
               <div>
-                <strong>{isId ? 'Sumber:' : 'Source:'}</strong>{' '}
+                <strong className="text-[var(--vv-text-strong)]">{isId ? 'Sumber:' : 'Source:'}</strong>{' '}
                 {project.exchange_rate.source_name}
               </div>
               <div>
-                <strong>{isId ? 'Jenis Kurs:' : 'Rate Type:'}</strong>{' '}
+                <strong className="text-[var(--vv-text-strong)]">{isId ? 'Keterangan:' : 'Rate Type:'}</strong>{' '}
                 {project.exchange_rate.rate_type}
               </div>
               <div className="flex items-center gap-1">
@@ -384,41 +434,41 @@ export const DashboardView: React.FC = () => {
                 <span>{project.exchange_rate.retrieved_at.slice(0, 19).replace('T', ' ')}</span>
               </div>
             </div>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-3.5 flex gap-2">
               <button
                 onClick={refreshExchangeRateAuto}
                 disabled={isRefreshingFx}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/20 border border-white/15 transition"
+                className="vv-btn-secondary flex-1 py-1.5 px-3 text-xs"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 ${isRefreshingFx ? 'animate-spin' : ''}`}
                 />
-                {t.refreshRateBtn}
+                <span>{t.refreshRateBtn}</span>
               </button>
               <button
                 onClick={() => setActiveTab('settings')}
-                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/15 border border-white/10 transition"
+                className="vv-btn-secondary py-1.5 px-3 text-xs"
               >
-                {isId ? 'Ubah Manual' : 'Manual Edit'}
+                {isId ? 'Ubah Sendiri' : 'Edit Rate'}
               </button>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-white/10">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider opacity-80 mb-2">
-              <Film className="w-3.5 h-3.5 text-sky-400" />
+          <div className="pt-3.5 border-t border-[var(--vv-border)]">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-2.5">
+              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
               <span>{isId ? 'Target Hasil Akhir Proyek' : 'Project Target Output'}</span>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="opacity-70">{isId ? 'Target Video Jadi' : 'Final Videos'}</div>
-                <div className="text-base font-bold tabular-nums text-right">
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <div className="p-3 rounded-[10px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)]">
+                <div className="text-[var(--vv-text-muted)]">{isId ? 'Target Video Jadi' : 'Final Videos'}</div>
+                <div className="text-base font-bold tabular-nums text-right mt-1">
                   {project.assumptions.target_videos}
                 </div>
               </div>
-              <div className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                <div className="opacity-70">{isId ? 'Total Durasi Video' : 'Total Duration'}</div>
-                <div className="text-base font-bold tabular-nums text-right">
+              <div className="p-3 rounded-[10px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)]">
+                <div className="text-[var(--vv-text-muted)]">{isId ? 'Total Durasi Video' : 'Total Duration'}</div>
+                <div className="text-base font-bold tabular-nums text-right mt-1">
                   {project.assumptions.final_duration_minutes} {isId ? 'menit' : 'min'}
                 </div>
               </div>
@@ -427,17 +477,16 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Peringatan Audit & Proyek Terakhir */}
+      {/* Status Kelengkapan Data & Proyek Terakhir */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Peringatan & Status Data */}
-        <div className={`${cardClass} rounded-2xl p-5`}>
-          <h3 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-3">
+        <div className={`${cardClass} rounded-[14px] p-6`}>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-3">
             {isId
               ? 'Status Kelengkapan Data & Info Penting'
               : 'Data Completeness & Important Notes'}
           </h3>
           {calc.warnings.length === 0 ? (
-            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-[10px] p-3.5">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 {isId
@@ -450,12 +499,12 @@ export const DashboardView: React.FC = () => {
               {calc.warnings.map((w, i) => (
                 <li
                   key={`${w.code}_${i}`}
-                  className={`p-2.5 rounded-xl border flex items-start gap-2 ${
+                  className={`p-3 rounded-[10px] border flex items-start gap-2 ${
                     w.severity === 'error'
-                      ? 'bg-rose-500/15 border-rose-400/30 text-rose-300'
+                      ? 'bg-rose-500/10 border-rose-400/30 text-rose-300'
                       : w.severity === 'warning'
-                      ? 'bg-amber-500/15 border-amber-400/30 text-amber-300'
-                      : 'bg-sky-500/15 border-sky-400/30 text-sky-300'
+                      ? 'bg-amber-500/10 border-amber-400/30 text-amber-300'
+                      : 'bg-[#0099ff]/10 border-[#0099ff]/30 text-[#7acaff]'
                   }`}
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -466,15 +515,14 @@ export const DashboardView: React.FC = () => {
           )}
         </div>
 
-        {/* Proyek Terakhir Dibuka */}
-        <div className={`${cardClass} rounded-2xl p-5`}>
-          <h3 className="text-xs font-bold uppercase tracking-wider opacity-80 mb-3">
+        <div className={`${cardClass} rounded-[14px] p-6`}>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] mb-3">
             {isId
               ? 'Proyek yang Terakhir Disimpan / Dibuka'
               : 'Recently Saved / Opened Projects'}
           </h3>
           {recentProjects.length === 0 ? (
-            <div className="text-xs opacity-60 p-4 text-center border border-dashed border-white/15 rounded-xl">
+            <div className="text-xs text-[var(--vv-text-muted)] p-5 text-center border border-dashed border-[var(--vv-border-strong)] rounded-[10px]">
               {isId
                 ? 'Belum ada proyek yang pernah Anda simpan di komputer ini.'
                 : 'No projects saved on this computer yet.'}
@@ -485,21 +533,21 @@ export const DashboardView: React.FC = () => {
                 <button
                   key={rec.file_path}
                   onClick={() => openProjectFile(rec.file_path)}
-                  className="w-full text-left p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition flex items-center justify-between gap-3"
+                  className="w-full text-left p-3 rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
                     <div className="text-xs font-semibold truncate">
                       {rec.project_name}
                     </div>
-                    <div className="text-[11px] opacity-60 truncate">
+                    <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
                       {rec.file_path}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="text-xs font-bold tabular-nums text-sky-400">
+                    <div className="text-xs font-bold tabular-nums text-[#0099ff]">
                       {formatCurrencyUsd(rec.total_cost_usd, language)}
                     </div>
-                    <div className="text-[10px] opacity-60">
+                    <div className="text-[10px] text-[var(--vv-text-subtle)]">
                       {rec.updated_at.slice(0, 10)}
                     </div>
                   </div>

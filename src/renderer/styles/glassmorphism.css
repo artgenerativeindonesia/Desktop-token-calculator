@@ -3,16 +3,75 @@
 @tailwind utilities;
 
 /* ============================================================================
- * APPLE-INSPIRED GLASSMORPHISM DESIGN SYSTEM (macOS Sequoia & visionOS Style)
- * Sesuai arahan pengguna & PRD Bab 11.4 (Hierarki visual jelas & tabular-nums)
+ * VISUVATE STUDIO DESIGN SYSTEM (Awwwards Honorable Mention Aesthetic)
+ * Inspired by https://www.awwwards.com/sites/visuvate-studio & visuvate.com
+ * - Architectural Monochrome (#000000 / #141414 Dark & #F6F6F6 / #FFFFFF Light)
+ * - Electric Studio Blue (#0099FF / #0068AD) & Warm Amber (#FFB840) Accents
+ * - Editorial Serif Italic Accent (.vv-accent) + Crisp Neo-Grotesk Sans
+ * - Hairline Bento Grids, Pill CTAs, & Tabular Monetary Alignment
  * ============================================================================ */
 
-:root {
-  --font-apple: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+:root,
+.vv-theme-dark {
+  --font-sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+  --font-serif-accent: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --ease-brand: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  /* Visuvate Dark Studio Tokens */
+  --vv-bg: #000000;
+  --vv-bg-elevated: #0d0d0d;
+  --vv-surface: #141414;
+  --vv-surface-2: #181818;
+  --vv-surface-strong: #1f1f1f;
+  --vv-border: rgba(255, 255, 255, 0.09);
+  --vv-border-strong: rgba(255, 255, 255, 0.17);
+  --vv-hairline: rgba(255, 255, 255, 0.13);
+  --vv-text-primary: #ffffff;
+  --vv-text-strong: #d8d8d8;
+  --vv-text-muted: #9a9a9a;
+  --vv-text-subtle: #7d7d7d;
+  --vv-nav-bg: rgba(0, 0, 0, 0.76);
+  --vv-tint-weak: rgba(255, 255, 255, 0.06);
+  --vv-tint: rgba(255, 255, 255, 0.11);
+  --vv-tint-strong: rgba(255, 255, 255, 0.18);
+  --vv-field: rgba(255, 255, 255, 0.07);
+  --vv-field-border: rgba(255, 255, 255, 0.14);
+  --vv-blue-300: #7acaff;
+  --vv-blue-500: #0099ff;
+  --vv-blue-700: #0068ad;
+  --vv-amber: #ffb840;
+}
+
+.vv-theme-light {
+  /* Visuvate Light Architectural Tokens (#F6F6F6 & #000000) */
+  --vv-bg: #f6f6f6;
+  --vv-bg-elevated: #fafafa;
+  --vv-surface: #ffffff;
+  --vv-surface-2: #f1f1f1;
+  --vv-surface-strong: #eaeaea;
+  --vv-border: rgba(0, 0, 0, 0.09);
+  --vv-border-strong: rgba(0, 0, 0, 0.18);
+  --vv-hairline: rgba(0, 0, 0, 0.12);
+  --vv-text-primary: #000000;
+  --vv-text-strong: #363636;
+  --vv-text-muted: #5a5a5a;
+  --vv-text-subtle: #767676;
+  --vv-nav-bg: rgba(255, 255, 255, 0.84);
+  --vv-tint-weak: rgba(0, 0, 0, 0.045);
+  --vv-tint: rgba(0, 0, 0, 0.08);
+  --vv-tint-strong: rgba(0, 0, 0, 0.14);
+  --vv-field: rgba(0, 0, 0, 0.05);
+  --vv-field-border: rgba(0, 0, 0, 0.14);
+  --vv-blue-300: #49b3fc;
+  --vv-blue-500: #0099ff;
+  --vv-blue-700: #0068ad;
+  --vv-amber: #d97706;
 }
 
 body {
-  font-family: var(--font-apple);
+  font-family: var(--font-sans);
+  letter-spacing: -0.012em;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -20,134 +79,242 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Angka moneter rata kanan dan sejajar sempurna (PRD Bab 11.4) */
+h1, h2, h3, h4 {
+  letter-spacing: -0.035em;
+}
+
+/* Signature Visuvate Editorial Serif Italic Accent */
+.vv-accent {
+  font-family: var(--font-serif-accent);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  padding-right: 0.06em;
+}
+
+/* Angka moneter rata kanan dan sejajar sempurna */
 .tabular-nums {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
 
-/* Ambient Mesh Backgrounds */
+/* Visuvate Studio Canvas Backgrounds with Subtle Vertical Architectural Ribs */
 .apple-bg-dark {
-  background-color: #080b14;
+  background-color: #000000;
   background-image:
-    radial-gradient(at 12% 15%, rgba(56, 189, 248, 0.16) 0px, transparent 48%),
-    radial-gradient(at 88% 12%, rgba(99, 102, 241, 0.18) 0px, transparent 52%),
-    radial-gradient(at 78% 85%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
-    radial-gradient(at 20% 82%, rgba(139, 92, 246, 0.14) 0px, transparent 48%);
-  color: #f8fafc;
+    radial-gradient(ellipse 80% 42% at 50% -8%, rgba(0, 153, 255, 0.16) 0%, rgba(0, 104, 173, 0.05) 48%, transparent 75%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.018) 0px,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px,
+      transparent 96px
+    );
+  color: #ffffff;
 }
 
 .apple-bg-light {
-  background-color: #eef2f9;
+  background-color: #f6f6f6;
   background-image:
-    radial-gradient(at 10% 12%, rgba(59, 130, 246, 0.14) 0px, transparent 50%),
-    radial-gradient(at 88% 15%, rgba(139, 92, 246, 0.12) 0px, transparent 50%),
-    radial-gradient(at 75% 88%, rgba(16, 185, 129, 0.10) 0px, transparent 50%),
-    radial-gradient(at 20% 80%, rgba(14, 165, 233, 0.12) 0px, transparent 48%);
-  color: #0f172a;
+    radial-gradient(ellipse 80% 40% at 50% -10%, rgba(0, 153, 255, 0.09) 0%, transparent 70%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.022) 0px,
+      rgba(0, 0, 0, 0.022) 1px,
+      transparent 1px,
+      transparent 96px
+    );
+  color: #000000;
 }
 
-/* Frosted Glass Sidebar (Level 1) */
+/* Visuvate Studio Sidebar Rail */
 .glass-sidebar-dark {
-  background: rgba(15, 23, 42, 0.58);
-  backdrop-filter: blur(32px) saturate(190%);
-  -webkit-backdrop-filter: blur(32px) saturate(190%);
-  border-right: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: inset -1px 0 0 0 rgba(255, 255, 255, 0.05);
+  background: rgba(10, 10, 10, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid var(--vv-border);
 }
 
 .glass-sidebar-light {
-  background: rgba(255, 255, 255, 0.68);
-  backdrop-filter: blur(32px) saturate(190%);
-  -webkit-backdrop-filter: blur(32px) saturate(190%);
-  border-right: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: inset -1px 0 0 0 rgba(255, 255, 255, 0.8);
+  background: rgba(250, 250, 250, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-right: 1px solid var(--vv-border);
 }
 
-/* Frosted Glass Card / Surface (Level 2) */
+/* Visuvate Bento Cards (Crisp Hairline + Matte-Glass Studio Surface) */
 .glass-card-dark {
-  background: linear-gradient(145deg, rgba(30, 41, 59, 0.62) 0%, rgba(15, 23, 42, 0.52) 100%);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: linear-gradient(165deg, rgba(24, 24, 24, 0.92) 0%, rgba(16, 16, 16, 0.96) 100%);
+  backdrop-filter: blur(16px) saturate(175%);
+  -webkit-backdrop-filter: blur(16px) saturate(175%);
+  border: 1px solid var(--vv-border);
   box-shadow:
-    0 14px 36px -10px rgba(0, 0, 0, 0.45),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.20);
+    0 28px 60px -24px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  transition: border-color 0.22s var(--ease-brand), transform 0.22s var(--ease-brand);
+}
+
+.glass-card-dark:hover {
+  border-color: var(--vv-border-strong);
 }
 
 .glass-card-light {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.82) 0%, rgba(255, 255, 255, 0.68) 100%);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: #ffffff;
+  border: 1px solid var(--vv-border);
   box-shadow:
-    0 12px 32px -10px rgba(15, 23, 42, 0.08),
-    0 1px 3px 0 rgba(15, 23, 42, 0.04),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.95);
+    0 24px 48px -24px rgba(0, 0, 0, 0.07),
+    0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  transition: border-color 0.22s var(--ease-brand), transform 0.22s var(--ease-brand);
 }
 
-/* Floating Glass Header & Dock (Level 3) */
+.glass-card-light:hover {
+  border-color: var(--vv-border-strong);
+}
+
+/* Visuvate Top Editor Header Bar */
 .glass-header-dark {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(0, 0, 0, 0.76);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--vv-border);
 }
 
 .glass-header-light {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(28px) saturate(200%);
-  -webkit-backdrop-filter: blur(28px) saturate(200%);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(246, 246, 246, 0.84);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--vv-border);
 }
 
-/* Translucent Inputs */
+/* Visuvate Studio Inputs & Selects */
 .glass-input-dark {
-  background: rgba(15, 23, 42, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  color: #f8fafc;
-  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  background: #0d0d0d;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  transition: border-color 0.18s var(--ease-brand), box-shadow 0.18s var(--ease-brand), background-color 0.18s var(--ease-brand);
+}
+.glass-input-dark:hover {
+  border-color: rgba(255, 255, 255, 0.24);
 }
 .glass-input-dark:focus {
   outline: none;
-  border-color: rgba(56, 189, 248, 0.75);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22);
-  background: rgba(15, 23, 42, 0.78);
+  border-color: #0099ff;
+  box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.25);
+  background: #141414;
 }
 .glass-input-dark option {
-  background-color: #0f172a;
-  color: #f8fafc;
+  background-color: #111111;
+  color: #ffffff;
 }
 
 .glass-input-light {
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid rgba(15, 23, 42, 0.15);
-  color: #0f172a;
-  transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  background: #f6f6f6;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: #000000;
+  transition: border-color 0.18s var(--ease-brand), box-shadow 0.18s var(--ease-brand), background-color 0.18s var(--ease-brand);
+}
+.glass-input-light:hover {
+  border-color: rgba(0, 0, 0, 0.28);
 }
 .glass-input-light:focus {
   outline: none;
-  border-color: rgba(37, 99, 235, 0.75);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+  border-color: #0099ff;
+  box-shadow: 0 0 0 2px rgba(0, 153, 255, 0.22);
   background: #ffffff;
 }
 .glass-input-light option {
   background-color: #ffffff;
-  color: #0f172a;
+  color: #000000;
+}
+
+/* Visuvate High-Contrast Pill Buttons & Badges */
+.vv-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--vv-text-primary);
+  color: var(--vv-bg);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border: 1px solid transparent;
+  transition: background-color 0.2s var(--ease-brand), transform 0.2s var(--ease-brand), opacity 0.2s var(--ease-brand);
+}
+.vv-btn-primary:hover {
+  background-color: var(--vv-text-strong);
+}
+
+.vv-btn-accent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: #0068ad;
+  color: #ffffff;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border: 1px solid rgba(122, 202, 255, 0.35);
+  box-shadow: 0 8px 24px -8px rgba(0, 153, 255, 0.45);
+  transition: background-color 0.2s var(--ease-brand), box-shadow 0.2s var(--ease-brand);
+}
+.vv-btn-accent:hover {
+  background-color: #0099ff;
+  box-shadow: 0 10px 28px -6px rgba(0, 153, 255, 0.65);
+}
+
+.vv-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--vv-tint-weak);
+  color: var(--vv-text-primary);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  border: 1px solid var(--vv-border-strong);
+  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+}
+.vv-btn-secondary:hover {
+  background-color: var(--vv-tint);
+  border-color: var(--vv-text-subtle);
+}
+
+.vv-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border-radius: 9999px;
+  border: 1px solid var(--vv-border-strong);
+  background: var(--vv-tint-weak);
+  padding: 0.25rem 0.75rem;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.vv-blue-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #0099ff;
+  box-shadow: 0 0 8px rgba(0, 153, 255, 0.85);
 }
 
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.3);
+  background: rgba(154, 154, 154, 0.28);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(148, 163, 184, 0.5);
+  background: rgba(154, 154, 154, 0.48);
 }
