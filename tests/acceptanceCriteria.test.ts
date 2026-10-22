@@ -57,13 +57,15 @@ describe('PRD Bab 15 — Full Acceptance Criteria Suite (AC-01 s/d AC-14)', () =
     expect((loadRes.project as Record<string, unknown>).history).toBeUndefined();
   });
 
-  it('AC-02 (Kategori) & AC-03 (Model): Mendukung 5 kategori proses AI dan parameter dinamis sesuai katalog', () => {
+  it('AC-02 (Kategori) & AC-03 (Model): Mendukung 7 kategori proses AI (termasuk Image to Image, Upscale Image, & Upscale Video) dan parameter dinamis sesuai katalog', () => {
     const categories: ProcessCategory[] = [
       'text_to_image',
+      'image_to_image',
       'image_to_video',
       'video_to_video',
       'text_to_video',
-      'upscaling',
+      'upscale_image',
+      'upscale_video',
     ];
     for (const cat of categories) {
       const models = getModelsByCategory(cat, HIGGSFIELD_MODEL_CATALOG);

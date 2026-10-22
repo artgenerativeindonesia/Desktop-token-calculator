@@ -24,10 +24,12 @@ import {
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
+  'image_to_image',
   'image_to_video',
   'video_to_video',
   'text_to_video',
-  'upscaling',
+  'upscale_image',
+  'upscale_video',
 ];
 
 export const BudgetSummaryView: React.FC = () => {

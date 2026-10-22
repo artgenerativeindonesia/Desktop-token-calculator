@@ -11,6 +11,10 @@ export const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }
     id: 'Text to Image (Gambar dari Teks)',
     en: 'Text to Image',
   },
+  image_to_image: {
+    id: 'Image to Image (Ubah / Edit Gambar)',
+    en: 'Image to Image',
+  },
   image_to_video: {
     id: 'Image to Video (Animasi Gambar)',
     en: 'Image to Video',
@@ -23,18 +27,24 @@ export const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }
     id: 'Text to Video (Video dari Teks)',
     en: 'Text to Video',
   },
-  upscaling: {
-    id: 'Upscaling / Enhancement (Peningkatan Kualitas)',
-    en: 'Upscaling / Enhancement',
+  upscale_image: {
+    id: 'Upscale Image (Perbesar Resolusi Gambar)',
+    en: 'Upscale Image',
+  },
+  upscale_video: {
+    id: 'Upscale Video (Perbesar Resolusi Video)',
+    en: 'Upscale Video',
   },
 };
 
 export const SHORT_CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
   text_to_image: { id: 'Text to Image', en: 'Text to Image' },
+  image_to_image: { id: 'Image to Image', en: 'Image to Image' },
   image_to_video: { id: 'Image to Video', en: 'Image to Video' },
   video_to_video: { id: 'Video to Video', en: 'Video to Video' },
   text_to_video: { id: 'Text to Video', en: 'Text to Video' },
-  upscaling: { id: 'Upscaling / Enhance', en: 'Upscaling / Enhance' },
+  upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
+  upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
 };
 
 export const STATUS_LABELS: Record<VerificationStatus, { id: string; en: string }> = {

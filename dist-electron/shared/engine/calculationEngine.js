@@ -15,10 +15,12 @@ const higgsfieldCatalog_1 = require("../catalog/higgsfieldCatalog");
 decimal_js_1.default.set({ precision: 28, rounding: decimal_js_1.default.ROUND_HALF_UP });
 const ALL_CATEGORIES = [
     'text_to_image',
+    'image_to_image',
     'image_to_video',
     'video_to_video',
     'text_to_video',
-    'upscaling',
+    'upscale_image',
+    'upscale_video',
 ];
 /**
  * Sinkronisasi 2 Arah (Bidirectional) antara Persentase Cadangan (R)
@@ -612,15 +614,19 @@ function createSampleCommercialProject(currentExchangeRate) {
     };
     const item1 = createProductionItemFromCatalog('text_to_image', 'higgsfield-ai/soul/v2/standard', 'Tahap 1: Key Visual & Karakter Utama (SOUL V2)', 4, 2, 0);
     item1.item_id = 'sample_item_t2i';
-    const item2 = createProductionItemFromCatalog('image_to_video', 'kling-video/v3.0', 'Tahap 2: Animasi Shot Produk & Karakter (Kling 3.0)', 4, 2, 5);
+    const item1b = createProductionItemFromCatalog('image_to_image', 'higgsfield-ai/soul/v2/reference', 'Tahap 2: Variasi Pose & Gaya Karakter (Image to Image)', 3, 2, 0);
+    item1b.item_id = 'sample_item_i2i';
+    const item2 = createProductionItemFromCatalog('image_to_video', 'kling-video/v3.0', 'Tahap 3: Animasi Shot Produk & Karakter (Kling 3.0)', 4, 2, 5);
     item2.item_id = 'sample_item_i2v';
-    const item3 = createProductionItemFromCatalog('text_to_video', 'bytedance/seedance-2.5', 'Tahap 3: B-Roll Sinematik Drone & Lingkungan (Seedance 2.5)', 2, 2, 8);
+    const item3 = createProductionItemFromCatalog('text_to_video', 'bytedance/seedance-2.5', 'Tahap 4: B-Roll Sinematik Drone & Lingkungan (Seedance 2.5)', 2, 2, 8);
     item3.item_id = 'sample_item_t2v';
-    const item4 = createProductionItemFromCatalog('video_to_video', 'higgsfield-ai/genjutsu', 'Tahap 4: Motion Transfer & VFX Restyle (Genjutsu)', 2, 1, 5);
+    const item4 = createProductionItemFromCatalog('video_to_video', 'higgsfield-ai/genjutsu', 'Tahap 5: Motion Transfer & VFX Restyle (Genjutsu)', 2, 1, 5);
     item4.item_id = 'sample_item_v2v';
-    const item5 = createProductionItemFromCatalog('upscaling', 'higgsfield-ai/video-upscale-4k', 'Tahap 5: Mastering Final 4K Upscale', 6, 1, 5);
-    item5.item_id = 'sample_item_upscale';
-    const items = [item1, item2, item3, item4, item5];
+    const item5 = createProductionItemFromCatalog('upscale_image', 'recraft/v4.1-utility-pro', 'Tahap 6: Upscale Image Key Visual ke 2K (Recraft Utility Pro)', 4, 1, 0);
+    item5.item_id = 'sample_item_upscale_img';
+    const item6 = createProductionItemFromCatalog('upscale_video', 'higgsfield-ai/video-upscale-4k', 'Tahap 7: Mastering Final 4K Upscale Video', 6, 1, 5);
+    item6.item_id = 'sample_item_upscale_vid';
+    const items = [item1, item1b, item2, item3, item4, item5, item6];
     const calculation = calculateProjectBudget(items, assumptions, fx);
     return {
         schema_version: project_1.CURRENT_SCHEMA_VERSION,

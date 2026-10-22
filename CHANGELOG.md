@@ -12,6 +12,38 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.1.0] - Tambah Fitur Baru: Jenis Pembuatan "Image to Image" serta Pemisahan "Upscale Image" & "Upscale Video"
+- **Tanggal Perubahan**: 22 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.1.0`
+
+### Ditambahkan (Added)
+1. **Jenis Pembuatan AI Baru: `Image to Image` (Ubah / Edit Gambar)**:
+   - Menambahkan kategori proses **Image to Image** di seluruh halaman aplikasi (Beranda, Daftar Pekerjaan AI, Ringkasan Biaya, Kurs & Daftar Harga, serta Laporan PDF).
+   - Dilengkapi dengan model resmi Higgsfield untuk *Image to Image*:
+     - **SOUL V2 Character & Style Reference (Image to Image)**
+     - **FLUX.1 Kontext (Smart Image Edit & Restyle)**
+     - **Recraft V4.1 Image-to-Image & Inpainting**
+     - **SOUL V2 (Editorial & Character)**
+2. **Pemisahan Jelas antara `Upscale Image` dan `Upscale Video`**:
+   - Memecah kategori *Upscale* menjadi 2 kategori utama yang terpisah sehingga total terdapat **7 Jenis Pembuatan AI**:
+     1. **Text to Image**
+     2. **Image to Image** *(Baru)*
+     3. **Image to Video**
+     4. **Video to Video**
+     5. **Text to Video**
+     6. **Upscale Image** *(Perbesar Resolusi Gambar — dihitung per gambar tanpa kolom durasi detik)*
+     7. **Upscale Video** *(Perbesar Resolusi Video — dihitung menggunakan durasi detik video)*
+   - Menambahkan model khusus **Higgsfield Clarity 4K Image Upscaler & Detail Enhancer** pada kategori **Upscale Image** mendampingi **Recraft V4.1 Utility Pro**.
+
+### Diubah (Changed)
+- **Proyek Contoh Komersial Lengkap (`createSampleCommercialProject`)**: Kini mencakup contoh tahapan untuk ketujuh jenis pembuatan AI sekaligus (termasuk *Image to Image*, *Upscale Image*, dan *Upscale Video*).
+- **Kompatibilitas File Proyek Lama (`.aivbudget`)**: File proyek lama yang masih memiliki label kategori `upscaling` otomatis dikenali dan dimigrasikan dengan aman saat dibuka.
+
+### Diperbaiki (Fixed)
+- Menyesuaikan formulir *popup* pengaturan adegan agar jenis berbasis gambar (*Text to Image*, *Image to Image*, *Upscale Image*) langsung menghitung per gambar tanpa menampilkan kolom durasi detik video.
+
+---
+
 ## Versi [1.0.3] - Tata Letak Berbasis Hierarki Visual, Titik Fokus (Emphasis), Kenyamanan UX, & Jendela Popup Kaca Buram (Frosted Glass)
 - **Tanggal Perubahan**: 22 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.0.3`

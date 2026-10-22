@@ -10,23 +10,25 @@ exports.HIGGSFIELD_DOCS_URL = 'https://docs.higgsfield.ai/docs/models';
 exports.HIGGSFIELD_PRICING_URL = 'https://higgsfield.ai/pricing';
 /**
  * Katalog Model Resmi Higgsfield (PRD Bab 6 & Bab 9.1)
- * Mencakup 5 Kategori Proses AI:
+ * Mencakup 7 Kategori Proses AI:
  * 1. text_to_image (Text to Image)
- * 2. image_to_video (Image to Video)
- * 3. video_to_video (Video to Video)
- * 4. text_to_video (Text to Video)
- * 5. upscaling (Upscaling / Enhancement)
+ * 2. image_to_image (Image to Image)
+ * 3. image_to_video (Image to Video)
+ * 4. video_to_video (Video to Video)
+ * 5. text_to_video (Text to Video)
+ * 6. upscale_image (Upscale Image)
+ * 7. upscale_video (Upscale Video)
  */
 exports.HIGGSFIELD_MODEL_CATALOG = [
     // ============================================================================
-    // 1. TEXT TO IMAGE
+    // 1. TEXT TO IMAGE & 2. IMAGE TO IMAGE
     // ============================================================================
     {
         provider: 'Higgsfield',
         model_id: 'higgsfield-ai/soul/v2/standard',
         model_name: 'SOUL V2 (Editorial & Character)',
         family: 'Higgsfield SOUL',
-        supported_categories: ['text_to_image'],
+        supported_categories: ['text_to_image', 'image_to_image'],
         description_id: 'Generasi gambar potret, fashion, dan karakter sinematik dengan gaya SOUL V2.',
         description_en: 'Generate portraits, fashion, and cinematic character images with SOUL V2 styles.',
         default_quantity_type: 'output',
@@ -250,6 +252,165 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
         ],
         source_name: 'Higgsfield Image Catalog (docs.higgsfield.ai/docs/models/ideogram-4)',
         source_url: 'https://docs.higgsfield.ai/docs/models/ideogram-4',
+        retrieved_at: exports.CATALOG_RETRIEVED_AT,
+    },
+    {
+        provider: 'Higgsfield',
+        model_id: 'higgsfield-ai/soul/v2/reference',
+        model_name: 'SOUL V2 Character & Style Reference (Image to Image)',
+        family: 'Higgsfield SOUL',
+        supported_categories: ['image_to_image'],
+        description_id: 'Ubah gaya, pose, atau pakaian dari gambar awal dengan tetap menjaga kemiripan wajah dan karakter.',
+        description_en: 'Transform style, pose, or outfit from a source image while preserving character likeness.',
+        default_quantity_type: 'output',
+        supports_duration: false,
+        default_duration_seconds: 0,
+        parameters: [
+            {
+                key: 'resolution',
+                label_id: 'Resolusi Gambar',
+                label_en: 'Image Resolution',
+                type: 'select',
+                options: [
+                    { value: '1K', label: '1K Standard (1024px)' },
+                    { value: '2K', label: '2K High-Res (2048px)' },
+                ],
+                defaultValue: '1K',
+                affectsPricing: true,
+            },
+            {
+                key: 'reference_mode',
+                label_id: 'Mode Referensi Gambar',
+                label_en: 'Image Reference Mode',
+                type: 'select',
+                options: [
+                    { value: 'character_lock', label: 'Kunci Karakter & Wajah' },
+                    { value: 'style_transfer', label: 'Ikuti Gaya Visual Gambar' },
+                ],
+                defaultValue: 'character_lock',
+                affectsPricing: false,
+            },
+        ],
+        pricing_variants: [
+            {
+                matchParameters: { resolution: '1K' },
+                pricing_unit: 'per_generation',
+                price_value: 0.094,
+                currency: 'USD',
+                credit_cost: 1.5,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+            {
+                matchParameters: { resolution: '2K' },
+                pricing_unit: 'per_generation',
+                price_value: 0.141,
+                currency: 'USD',
+                credit_cost: 2.25,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+        ],
+        source_name: 'Higgsfield SOUL V2 Reference Docs (docs.higgsfield.ai/docs/models/soul)',
+        source_url: 'https://docs.higgsfield.ai/docs/models/soul',
+        retrieved_at: exports.CATALOG_RETRIEVED_AT,
+    },
+    {
+        provider: 'Higgsfield',
+        model_id: 'flux-1/kontext-pro',
+        model_name: 'FLUX.1 Kontext (Smart Image Edit & Restyle)',
+        family: 'FLUX Kontext',
+        supported_categories: ['image_to_image'],
+        description_id: 'Edit objek, latar belakang, atau suasana dari gambar referensi menggunakan instruksi teks.',
+        description_en: 'Edit objects, backgrounds, or lighting from a reference image using text instructions.',
+        default_quantity_type: 'output',
+        supports_duration: false,
+        default_duration_seconds: 0,
+        parameters: [
+            {
+                key: 'tier',
+                label_id: 'Tingkat Kualitas Edit',
+                label_en: 'Edit Quality Tier',
+                type: 'select',
+                options: [
+                    { value: 'pro_1k', label: 'Kontext Pro (1K)' },
+                    { value: 'max_2k', label: 'Kontext Max (2K)' },
+                ],
+                defaultValue: 'pro_1k',
+                affectsPricing: true,
+            },
+        ],
+        pricing_variants: [
+            {
+                matchParameters: { tier: 'pro_1k' },
+                pricing_unit: 'per_generation',
+                price_value: 0.05,
+                currency: 'USD',
+                credit_cost: 1.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+            {
+                matchParameters: { tier: 'max_2k' },
+                pricing_unit: 'per_generation',
+                price_value: 0.08,
+                currency: 'USD',
+                credit_cost: 2.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+        ],
+        source_name: 'Higgsfield Image Editing Catalog (docs.higgsfield.ai/docs/models)',
+        source_url: 'https://docs.higgsfield.ai/docs/models',
+        retrieved_at: exports.CATALOG_RETRIEVED_AT,
+    },
+    {
+        provider: 'Higgsfield',
+        model_id: 'recraft/v4.1-i2i',
+        model_name: 'Recraft V4.1 Image-to-Image & Inpainting',
+        family: 'Recraft',
+        supported_categories: ['image_to_image'],
+        description_id: 'Modifikasi gambar, variasi produk, dan penggantian elemen desain dari gambar sumber.',
+        description_en: 'Modify images, create product variations, and inpaint design elements from a source image.',
+        default_quantity_type: 'output',
+        supports_duration: false,
+        default_duration_seconds: 0,
+        parameters: [
+            {
+                key: 'tier',
+                label_id: 'Varian Model',
+                label_en: 'Model Variant',
+                type: 'select',
+                options: [
+                    { value: 'standard_1k', label: 'Standard (1K)' },
+                    { value: 'pro_2k', label: 'Pro (2K)' },
+                ],
+                defaultValue: 'standard_1k',
+                affectsPricing: true,
+            },
+        ],
+        pricing_variants: [
+            {
+                matchParameters: { tier: 'standard_1k' },
+                pricing_unit: 'per_generation',
+                price_value: 0.04,
+                currency: 'USD',
+                credit_cost: 1.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+            {
+                matchParameters: { tier: 'pro_2k' },
+                pricing_unit: 'per_generation',
+                price_value: 0.08,
+                currency: 'USD',
+                credit_cost: 2.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+        ],
+        source_name: 'Higgsfield Recraft V4.1 Docs (docs.higgsfield.ai/docs/models/recraft-v4-1)',
+        source_url: 'https://docs.higgsfield.ai/docs/models/recraft-v4-1',
         retrieved_at: exports.CATALOG_RETRIEVED_AT,
     },
     // ============================================================================
@@ -679,15 +840,15 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
         retrieved_at: exports.CATALOG_RETRIEVED_AT,
     },
     // ============================================================================
-    // 5. UPSCALING / ENHANCEMENT
+    // 6. UPSCALE IMAGE & 7. UPSCALE VIDEO
     // ============================================================================
     {
         provider: 'Higgsfield',
         model_id: 'higgsfield-ai/video-upscale-4k',
         model_name: 'Higgsfield 4K Video Upscaler & Enhancer',
-        family: 'Higgsfield Enhancement',
-        supported_categories: ['upscaling'],
-        description_id: 'Peningkatan resolusi dan ketajaman klip video hingga 4K.',
+        family: 'Higgsfield Video Enhancement',
+        supported_categories: ['upscale_video'],
+        description_id: 'Perbesar resolusi dan tingkatkan ketajaman klip video hingga kualitas 4K.',
         description_en: 'Upscale and enhance generated video clips up to 4K resolution.',
         default_quantity_type: 'asset',
         supports_duration: true,
@@ -695,8 +856,8 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
         parameters: [
             {
                 key: 'target_resolution',
-                label_id: 'Target Resolusi',
-                label_en: 'Target Resolution',
+                label_id: 'Target Resolusi Video',
+                label_en: 'Target Video Resolution',
                 type: 'select',
                 options: [
                     { value: '1080p_enhance', label: '1080p Detail Enhance' },
@@ -734,22 +895,22 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
         provider: 'Higgsfield',
         model_id: 'recraft/v4.1-utility-pro',
         model_name: 'Recraft V4.1 Utility Pro (2K Image Upscale & Clean)',
-        family: 'Recraft',
-        supported_categories: ['upscaling'],
-        description_id: 'Upscale gambar ke 2K dan pembersihan latar belakang presisi.',
-        description_en: 'Upscale still images to 2K resolution with precision background utility.',
-        default_quantity_type: 'asset',
+        family: 'Recraft Image Upscale',
+        supported_categories: ['upscale_image'],
+        description_id: 'Perbesar resolusi gambar ke 2K dan pembersihan detail gambar secara presisi.',
+        description_en: 'Upscale still images to 2K resolution with precision detail cleanup.',
+        default_quantity_type: 'output',
         supports_duration: false,
         default_duration_seconds: 0,
         parameters: [
             {
                 key: 'output_quality',
-                label_id: 'Kualitas Target',
-                label_en: 'Target Quality',
+                label_id: 'Kualitas Target Gambar',
+                label_en: 'Target Image Quality',
                 type: 'select',
                 options: [
-                    { value: '1K_utility', label: '1K Utility' },
-                    { value: '2K_pro', label: '2K Utility Pro' },
+                    { value: '1K_utility', label: '1K Clean & Enhance' },
+                    { value: '2K_pro', label: '2K High-Res Upscale' },
                 ],
                 defaultValue: '2K_pro',
                 affectsPricing: true,
@@ -781,10 +942,59 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
     },
     {
         provider: 'Higgsfield',
+        model_id: 'higgsfield-ai/clarity-image-upscaler',
+        model_name: 'Higgsfield Clarity 4K Image Upscaler & Detail Enhancer',
+        family: 'Higgsfield Image Enhancement',
+        supported_categories: ['upscale_image'],
+        description_id: 'Perbesar resolusi gambar dan pertajam tekstur hingga 4K tanpa mengubah komposisi asli.',
+        description_en: 'Upscale still images and sharpen textures up to 4K while preserving original composition.',
+        default_quantity_type: 'output',
+        supports_duration: false,
+        default_duration_seconds: 0,
+        parameters: [
+            {
+                key: 'target_resolution',
+                label_id: 'Target Resolusi Gambar',
+                label_en: 'Target Image Resolution',
+                type: 'select',
+                options: [
+                    { value: '2k_crisp', label: '2K Crisp Upscale' },
+                    { value: '4k_ultra', label: '4K Ultra Detail' },
+                ],
+                defaultValue: '4k_ultra',
+                affectsPricing: true,
+            },
+        ],
+        pricing_variants: [
+            {
+                matchParameters: { target_resolution: '2k_crisp' },
+                pricing_unit: 'per_asset',
+                price_value: 0.05,
+                currency: 'USD',
+                credit_cost: 1.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+            {
+                matchParameters: { target_resolution: '4k_ultra' },
+                pricing_unit: 'per_asset',
+                price_value: 0.09,
+                currency: 'USD',
+                credit_cost: 2.0,
+                credit_unit: 'per_generation',
+                status: 'verified',
+            },
+        ],
+        source_name: 'Higgsfield Image Upscale Reference (docs.higgsfield.ai/docs/models)',
+        source_url: 'https://docs.higgsfield.ai/docs/models',
+        retrieved_at: exports.CATALOG_RETRIEVED_AT,
+    },
+    {
+        provider: 'Higgsfield',
         model_id: 'higgsfield-ai/speak-2.0',
-        model_name: 'Speak 2.0 (Lip-Sync & Voice Enhancement)',
-        family: 'Higgsfield Enhancement',
-        supported_categories: ['upscaling', 'video_to_video'],
+        model_name: 'Speak 2.0 (Video Lip-Sync & Facial Enhancement)',
+        family: 'Higgsfield Video Enhancement',
+        supported_categories: ['upscale_video', 'video_to_video'],
         description_id: 'Sinkronisasi bibir (lip-sync) dan penyempurnaan ekspresi wajah bicara.',
         description_en: 'Lip-sync and talking character facial expression enhancement.',
         default_quantity_type: 'asset',
@@ -838,10 +1048,12 @@ exports.HIGGSFIELD_MODEL_CATALOG = [
         family: 'Custom / Preview',
         supported_categories: [
             'text_to_image',
+            'image_to_image',
             'image_to_video',
             'video_to_video',
             'text_to_video',
-            'upscaling',
+            'upscale_image',
+            'upscale_video',
         ],
         description_id: 'Gunakan opsi ini untuk model preview baru yang tarif resminya belum dipublikasikan (memerlukan input tarif manual sesuai PRD FR-08 & FR-09).',
         description_en: 'Use this option for preview models whose public rate is not yet verified (requires manual rate input per PRD FR-08 & FR-09).',

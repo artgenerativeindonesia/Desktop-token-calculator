@@ -31,10 +31,12 @@ import { ProcessCategory } from '../../shared/types/project';
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
+  'image_to_image',
   'image_to_video',
   'video_to_video',
   'text_to_video',
-  'upscaling',
+  'upscale_image',
+  'upscale_video',
 ];
 
 export const DashboardView: React.FC = () => {
@@ -457,8 +459,8 @@ export const DashboardView: React.FC = () => {
             </h2>
             <p className="text-xs text-[var(--vv-text-subtle)] mt-0.5">
               {isId
-                ? 'Ringkasan cepat 5 kategori AI. Klik tombol di kanan untuk melihat rincian tabel penuh dalam jendela popup.'
-                : 'Quick summary of the 5 AI categories. Click the buttons on the right to inspect full details in a popup window.'}
+                ? 'Ringkasan cepat 7 kategori AI. Klik tombol di kanan untuk melihat rincian tabel penuh dalam jendela popup.'
+                : 'Quick summary of the 7 AI categories. Click the buttons on the right to inspect full details in a popup window.'}
             </p>
           </div>
 
@@ -493,8 +495,8 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Clean 5-Category Horizontal Bento Pills */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-4">
+        {/* Clean 7-Category Horizontal Bento Pills */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
           {ALL_CATEGORIES.map((cat) => {
             const sum = calc.category_summaries[cat];
             const isActiveCat = sum.item_count > 0;

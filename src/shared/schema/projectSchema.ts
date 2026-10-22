@@ -9,13 +9,18 @@ export const VerificationStatusSchema = z.enum([
   'invalid',
 ]);
 
-export const ProcessCategorySchema = z.enum([
-  'text_to_image',
-  'image_to_video',
-  'video_to_video',
-  'text_to_video',
-  'upscaling',
-]);
+export const ProcessCategorySchema = z.preprocess(
+  (val) => (val === 'upscaling' ? 'upscale_video' : val),
+  z.enum([
+    'text_to_image',
+    'image_to_image',
+    'image_to_video',
+    'video_to_video',
+    'text_to_video',
+    'upscale_image',
+    'upscale_video',
+  ])
+);
 
 export const EstimationModeSchema = z.enum(['target_final', 'per_shot']);
 

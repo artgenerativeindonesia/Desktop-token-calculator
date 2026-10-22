@@ -197,15 +197,17 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
     expect(calc.warnings.some((w) => w.code === 'ZERO_DIVISOR_MINUTE')).toBe(true);
   });
 
-  it('AC-02: Proyek komersial mendukung seluruh 5 kategori proses AI secara simultan', () => {
+  it('AC-02: Proyek komersial mendukung seluruh 7 kategori proses AI secara simultan', () => {
     const sample = createSampleCommercialProject(validExchangeRate);
     const categoriesPresent = new Set(sample.items.map((i) => i.category));
 
     expect(categoriesPresent.has('text_to_image')).toBe(true);
+    expect(categoriesPresent.has('image_to_image')).toBe(true);
     expect(categoriesPresent.has('image_to_video')).toBe(true);
     expect(categoriesPresent.has('video_to_video')).toBe(true);
     expect(categoriesPresent.has('text_to_video')).toBe(true);
-    expect(categoriesPresent.has('upscaling')).toBe(true);
+    expect(categoriesPresent.has('upscale_image')).toBe(true);
+    expect(categoriesPresent.has('upscale_video')).toBe(true);
     expect(sample.calculation.is_complete).toBe(true);
     expect(sample.calculation.total_cost_usd).toBeGreaterThan(0);
   });

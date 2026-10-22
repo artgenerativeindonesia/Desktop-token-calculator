@@ -12,13 +12,15 @@ exports.VerificationStatusSchema = zod_1.z.enum([
     'unavailable',
     'invalid',
 ]);
-exports.ProcessCategorySchema = zod_1.z.enum([
+exports.ProcessCategorySchema = zod_1.z.preprocess((val) => (val === 'upscaling' ? 'upscale_video' : val), zod_1.z.enum([
     'text_to_image',
+    'image_to_image',
     'image_to_video',
     'video_to_video',
     'text_to_video',
-    'upscaling',
-]);
+    'upscale_image',
+    'upscale_video',
+]));
 exports.EstimationModeSchema = zod_1.z.enum(['target_final', 'per_shot']);
 exports.QuantityTypeSchema = zod_1.z.enum(['shot', 'asset', 'output']);
 exports.PricingUnitSchema = zod_1.z.enum([

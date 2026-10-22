@@ -8,10 +8,12 @@ const project_1 = require("../types/project");
 const calculationEngine_1 = require("../engine/calculationEngine");
 const CATEGORY_LABELS = {
     text_to_image: { id: 'Text to Image', en: 'Text to Image' },
+    image_to_image: { id: 'Image to Image', en: 'Image to Image' },
     image_to_video: { id: 'Image to Video', en: 'Image to Video' },
     video_to_video: { id: 'Video to Video', en: 'Video to Video' },
     text_to_video: { id: 'Text to Video', en: 'Text to Video' },
-    upscaling: { id: 'Upscaling / Enhancement', en: 'Upscaling / Enhancement' },
+    upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
+    upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
 };
 const STATUS_LABELS = {
     verified: { id: 'Terverifikasi (Otomatis)', en: 'Verified (Automatic)' },

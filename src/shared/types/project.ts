@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.0.3';
+export const APP_VERSION = '1.1.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -16,13 +16,25 @@ export type VerificationStatus =
   | 'unavailable'
   | 'invalid';
 
-/** PRD Bab 6: 5 Kategori Proses AI wajib */
+/** 7 Kategori Proses AI (termasuk Image to Image, Upscale Image, & Upscale Video) */
 export type ProcessCategory =
   | 'text_to_image'
+  | 'image_to_image'
   | 'image_to_video'
   | 'video_to_video'
   | 'text_to_video'
-  | 'upscaling';
+  | 'upscale_image'
+  | 'upscale_video';
+
+export const ALL_PROCESS_CATEGORIES: ProcessCategory[] = [
+  'text_to_image',
+  'image_to_image',
+  'image_to_video',
+  'video_to_video',
+  'text_to_video',
+  'upscale_image',
+  'upscale_video',
+];
 
 /** PRD Bab 1.1 & 8.8: Dua mode estimasi */
 export type EstimationMode = 'target_final' | 'per_shot';
