@@ -12,6 +12,26 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.3] - Penghapusan Total Rumus Matematika Rumit & Input Variasi
+- **Tanggal Perubahan**: 25 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.3`
+
+### Ditambahkan (Added)
+1. **Rangkuman Bersih & Minimalis (Bebas Matematika)**:
+   - Kotak informasi di dalam jendela 'Atur Detail' kini tampil rapi dalam 2 baris manusiawi tanpa simbol matematika (`×`, `+`, `=`, `%`):
+     - Baris 1: `Kebutuhan: 2 Gambar • Ditambah Cadangan Langkah 2 (+20%)`
+     - Baris 2: `Total Anggaran Tahap Ini: Rp 8.138 (2.4 Credit)`
+2. **Baris Ringkas Sederhana di Daftar Adegan**:
+   - Menampilkan ringkasan to-the-point: `2 Gambar • Total Buat: 3x (sudah termasuk cadangan jaga-jaga)`.
+
+### Diubah (Changed)
+1. **Penghapusan Total Input 'Variasi'**:
+   - Menghapus kolom input variasi yang sebelumnya membingungkan dan membuat perhitungan terkesan dobel. Pengguna kini hanya perlu mengisi satu hal: *"Mau Buat Berapa Gambar / Adegan?"*.
+2. **Koneksi Otomatis Murni ke Cadangan Langkah 2**:
+   - Jumlah gambar langsung terhubung ke persentase dana jaga-jaga cadangan yang diatur di Langkah 2 tanpa rumus perkalian panjang di layar.
+
+---
+
 ## Versi [1.2.2] - Penghapusan Input Ganda & Penyatuan Alur Kerja Dana Jaga-Jaga
 - **Tanggal Perubahan**: 25 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.2`

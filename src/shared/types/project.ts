@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.2.2';
+export const APP_VERSION = '1.2.3';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';

@@ -71,11 +71,6 @@ export const ProductionPlannerView: React.FC = () => {
       ? `Mau Buat Berapa ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'}?`
       : `How Many ${qt === 'shot' ? 'Scenes' : qt === 'asset' ? 'Files' : 'Images'}?`;
 
-  const attemptsQuestion = (qt: QuantityType) =>
-    language === 'id'
-      ? `Berapa Pilihan / Variasi per ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'}?`
-      : `How Many Variations per ${qt === 'shot' ? 'Scene' : qt === 'asset' ? 'File' : 'Image'}?`;
-
   const tierBadgeClass = (badge?: string) => {
     if (badge === 'NEW')
       return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
@@ -393,19 +388,16 @@ export const ProductionPlannerView: React.FC = () => {
                     >
                       <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
                         <strong>{item.quantity}</strong>{' '}
-                        {unitNoun(item.quantity_type)} &times;{' '}
-                        <strong>{item.attempts_per_item}</strong>{' '}
-                        {isId ? 'variasi' : 'variations'} &rarr;{' '}
+                        {unitNoun(item.quantity_type)} &bull;{' '}
                         <span className="text-[#0099ff] font-semibold">
-                          {isId ? 'total' : 'total'}{' '}
-                          {calcRow?.budgeted_generations ?? 0}{' '}
-                          {isId ? 'kali buat' : 'generations'}
+                          {isId ? 'Total Buat:' : 'Total Tries:'}{' '}
+                          {calcRow?.budgeted_generations ?? item.quantity}x
                         </span>
                       </div>
                       <div className="text-[10px] text-[var(--vv-text-subtle)] mt-0.5">
                         {isId
-                          ? `sudah termasuk ${calcRow?.reserve_generations ?? 0} jaga-jaga (+${assumptions.reserve_percent}%)`
-                          : `includes ${calcRow?.reserve_generations ?? 0} reserve (+${assumptions.reserve_percent}%)`}
+                          ? 'sudah termasuk cadangan jaga-jaga'
+                          : 'includes safety reserve'}
                       </div>
                     </button>
                     <InfoTip align="right" width={270}>
@@ -413,29 +405,24 @@ export const ProductionPlannerView: React.FC = () => {
                         <>
                           <strong>Dari mana angka ini?</strong>
                           <br />
-                          {item.quantity} {unitNoun(item.quantity_type)} &times;{' '}
-                          {item.attempts_per_item} pilihan variasi ={' '}
-                          {calcRow?.planned_generations ?? 0} kali buat, ditambah{' '}
-                          {calcRow?.reserve_generations ?? 0} jatah jaga-jaga
-                          (+{assumptions.reserve_percent}%) ={' '}
-                          {calcRow?.budgeted_generations ?? 0} kali buat.
+                          Kebutuhan: {item.quantity} {unitNoun(item.quantity_type)}.
+                          Ditambah jatah cadangan jaga-jaga (+{assumptions.reserve_percent}%) dari Langkah 2 ={' '}
+                          {calcRow?.budgeted_generations ?? item.quantity} kali buat.
                           <br />
                           <span className="text-[#7acaff]">
-                            Untuk mengubah angkanya, klik &ldquo;Atur Detail&rdquo;.
+                            Untuk mengubah jumlah gambar, klik &ldquo;Atur Detail&rdquo;.
                           </span>
                         </>
                       ) : (
                         <>
                           <strong>Where does this come from?</strong>
                           <br />
-                          {item.quantity} {unitNoun(item.quantity_type)} &times;{' '}
-                          {item.attempts_per_item} variations ={' '}
-                          {calcRow?.planned_generations ?? 0} planned, plus{' '}
-                          {calcRow?.reserve_generations ?? 0} reserve (+{assumptions.reserve_percent}%) ={' '}
-                          {calcRow?.budgeted_generations ?? 0} generations.
+                          Requirement: {item.quantity} {unitNoun(item.quantity_type)}.
+                          Plus safety reserve (+{assumptions.reserve_percent}%) from Step 2 ={' '}
+                          {calcRow?.budgeted_generations ?? item.quantity} generations.
                           <br />
                           <span className="text-[#7acaff]">
-                            Click &ldquo;Edit Details&rdquo; to change the numbers.
+                            Click &ldquo;Edit Details&rdquo; to change the count.
                           </span>
                         </>
                       )}
@@ -793,15 +780,15 @@ export const ProductionPlannerView: React.FC = () => {
                           : '4. How Much Do You Want to Make?'}
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {/* Kolom 1: Mau buat berapa */}
                         <div>
                           <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
                             <span>{quantityQuestion(item.quantity_type)}</span>
                             <InfoTip>
                               {isId
-                                ? `Jumlah ${noun} jadi yang Anda butuhkan untuk tahap ini. Contoh: butuh 4 ${noun} berbeda, isi 4.`
-                                : `The number of finished ${noun} you need for this stage. Example: need 4 different ${noun}, enter 4.`}
+                                ? `Jumlah ${noun} jadi yang Anda butuhkan untuk tahap ini. Contoh: butuh 2 ${noun}, isi 2.`
+                                : `The number of finished ${noun} you need for this stage. Example: need 2 ${noun}, enter 2.`}
                             </InfoTip>
                           </label>
                           <input
@@ -812,50 +799,17 @@ export const ProductionPlannerView: React.FC = () => {
                             onChange={(e) =>
                               updateProductionItemField(item.item_id, {
                                 quantity: Math.max(
-                                  0,
-                                  Math.floor(Number(e.target.value) || 0)
-                                ),
-                              })
-                            }
-                            className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                          />
-                          {usesTargetMultiplier && (
-                            <span className="block text-[10px] text-[#0099ff] mt-1 text-right">
-                              {isId
-                                ? `× ${assumptions.target_videos} video = ${effQty} ${noun}`
-                                : `× ${assumptions.target_videos} videos = ${effQty} ${noun}`}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Kolom 2: Pilihan / Variasi per gambar */}
-                        <div>
-                          <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
-                            <span>{attemptsQuestion(item.quantity_type)}</span>
-                            <InfoTip align="center">
-                              {isId
-                                ? `Berapa banyak opsi/variasi hasil yang ingin dibuat AI untuk dipilih 1 yang terbaik. Contoh: ingin 2 pilihan variasi per ${noun}, isi 2.`
-                                : `How many variation options you want AI to generate so you can pick the best one. Example: want 2 variations per ${noun}, enter 2.`}
-                            </InfoTip>
-                          </label>
-                          <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={item.attempts_per_item}
-                            onChange={(e) =>
-                              updateProductionItemField(item.item_id, {
-                                attempts_per_item: Math.max(
                                   1,
                                   Math.floor(Number(e.target.value) || 1)
                                 ),
+                                attempts_per_item: 1,
                               })
                             }
-                            className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
+                            className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-sm font-bold tabular-nums text-right`}
                           />
                         </div>
 
-                        {/* Kolom 3: Durasi (jika ada) atau info cara tagih */}
+                        {/* Kolom 2: Durasi (jika ada) atau info cara tagih */}
                         {showDuration ? (
                           <div>
                             <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
@@ -888,7 +842,7 @@ export const ProductionPlannerView: React.FC = () => {
                                   ),
                                 })
                               }
-                              className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
+                              className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-sm font-bold tabular-nums text-right`}
                             />
                             <span className="block text-[10px] text-[var(--vv-text-muted)] mt-1 text-right">
                               {isPerSecond
@@ -901,9 +855,9 @@ export const ProductionPlannerView: React.FC = () => {
                             </span>
                           </div>
                         ) : (
-                          <div className="flex flex-col justify-center gap-1 pt-1 sm:pt-5">
-                            <div className="flex items-center gap-1.5 text-[11px] text-[var(--vv-text-muted)]">
-                              <Info className="w-3.5 h-3.5 text-[#0099ff] shrink-0" />
+                          <div className="flex flex-col justify-center gap-1.5 pt-1 sm:pt-4">
+                            <div className="flex items-center gap-1.5 text-xs text-[var(--vv-text-muted)]">
+                              <Info className="w-4 h-4 text-[#0099ff] shrink-0" />
                               <span>
                                 {isId
                                   ? `Model ini ditagih ${unitLabel}${
@@ -926,82 +880,48 @@ export const ProductionPlannerView: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Kalimat ringkasan otomatis */}
-                      <div className="rounded-[10px] border border-[#0099ff]/25 bg-[#0099ff]/[0.06] px-3.5 py-2.5 text-xs leading-relaxed text-[var(--vv-text-strong)]">
-                        <div className="tabular-nums">
-                          {isId ? (
-                            <>
-                              <strong>{item.quantity}</strong> {noun} &times;{' '}
-                              <strong>{item.attempts_per_item}</strong> pilihan variasi ={' '}
-                              {planned} kali buat{' '}
-                              <span className="inline-flex items-center gap-1">
-                                + {reserve} jaga-jaga cadangan (+{assumptions.reserve_percent}%)
-                                <InfoTip align="center" width={280}>
-                                  <strong>Dari mana jaga-jaga ini?</strong>
-                                  <br />
-                                  Dana jaga-jaga (cadangan) otomatis terhubung
-                                  dari persentase proyek (+{assumptions.reserve_percent}%)
-                                  yang Anda tentukan di Langkah 2, agar anggaran Anda
-                                  aman jika ada revisi atau kegagalan tanpa biaya tak terduga.
-                                </InfoTip>
-                              </span>{' '}
-                              ={' '}
-                              <strong className="text-[#0099ff]">
-                                {budgeted} kali buat
-                              </strong>
-                              {isPerSecond && item.duration_seconds > 0 && (
-                                <>
-                                  {' '}
-                                  &times; {item.duration_seconds} detik ={' '}
-                                  <strong className="text-[#0099ff]">
-                                    {billedSeconds} detik video yang ditagih
-                                  </strong>
-                                </>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <strong>{item.quantity}</strong> {noun} &times;{' '}
-                              <strong>{item.attempts_per_item}</strong> variations ={' '}
-                              {planned} planned{' '}
-                              <span className="inline-flex items-center gap-1">
-                                + {reserve} safety reserve (+{assumptions.reserve_percent}%)
-                                <InfoTip align="center" width={280}>
-                                  <strong>Where does this reserve come from?</strong>
-                                  <br />
-                                  The safety reserve is automatically applied from your
-                                  project percentage (+{assumptions.reserve_percent}%)
-                                  set in Step 2, protecting you from unexpected revision costs.
-                                </InfoTip>
-                              </span>{' '}
-                              ={' '}
-                              <strong className="text-[#0099ff]">
-                                {budgeted} generations
-                              </strong>
-                              {isPerSecond && item.duration_seconds > 0 && (
-                                <>
-                                  {' '}
-                                  &times; {item.duration_seconds} sec ={' '}
-                                  <strong className="text-[#0099ff]">
-                                    {billedSeconds} billed video seconds
-                                  </strong>
-                                </>
-                              )}
-                            </>
-                          )}
+                      {/* Ringkasan Bersih & Minimalis (Tanpa Simbol Matematika Rumit) */}
+                      <div className="rounded-[12px] border border-[#0099ff]/30 bg-[#0099ff]/[0.07] p-3.5 space-y-1.5 text-xs">
+                        <div className="flex flex-wrap items-center justify-between text-[var(--vv-text-muted)]">
+                          <span>
+                            {isId
+                              ? `Kebutuhan: ${item.quantity} ${noun} • Ditambah Cadangan Langkah 2 (+${assumptions.reserve_percent}%)`
+                              : `Requirement: ${item.quantity} ${noun} • Plus Step 2 Safety Reserve (+${assumptions.reserve_percent}%)`}
+                          </span>
+                          <span className="tabular-nums font-mono text-[var(--vv-text-strong)]">
+                            {calcRow?.budgeted_generations ?? item.quantity}x {isId ? 'buat' : 'tries'}
+                          </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingItemId(null);
-                            setActiveTab('setup');
-                          }}
-                          className="mt-1 text-[11px] font-medium text-[#0099ff] hover:underline"
-                        >
-                          {isId
-                            ? 'Ubah persentase dana jaga-jaga di Langkah 2 →'
-                            : 'Change safety reserve percentage in Step 2 →'}
-                        </button>
+                        <div className="flex flex-wrap items-baseline justify-between pt-1 border-t border-[var(--vv-border)]">
+                          <span className="font-medium text-[var(--vv-text-strong)]">
+                            {isId ? 'Total Anggaran Tahap Ini:' : 'Total Stage Budget:'}
+                          </span>
+                          <div className="text-right">
+                            <strong className="text-base text-[#0099ff] tabular-nums">
+                              {formatCurrencyIdr(calcRow?.total_cost_idr, language)}
+                            </strong>
+                            <span className="text-xs text-[var(--vv-text-muted)] tabular-nums ml-2">
+                              ({formatCurrencyUsd(calcRow?.total_cost_usd, language)}
+                              {calcRow?.total_credit !== null
+                                ? ` • ${calcRow?.total_credit} Credit`
+                                : ''})
+                            </span>
+                          </div>
+                        </div>
+                        <div className="pt-0.5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingItemId(null);
+                              setActiveTab('setup');
+                            }}
+                            className="text-[11px] font-medium text-[#0099ff] hover:underline"
+                          >
+                            {isId
+                              ? 'Ubah persentase dana jaga-jaga di Langkah 2 →'
+                              : 'Change safety reserve percentage in Step 2 →'}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
