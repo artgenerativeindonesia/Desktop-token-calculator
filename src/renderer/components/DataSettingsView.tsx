@@ -18,6 +18,7 @@ import {
 } from '../../shared/types/project';
 import { HIGGSFIELD_SUBSCRIPTION_PLANS } from '../../shared/catalog/higgsfieldCatalog';
 import {
+  CheckCircle2,
   Coins,
   Database,
   Edit3,
@@ -77,7 +78,7 @@ export const DataSettingsView: React.FC = () => {
   // Filter Kategori Paket Langganan (Lapis 2)
   const [planFilterTab, setPlanFilterTab] = useState<
     'all' | 'individual_monthly' | 'individual_annual' | 'business' | 'topup'
-  >('all');
+  >('individual_annual');
 
   const displayedPlans = useMemo(() => {
     return HIGGSFIELD_SUBSCRIPTION_PLANS.filter((plan) => {
@@ -406,20 +407,14 @@ export const DataSettingsView: React.FC = () => {
           {(
             [
               {
-                id: 'all',
-                label: isId
-                  ? `Semua Paket (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`
-                  : `All Plans (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`,
-              },
-              {
-                id: 'individual_monthly',
-                label: isId ? 'Individu Bulanan' : 'Individual Monthly',
-              },
-              {
                 id: 'individual_annual',
                 label: isId
                   ? 'Individu Tahunan (Hemat s/d 30%)'
                   : 'Individual Annual (Up to 30% Off)',
+              },
+              {
+                id: 'individual_monthly',
+                label: isId ? 'Individu Bulanan' : 'Individual Monthly',
               },
               {
                 id: 'business',
@@ -431,15 +426,21 @@ export const DataSettingsView: React.FC = () => {
                 id: 'topup',
                 label: isId ? 'Top-Up & API Resmi' : 'Top-Up & Official API',
               },
+              {
+                id: 'all',
+                label: isId
+                  ? `Semua Paket (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`
+                  : `All Plans (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`,
+              },
             ] as const
           ).map((tab) => (
             <button
               key={tab.id}
               type="button"
               onClick={() => setPlanFilterTab(tab.id)}
-              className={`px-3 py-1 rounded-lg font-medium transition-all text-xs ${
+              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all text-xs ${
                 planFilterTab === tab.id
-                  ? 'bg-[#0068ad] text-white shadow-sm'
+                  ? 'bg-[#0068ad] text-white shadow-sm font-semibold'
                   : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] hover:bg-[var(--vv-tint-weak)]'
               }`}
             >
@@ -448,59 +449,109 @@ export const DataSettingsView: React.FC = () => {
           ))}
         </div>
 
-        {/* Grid Kartu Pilihan Paket */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5">
+        {/* Grid Kartu Pilihan Paket (Leluasa, Rapi, & Tanpa Teks Tabrakan) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
           {displayedPlans.map((plan) => {
             const isSelected = selectedCreditPlanId === plan.plan_id;
-            const shortName = isId
-              ? plan.name_id.split(' (')[0]
-              : plan.name_en.split(' (')[0];
+            const planName = isId ? plan.name_id : plan.name_en;
 
             return (
               <button
                 key={plan.plan_id}
                 type="button"
                 onClick={() => applyCreditSubscriptionPlan(plan.plan_id)}
-                className={`p-3 rounded-[14px] text-left border transition-all flex flex-col justify-between ${
+                className={`group p-4 rounded-[16px] text-left border transition-all flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-[#0068ad]/20 border-[#0099ff] shadow-md ring-1 ring-[#0099ff]/50'
-                    : 'bg-[var(--vv-tint-weak)] border-[var(--vv-border)] hover:border-[#0099ff]/50'
+                    ? 'bg-[#0068ad]/20 border-[#0099ff] shadow-lg shadow-[#0099ff]/15 ring-2 ring-[#0099ff]/50'
+                    : 'bg-[var(--vv-tint-weak)] border-[var(--vv-border)] hover:border-[#0099ff]/60 hover:bg-[var(--vv-field)]/60'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[11px] font-bold text-[var(--vv-text-primary)] truncate">
-                      {shortName}
-                    </span>
+                  {/* Header: Nama Paket & Badge Diskon */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-[var(--vv-text-strong)] leading-snug break-words">
+                        {planName}
+                      </div>
+                      <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5">
+                        {plan.billing_cycle === 'annual'
+                          ? (isId ? 'Tagihan Tahunan (Hemat)' : 'Annual Billing')
+                          : plan.billing_cycle === 'monthly'
+                          ? (isId ? 'Tagihan Bulanan' : 'Monthly Billing')
+                          : plan.plan_category === 'api'
+                          ? (isId ? 'Pay-as-you-go API' : 'Pay-as-you-go API')
+                          : (isId ? 'Top-Up Sekali Beli' : 'One-Time Pack')}
+                      </div>
+                    </div>
                     {plan.discount_badge && (
-                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0 shadow-sm">
                         {plan.discount_badge}
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-[#0099ff] font-mono font-bold mt-1">
-                    ${plan.usd_per_credit.toFixed(4)}
-                    <span className="text-[9px] font-normal text-[var(--vv-text-muted)]">
-                      /cr
-                    </span>
+
+                  {/* Nilai Konversi 1 Credit */}
+                  <div className="my-3 p-2.5 rounded-xl bg-[var(--vv-field)] border border-[var(--vv-border)]">
+                    <div className="flex items-baseline justify-between gap-1">
+                      <span className="text-[11px] text-[var(--vv-text-muted)] font-medium">
+                        {isId ? 'Nilai 1 Credit:' : '1 Credit Rate:'}
+                      </span>
+                      <span className="text-base font-bold font-mono text-[#0099ff]">
+                        ${plan.usd_per_credit.toFixed(4)}
+                      </span>
+                    </div>
+                    {fx.rate && (
+                      <div className="text-[11px] text-[var(--vv-text-subtle)] font-mono text-right mt-1">
+                        ≈ {formatCurrencyIdr(plan.usd_per_credit * fx.rate, language)} / cr
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[10px] text-[var(--vv-text-muted)] mt-2 pt-1.5 border-t border-[var(--vv-border)]">
-                  <span>
-                    {plan.monthly_credits > 0
-                      ? `${plan.monthly_credits.toLocaleString()} cr`
-                      : plan.plan_id === 'api_standard'
-                      ? 'Pay-per-use'
-                      : 'On-demand'}
-                  </span>
-                  <span className="font-semibold text-[var(--vv-text-strong)]">
-                    {plan.monthly_price_usd > 0
-                      ? `$${plan.monthly_price_usd}/bln`
-                      : plan.plan_id === 'api_standard'
-                      ? 'API'
-                      : 'Top-Up'}
-                  </span>
+                {/* Footer Informasi Alokasi & Harga (Terpisah Jelas & Rapi) */}
+                <div className="mt-1">
+                  <div className="pt-2.5 border-t border-[var(--vv-border)] grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--vv-text-subtle)] block">
+                        {isId ? 'Alokasi' : 'Allocation'}
+                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5 text-[var(--vv-text-primary)] font-semibold text-xs">
+                        <Coins className="w-3.5 h-3.5 text-[#0099ff] shrink-0" />
+                        <span className="truncate">
+                          {plan.monthly_credits > 0
+                            ? `${plan.monthly_credits.toLocaleString()} Cr`
+                            : plan.plan_id === 'api_standard'
+                            ? 'Sesuai Pakai'
+                            : '1.000 Cr'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--vv-text-subtle)] block">
+                        {isId ? 'Harga Paket' : 'Price'}
+                      </span>
+                      <div className="mt-0.5 font-bold text-xs text-[var(--vv-text-strong)]">
+                        {plan.monthly_price_usd > 0
+                          ? `$${plan.monthly_price_usd} / bln`
+                          : plan.plan_id === 'api_standard'
+                          ? 'Pay-per-use'
+                          : '$120 Sekali'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Terpilih */}
+                  {isSelected ? (
+                    <div className="mt-3 py-1.5 px-2.5 rounded-lg bg-[#0099ff]/15 text-[#0099ff] border border-[#0099ff]/30 text-xs font-semibold flex items-center justify-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#0099ff]" />
+                      <span>{isId ? 'Paket Aktif Digunakan' : 'Active Plan Selected'}</span>
+                    </div>
+                  ) : (
+                    <div className="mt-3 py-1.5 px-2 text-[11px] text-[var(--vv-text-subtle)] text-center transition group-hover:text-[#0099ff]">
+                      {isId ? 'Klik untuk memilih paket ini' : 'Click to select this plan'}
+                    </div>
+                  )}
                 </div>
               </button>
             );
@@ -509,25 +560,42 @@ export const DataSettingsView: React.FC = () => {
 
         {/* Selected Plan Details Banner */}
         {selectedPlanObj && (
-          <div className="p-3 rounded-[12px] bg-[var(--vv-field)] border border-[var(--vv-border)] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-[#0099ff] shrink-0" />
-              <div className="text-[var(--vv-text-muted)] leading-relaxed">
-                <strong className="text-[var(--vv-text-strong)]">
+          <div className="p-4 rounded-[14px] bg-[var(--vv-field)] border border-[#0099ff]/30 text-xs flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-start md:items-center gap-3">
+              <div className="p-2 rounded-xl bg-[#0099ff]/15 text-[#0099ff] shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#0099ff]">
+                    {isId ? 'Paket Terpilih Sebagai Patokan' : 'Active Benchmark Plan'}
+                  </span>
+                  {selectedPlanObj.discount_badge && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      {selectedPlanObj.discount_badge}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm font-bold text-[var(--vv-text-strong)] mt-0.5">
                   {isId ? selectedPlanObj.name_id : selectedPlanObj.name_en}
-                </strong>
-                : {isId ? selectedPlanObj.description_id : selectedPlanObj.description_en}
+                </div>
+                <div className="text-xs text-[var(--vv-text-muted)] mt-0.5">
+                  {isId ? selectedPlanObj.description_id : selectedPlanObj.description_en}
+                </div>
               </div>
             </div>
-            <div className="text-right shrink-0">
-              <span className="font-mono font-bold text-[#0099ff] text-xs">
+            <div className="text-left md:text-right shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[var(--vv-border)]">
+              <span className="text-[10px] uppercase tracking-wider text-[var(--vv-text-subtle)] block">
+                {isId ? 'Patokan Konversi 1 Credit' : '1 Credit Conversion Rate'}
+              </span>
+              <span className="font-mono font-bold text-[#0099ff] text-base">
                 ${selectedPlanObj.usd_per_credit.toFixed(4)} / Credit
               </span>
-              <div className="text-[10px] text-[var(--vv-text-subtle)]">
-                {fx.rate
-                  ? `~${formatCurrencyIdr(selectedPlanObj.usd_per_credit * fx.rate, language)} / cr`
-                  : ''}
-              </div>
+              {fx.rate && (
+                <div className="text-[11px] text-[var(--vv-text-subtle)] font-mono mt-0.5">
+                  ≈ {formatCurrencyIdr(selectedPlanObj.usd_per_credit * fx.rate, language)} / cr
+                </div>
+              )}
             </div>
           </div>
         )}

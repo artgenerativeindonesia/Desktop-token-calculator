@@ -12,6 +12,25 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.3.1] - Perapian Tata Letak Kartu Paket Higgsfield Lapis 2 (Bebas Tabrakan & Teks Terpotong)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.3.1`
+
+### Diperbaiki (Fixed)
+1. **Pelegaan Tata Letak Kartu Paket (Grid 3-4 Kolom)**:
+   - Mengubah pembagian kartu dari yang sebelumnya 6 kolom sempit (`xl:grid-cols-6`) menjadi 3 hingga 4 kolom leluasa (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`). Setiap kartu kini memiliki ruang selebar minimal ~280px sehingga tidak lagi saling himpit atau bertumpukan.
+2. **Penghapusan Pemotongan Teks Nama Paket (`truncate`)**:
+   - Menghapus pembatasan teks (`truncate`) pada nama paket, sehingga nama panjang seperti *"Paket Pro 600 Tahunan"* dan *"Paket Max 1.800 Tahunan"* tampil utuh sempurna tanpa terpotong tanda titik-titik (`...`).
+3. **Pemisahan Jelas Info Alokasi Credit vs Harga Paket**:
+   - Menata ulang bagian bawah kartu menjadi 2 kolom informasi terstruktur (*Alokasi* di kiri dan *Harga Paket* di kanan) dengan label tersendiri.
+   - Mengatasi kendala teks yang sebelumnya bertabrakan seperti `"600 cr$29/bln"` atau `"Pay-per-useAPI"`. Kini tampil rapi: Alokasi `600 Cr` dan Harga `$29 / bln`.
+4. **Lencana Status Pilihan yang Mewah**:
+   - Menambahkan ikon centang biru dan teks `"✓ Paket Aktif Digunakan"` pada kartu yang sedang dipilih, serta panduan lembut `"Klik untuk memilih paket ini"` pada kartu lainnya.
+5. **Kategori Pembuka Lebih Nyaman (Default Individu Tahunan)**:
+   - Tab filter paket kini secara default membuka kategori *"Individu Tahunan (Hemat s/d 30%)"* yang berisi 5 paket utama kreator, sehingga pengguna tidak langsung dihujani 17 kartu sekaligus. Tab lain tetap dapat diklik kapan saja dengan cepat.
+
+---
+
 ## Versi [1.3.0] - Pembaruan Lengkap Katalog Paket Langganan Higgsfield 2026 (Riset Resmi Live Website)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.3.0`
