@@ -371,62 +371,79 @@ export const ProductionPlannerView: React.FC = () => {
 
                   {/* Middle: Ringkasan hitungan (hanya dibaca — angka diubah lewat "Atur Detail") */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowManualPriceSection(
-                          item.pricing.status === 'manual'
-                        );
-                        setEditingItemId(item.item_id);
-                      }}
-                      title={
-                        isId
-                          ? 'Klik untuk mengubah angka di "Atur Detail"'
-                          : 'Click to change numbers in "Edit Details"'
-                      }
-                      className="vv-card-quiet px-3.5 py-2 text-left hover:border-[#0099ff]/45 transition"
-                    >
-                      <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
-                        <strong>{item.quantity}</strong>{' '}
-                        {unitNoun(item.quantity_type)} &bull;{' '}
-                        <span className="text-[#0099ff] font-semibold">
-                          {isId ? 'Total Buat:' : 'Total Tries:'}{' '}
-                          {calcRow?.budgeted_generations ?? item.quantity}x
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-[var(--vv-text-subtle)] mt-0.5">
-                        {isId
-                          ? 'sudah termasuk cadangan jaga-jaga'
-                          : 'includes safety reserve'}
-                      </div>
-                    </button>
-                    <InfoTip align="right" width={270}>
-                      {isId ? (
+                    {(() => {
+                      const cadanganCount =
+                        assumptions.default_attempts_per_shot ||
+                        assumptions.reserve_generations_override ||
+                        item.attempts_per_item ||
+                        1;
+                      const itemTotalGenerations =
+                        calcRow?.budgeted_generations ??
+                        item.quantity * cadanganCount;
+
+                      return (
                         <>
-                          <strong>Dari mana angka ini?</strong>
-                          <br />
-                          Kebutuhan: {item.quantity} {unitNoun(item.quantity_type)}.
-                          Ditambah jatah cadangan jaga-jaga (+{assumptions.reserve_percent}%) dari Langkah 2 ={' '}
-                          {calcRow?.budgeted_generations ?? item.quantity} kali buat.
-                          <br />
-                          <span className="text-[#7acaff]">
-                            Untuk mengubah jumlah gambar, klik &ldquo;Atur Detail&rdquo;.
-                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowManualPriceSection(
+                                item.pricing.status === 'manual'
+                              );
+                              setEditingItemId(item.item_id);
+                            }}
+                            title={
+                              isId
+                                ? 'Klik untuk mengubah angka di "Atur Detail"'
+                                : 'Click to change numbers in "Edit Details"'
+                            }
+                            className="vv-card-quiet px-3.5 py-2 text-left hover:border-[#0099ff]/45 transition"
+                          >
+                            <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
+                              <strong>{item.quantity}</strong>{' '}
+                              {unitNoun(item.quantity_type)} &bull;{' '}
+                              <span className="text-[#0099ff] font-semibold">
+                                {isId ? 'Total Buat:' : 'Total Tries:'}{' '}
+                                {itemTotalGenerations}x
+                              </span>
+                            </div>
+                            <div className="text-[10px] text-[var(--vv-text-subtle)] mt-0.5">
+                              {isId
+                                ? `(dikalikan ${cadanganCount} cadangan Langkah 2)`
+                                : `(multiplied by ${cadanganCount} Step 2 reserve)`}
+                            </div>
+                          </button>
+                          <InfoTip align="right" width={270}>
+                            {isId ? (
+                              <>
+                                <strong>Dari mana angka ini?</strong>
+                                <br />
+                                Kebutuhan: {item.quantity} {unitNoun(item.quantity_type)}.
+                                <br />
+                                Dikalikan Cadangan Langkah 2 ({cadanganCount} cadangan) ={' '}
+                                {itemTotalGenerations} kali buat.
+                                <br />
+                                <span className="text-[#7acaff]">
+                                  Untuk mengubah jumlah kebutuhan, klik &ldquo;Atur Detail&rdquo;.
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <strong>Where does this count come from?</strong>
+                                <br />
+                                Requirement: {item.quantity} {unitNoun(item.quantity_type)}.
+                                <br />
+                                Multiplied by Step 2 Reserve ({cadanganCount} reserve) ={' '}
+                                {itemTotalGenerations} generations.
+                                <br />
+                                <span className="text-[#7acaff]">
+                                  Click &ldquo;Edit Details&rdquo; to change the count.
+                                </span>
+                              </>
+                            )}
+                          </InfoTip>
                         </>
-                      ) : (
-                        <>
-                          <strong>Where does this come from?</strong>
-                          <br />
-                          Requirement: {item.quantity} {unitNoun(item.quantity_type)}.
-                          Plus safety reserve (+{assumptions.reserve_percent}%) from Step 2 ={' '}
-                          {calcRow?.budgeted_generations ?? item.quantity} generations.
-                          <br />
-                          <span className="text-[#7acaff]">
-                            Click &ldquo;Edit Details&rdquo; to change the count.
-                          </span>
-                        </>
-                      )}
-                    </InfoTip>
+                      );
+                    })()}
                   </div>
 
                   {/* Right: Focal Stage Subtotal + Frosted Modal Edit Trigger */}
@@ -796,15 +813,20 @@ export const ProductionPlannerView: React.FC = () => {
                             min={1}
                             step={1}
                             value={item.quantity}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const cadanganMultiplier =
+                                assumptions.default_attempts_per_shot ||
+                                assumptions.reserve_generations_override ||
+                                item.attempts_per_item ||
+                                1;
                               updateProductionItemField(item.item_id, {
                                 quantity: Math.max(
                                   1,
                                   Math.floor(Number(e.target.value) || 1)
                                 ),
-                                attempts_per_item: 1,
-                              })
-                            }
+                                attempts_per_item: cadanganMultiplier,
+                              });
+                            }}
                             className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-sm font-bold tabular-nums text-right`}
                           />
                         </div>
@@ -880,49 +902,62 @@ export const ProductionPlannerView: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Ringkasan Bersih & Minimalis (Tanpa Simbol Matematika Rumit) */}
-                      <div className="rounded-[12px] border border-[#0099ff]/30 bg-[#0099ff]/[0.07] p-3.5 space-y-1.5 text-xs">
-                        <div className="flex flex-wrap items-center justify-between text-[var(--vv-text-muted)]">
-                          <span>
-                            {isId
-                              ? `Kebutuhan: ${item.quantity} ${noun} • Ditambah Cadangan Langkah 2 (+${assumptions.reserve_percent}%)`
-                              : `Requirement: ${item.quantity} ${noun} • Plus Step 2 Safety Reserve (+${assumptions.reserve_percent}%)`}
-                          </span>
-                          <span className="tabular-nums font-mono text-[var(--vv-text-strong)]">
-                            {calcRow?.budgeted_generations ?? item.quantity}x {isId ? 'buat' : 'tries'}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-baseline justify-between pt-1 border-t border-[var(--vv-border)]">
-                          <span className="font-medium text-[var(--vv-text-strong)]">
-                            {isId ? 'Total Anggaran Tahap Ini:' : 'Total Stage Budget:'}
-                          </span>
-                          <div className="text-right">
-                            <strong className="text-base text-[#0099ff] tabular-nums">
-                              {formatCurrencyIdr(calcRow?.total_cost_idr, language)}
-                            </strong>
-                            <span className="text-xs text-[var(--vv-text-muted)] tabular-nums ml-2">
-                              ({formatCurrencyUsd(calcRow?.total_cost_usd, language)}
-                              {calcRow?.total_credit !== null
-                                ? ` • ${calcRow?.total_credit} Credit`
-                                : ''})
-                            </span>
+                      {/* Ringkasan Bersih & Minimalis: Perkalian Kebutuhan x Cadangan Langkah 2 */}
+                      {(() => {
+                        const cadanganCount =
+                          assumptions.default_attempts_per_shot ||
+                          assumptions.reserve_generations_override ||
+                          item.attempts_per_item ||
+                          1;
+                        const itemTotalGenerations =
+                          calcRow?.budgeted_generations ??
+                          item.quantity * cadanganCount;
+
+                        return (
+                          <div className="rounded-[12px] border border-[#0099ff]/30 bg-[#0099ff]/[0.07] p-3.5 space-y-1.5 text-xs">
+                            <div className="flex flex-wrap items-center justify-between text-[var(--vv-text-muted)]">
+                              <span>
+                                {isId
+                                  ? `Kebutuhan: ${item.quantity} ${noun} • Dikalikan Cadangan Langkah 2 (${cadanganCount} cadangan)`
+                                  : `Requirement: ${item.quantity} ${noun} • Multiplied by Step 2 Reserve (${cadanganCount} reserve)`}
+                              </span>
+                              <span className="tabular-nums font-mono text-[var(--vv-text-strong)] font-semibold">
+                                {itemTotalGenerations}x {isId ? 'buat' : 'tries'}
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap items-baseline justify-between pt-1 border-t border-[var(--vv-border)]">
+                              <span className="font-medium text-[var(--vv-text-strong)]">
+                                {isId ? 'Total Anggaran Tahap Ini:' : 'Total Stage Budget:'}
+                              </span>
+                              <div className="text-right">
+                                <strong className="text-base text-[#0099ff] tabular-nums">
+                                  {formatCurrencyIdr(calcRow?.total_cost_idr, language)}
+                                </strong>
+                                <span className="text-xs text-[var(--vv-text-muted)] tabular-nums ml-2">
+                                  ({formatCurrencyUsd(calcRow?.total_cost_usd, language)}
+                                  {calcRow?.total_credit !== null
+                                    ? ` • ${calcRow?.total_credit} Credit`
+                                    : ''})
+                                </span>
+                              </div>
+                            </div>
+                            <div className="pt-0.5 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setEditingItemId(null);
+                                  setActiveTab('setup');
+                                }}
+                                className="text-[11px] font-medium text-[#0099ff] hover:underline"
+                              >
+                                {isId
+                                  ? 'Ubah angka cadangan di Langkah 2 →'
+                                  : 'Change reserve count in Step 2 →'}
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <div className="pt-0.5 text-right">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingItemId(null);
-                              setActiveTab('setup');
-                            }}
-                            className="text-[11px] font-medium text-[#0099ff] hover:underline"
-                          >
-                            {isId
-                              ? 'Ubah persentase dana jaga-jaga di Langkah 2 →'
-                              : 'Change safety reserve percentage in Step 2 →'}
-                          </button>
-                        </div>
-                      </div>
+                        );
+                      })()}
                     </div>
                   );
                 })()}

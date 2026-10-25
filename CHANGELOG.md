@@ -12,6 +12,32 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.4] - Penyesuaian Rumus Perkalian Cadangan Langkah 2 Sesuai Keinginan Pengguna
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.4`
+
+### Diubah (Changed)
+1. **Rumus Perkalian Cadangan Langsung di Langkah 3 (Atur Detail)**:
+   - Mengubah kalimat ringkasan dan rumus perhitungan sesuai instruksi langsung pengguna:
+     - **Sebelumnya (Keliru)**: `Kebutuhan: 20 gambar • Ditambah Cadangan Langkah 2 (+50%)` menghasilkan `30x buat`.
+     - **Sekarang (Sesuai Permintaan)**: `Kebutuhan: 20 gambar • Dikalikan Cadangan Langkah 2 ([angka jumlah cadangannya])` langsung menghasilkan `200x buat` (misal 20 gambar × 10 cadangan = 200 kali buat).
+2. **Penghapusan Total Format Persentase Membingungkan**:
+   - Menghilangkan persentase seperti `(+50%)` atau `(+20%)` yang membingungkan bagi pengguna non-programmer, dan menggantinya dengan angka jumlah cadangan yang konkret (misal: `10 cadangan`).
+3. **Penyederhanaan Pengaturan Cadangan di Langkah 2 (Pengaturan Proyek)**:
+   - Tampilan kolom kanan Langkah 2 kini menyajikan input langsung angka cadangan per adegan/gambar:
+     - Pilihan Cepat: `2 cadangan (Hemat)`, `5 cadangan (Standar)`, `10 cadangan (Aman)`.
+     - Kotak input angka dan slider yang mudah digeser (1 s/d 20 cadangan).
+     - Keterangan rumus yang sangat jelas: `Kebutuhan gambar × [angka] cadangan = Total kali buat`.
+4. **Penyelarasan Kartu Adegan Luar & InfoTip**:
+   - Kartu adegan utama kini menampilkan: `20 gambar • Total Buat: 200x (dikalikan 10 cadangan Langkah 2)`.
+   - InfoTip popover menampilkan penjelasan runut dari mana asal angka 200x tersebut.
+
+### Diperbaiki (Fixed)
+1. **Sinkronisasi Otomatis Angka Cadangan**:
+   - Memperbaiki pengisian `attempts_per_item` agar otomatis mengikuti angka cadangan yang ditentukan di Langkah 2, sehingga perhitungan anggaran IDR, USD, dan Credit selalu akurat dan sinkron di semua halaman aplikasi.
+
+---
+
 ## Versi [1.2.3] - Penghapusan Total Rumus Matematika Rumit & Input Variasi
 - **Tanggal Perubahan**: 25 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.3`

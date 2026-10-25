@@ -95,6 +95,7 @@ interface ProjectStoreState {
   setDefaultShotsPerVideo: (shots: number) => void;
   setReserveByPercent: (percent: number) => void;
   setReserveByCount: (reserveCount: number) => void;
+  setCadanganMultiplier: (multiplier: number) => void;
 
   // Production Items (Planner)
   addProductionItem: (category?: ProcessCategory) => void;
@@ -560,18 +561,49 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       };
     }),
 
-  // Sinkronisasi 2 Arah: User mengubah Jumlah Generasi Cadangan (Greserve) -> Persentase (R) terhitung otomatis
-  setReserveByCount: (reserveCount) =>
+  // Pengaturan Cadangan Langsung: Mengatur faktor perkalian cadangan untuk seluruh adegan
+  setCadanganMultiplier: (multiplier) =>
     set((state) => {
-      const cleanCount = Math.max(0, Math.floor(Number(reserveCount) || 0));
+      const cleanMultiplier = Math.max(1, Math.floor(Number(multiplier) || 1));
+      const items = state.project.items.map((item) => ({
+        ...item,
+        attempts_per_item: cleanMultiplier,
+      }));
       return {
         hasUnsavedChanges: true,
         project: recalculateProject({
           ...state.project,
+          items,
           assumptions: {
             ...state.project.assumptions,
+            default_attempts_per_shot: cleanMultiplier,
+            reserve_generations_override: cleanMultiplier,
+            reserve_percent: 0,
+            reserve_input_mode: 'count',
+          },
+        }),
+      };
+    }),
+
+  // Sinkronisasi 2 Arah: User mengubah Jumlah Generasi Cadangan (Greserve) -> Persentase (R) terhitung otomatis
+  setReserveByCount: (reserveCount) =>
+    set((state) => {
+      const cleanCount = Math.max(1, Math.floor(Number(reserveCount) || 1));
+      const items = state.project.items.map((item) => ({
+        ...item,
+        attempts_per_item: cleanCount,
+      }));
+      return {
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          items,
+          assumptions: {
+            ...state.project.assumptions,
+            default_attempts_per_shot: cleanCount,
             reserve_input_mode: 'count',
             reserve_generations_override: cleanCount,
+            reserve_percent: 0,
           },
         }),
       };
