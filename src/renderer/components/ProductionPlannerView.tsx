@@ -73,8 +73,8 @@ export const ProductionPlannerView: React.FC = () => {
 
   const attemptsQuestion = (qt: QuantityType) =>
     language === 'id'
-      ? `Tiap ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'} Dibuat Ulang Berapa Kali?`
-      : `How Many Tries per ${qt === 'shot' ? 'Scene' : qt === 'asset' ? 'File' : 'Image'}?`;
+      ? `Berapa Pilihan / Variasi per ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'}?`
+      : `How Many Variations per ${qt === 'shot' ? 'Scene' : qt === 'asset' ? 'File' : 'Image'}?`;
 
   const tierBadgeClass = (badge?: string) => {
     if (badge === 'NEW')
@@ -392,11 +392,10 @@ export const ProductionPlannerView: React.FC = () => {
                       className="vv-card-quiet px-3.5 py-2 text-left hover:border-[#0099ff]/45 transition"
                     >
                       <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
-                        <strong>{calcRow?.effective_quantity ?? item.quantity}</strong>{' '}
+                        <strong>{item.quantity}</strong>{' '}
                         {unitNoun(item.quantity_type)} &times;{' '}
-                        {isId ? 'dibuat' : 'made'}{' '}
                         <strong>{item.attempts_per_item}</strong>{' '}
-                        {isId ? 'kali' : 'times'} &rarr;{' '}
+                        {isId ? 'variasi' : 'variations'} &rarr;{' '}
                         <span className="text-[#0099ff] font-semibold">
                           {isId ? 'total' : 'total'}{' '}
                           {calcRow?.budgeted_generations ?? 0}{' '}
@@ -405,8 +404,8 @@ export const ProductionPlannerView: React.FC = () => {
                       </div>
                       <div className="text-[10px] text-[var(--vv-text-subtle)] mt-0.5">
                         {isId
-                          ? `sudah termasuk ${calcRow?.reserve_generations ?? 0} cadangan`
-                          : `includes ${calcRow?.reserve_generations ?? 0} reserve`}
+                          ? `sudah termasuk ${calcRow?.reserve_generations ?? 0} jaga-jaga (+${assumptions.reserve_percent}%)`
+                          : `includes ${calcRow?.reserve_generations ?? 0} reserve (+${assumptions.reserve_percent}%)`}
                       </div>
                     </button>
                     <InfoTip align="right" width={270}>
@@ -414,13 +413,12 @@ export const ProductionPlannerView: React.FC = () => {
                         <>
                           <strong>Dari mana angka ini?</strong>
                           <br />
-                          {calcRow?.effective_quantity ?? item.quantity}{' '}
-                          {unitNoun(item.quantity_type)} &times; dibuat{' '}
-                          {item.attempts_per_item} kali ={' '}
-                          {calcRow?.planned_generations ?? 0} kali, ditambah{' '}
-                          {calcRow?.reserve_generations ?? 0} kali cadangan
-                          untuk berjaga-jaga = {calcRow?.budgeted_generations ?? 0}{' '}
-                          kali buat.
+                          {item.quantity} {unitNoun(item.quantity_type)} &times;{' '}
+                          {item.attempts_per_item} pilihan variasi ={' '}
+                          {calcRow?.planned_generations ?? 0} kali buat, ditambah{' '}
+                          {calcRow?.reserve_generations ?? 0} jatah jaga-jaga
+                          (+{assumptions.reserve_percent}%) ={' '}
+                          {calcRow?.budgeted_generations ?? 0} kali buat.
                           <br />
                           <span className="text-[#7acaff]">
                             Untuk mengubah angkanya, klik &ldquo;Atur Detail&rdquo;.
@@ -430,11 +428,10 @@ export const ProductionPlannerView: React.FC = () => {
                         <>
                           <strong>Where does this come from?</strong>
                           <br />
-                          {calcRow?.effective_quantity ?? item.quantity}{' '}
-                          {unitNoun(item.quantity_type)} &times; made{' '}
-                          {item.attempts_per_item} times ={' '}
-                          {calcRow?.planned_generations ?? 0}, plus{' '}
-                          {calcRow?.reserve_generations ?? 0} reserve ={' '}
+                          {item.quantity} {unitNoun(item.quantity_type)} &times;{' '}
+                          {item.attempts_per_item} variations ={' '}
+                          {calcRow?.planned_generations ?? 0} planned, plus{' '}
+                          {calcRow?.reserve_generations ?? 0} reserve (+{assumptions.reserve_percent}%) ={' '}
                           {calcRow?.budgeted_generations ?? 0} generations.
                           <br />
                           <span className="text-[#7acaff]">
@@ -831,14 +828,14 @@ export const ProductionPlannerView: React.FC = () => {
                           )}
                         </div>
 
-                        {/* Kolom 2: Dibuat ulang berapa kali */}
+                        {/* Kolom 2: Pilihan / Variasi per gambar */}
                         <div>
                           <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
                             <span>{attemptsQuestion(item.quantity_type)}</span>
                             <InfoTip align="center">
                               {isId
-                                ? `Hasil AI jarang langsung pas di percobaan pertama. Isi berapa kali Anda biasanya membuat ulang satu ${noun} sampai mendapat hasil yang bagus. Contoh: biasanya 2 kali, isi 2.`
-                                : `AI results are rarely perfect on the first try. Enter how many times you usually regenerate one ${noun} until it looks right. Example: usually twice, enter 2.`}
+                                ? `Berapa banyak opsi/variasi hasil yang ingin dibuat AI untuk dipilih 1 yang terbaik. Contoh: ingin 2 pilihan variasi per ${noun}, isi 2.`
+                                : `How many variation options you want AI to generate so you can pick the best one. Example: want 2 variations per ${noun}, enter 2.`}
                             </InfoTip>
                           </label>
                           <input
@@ -849,8 +846,8 @@ export const ProductionPlannerView: React.FC = () => {
                             onChange={(e) =>
                               updateProductionItemField(item.item_id, {
                                 attempts_per_item: Math.max(
-                                  0,
-                                  Math.floor(Number(e.target.value) || 0)
+                                  1,
+                                  Math.floor(Number(e.target.value) || 1)
                                 ),
                               })
                             }
@@ -934,20 +931,18 @@ export const ProductionPlannerView: React.FC = () => {
                         <div className="tabular-nums">
                           {isId ? (
                             <>
-                              <strong>{effQty}</strong> {noun} &times; dibuat{' '}
-                              <strong>{item.attempts_per_item}</strong> kali ={' '}
-                              {planned} kali{' '}
+                              <strong>{item.quantity}</strong> {noun} &times;{' '}
+                              <strong>{item.attempts_per_item}</strong> pilihan variasi ={' '}
+                              {planned} kali buat{' '}
                               <span className="inline-flex items-center gap-1">
-                                + {reserve} cadangan
+                                + {reserve} jaga-jaga cadangan (+{assumptions.reserve_percent}%)
                                 <InfoTip align="center" width={280}>
-                                  <strong>Apa itu cadangan?</strong>
+                                  <strong>Dari mana jaga-jaga ini?</strong>
                                   <br />
-                                  Cadangan = jatah percobaan tambahan untuk
-                                  berjaga-jaga jika hasil AI kurang bagus.
-                                  Saat ini cadangan proyek{' '}
-                                  {assumptions.reserve_percent}%, jadi tahap ini
-                                  mendapat {reserve} kali tambahan dari {planned}{' '}
-                                  kali.
+                                  Dana jaga-jaga (cadangan) otomatis terhubung
+                                  dari persentase proyek (+{assumptions.reserve_percent}%)
+                                  yang Anda tentukan di Langkah 2, agar anggaran Anda
+                                  aman jika ada revisi atau kegagalan tanpa biaya tak terduga.
                                 </InfoTip>
                               </span>{' '}
                               ={' '}
@@ -966,19 +961,17 @@ export const ProductionPlannerView: React.FC = () => {
                             </>
                           ) : (
                             <>
-                              <strong>{effQty}</strong> {noun} &times; made{' '}
-                              <strong>{item.attempts_per_item}</strong> times ={' '}
-                              {planned}{' '}
+                              <strong>{item.quantity}</strong> {noun} &times;{' '}
+                              <strong>{item.attempts_per_item}</strong> variations ={' '}
+                              {planned} planned{' '}
                               <span className="inline-flex items-center gap-1">
-                                + {reserve} reserve
+                                + {reserve} safety reserve (+{assumptions.reserve_percent}%)
                                 <InfoTip align="center" width={280}>
-                                  <strong>What is reserve?</strong>
+                                  <strong>Where does this reserve come from?</strong>
                                   <br />
-                                  Reserve = extra tries set aside in case AI
-                                  results are not good enough. The project
-                                  reserve is {assumptions.reserve_percent}%, so
-                                  this stage gets {reserve} extra out of{' '}
-                                  {planned}.
+                                  The safety reserve is automatically applied from your
+                                  project percentage (+{assumptions.reserve_percent}%)
+                                  set in Step 2, protecting you from unexpected revision costs.
                                 </InfoTip>
                               </span>{' '}
                               ={' '}
@@ -1006,8 +999,8 @@ export const ProductionPlannerView: React.FC = () => {
                           className="mt-1 text-[11px] font-medium text-[#0099ff] hover:underline"
                         >
                           {isId
-                            ? 'Ubah persentase cadangan →'
-                            : 'Change reserve percentage →'}
+                            ? 'Ubah persentase dana jaga-jaga di Langkah 2 →'
+                            : 'Change safety reserve percentage in Step 2 →'}
                         </button>
                       </div>
                     </div>

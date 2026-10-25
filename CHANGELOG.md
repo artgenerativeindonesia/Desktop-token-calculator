@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.2] - Penghapusan Input Ganda & Penyatuan Alur Kerja Dana Jaga-Jaga
+- **Tanggal Perubahan**: 25 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.2`
+
+### Ditambahkan (Added)
+1. **Penjelasan Alur Kerja Terpusat di Langkah 2**:
+   - Menambahkan panduan ringkas bahwa pengguna tidak perlu lagi mengisi perkiraan adegan atau jumlah video di awal. Seluruh rincian aset diatur sepenuhnya di Langkah 3.
+2. **Koneksi Transparan Dana Jaga-Jaga ke Adegan**:
+   - Nilai persentase dana jaga-jaga (misal 20%) dari Langkah 2 kini otomatis terhubung ke setiap adegan di Langkah 3 dengan penjelasan yang lugas dan tidak membingungkan.
+
+### Diubah (Changed)
+1. **Pembersihan Input Dobel di Langkah 2 (Pengaturan Proyek)**:
+   - Menghapus input yang membingungkan dan terasa dobel sebelum memulai adegan: pilihan toggle *"Cara Menghitung Kebutuhan Proyek"*, *"Target Jumlah Video Jadi"*, *"Total Durasi Video"*, dan *"Rata-rata Jumlah Adegan di Setiap Video"*.
+   - Langkah 2 kini fokus murni pada 2 hal penting: **Nama Proyek** dan **Dana Jaga-Jaga (Cadangan)**.
+2. **Pemisahan Tegas Istilah "Variasi" vs "Dana Jaga-Jaga"**:
+   - Mengganti istilah *"Dibuat Ulang"* di dalam adegan menjadi **"Pilihan / Variasi per Gambar/Adegan"** (contoh: 2 variasi untuk dipilih 1 hasil terbaik).
+   - Menghilangkan kesan "mengulang dobel-dobel" karena di adegan murni menentukan variasi pilihan, sedangkan dana jaga-jaga cadangan (+20%) otomatis ditambahkan sebagai asuransi proyek secara transparan.
+3. **Kartu Rangkuman Adegan yang Bersih**:
+   - Menampilkan ringkasan yang jelas: `6 gambar × 2 variasi → total 14 kali buat (termasuk 2 jaga-jaga +20%)`.
+
+---
+
 ## Versi [1.2.1] - Perbaikan Bahasa & Kejelasan Tampilan Input Perhitungan Adegan AI
 - **Tanggal Perubahan**: 25 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.1`

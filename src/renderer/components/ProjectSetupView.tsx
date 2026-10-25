@@ -9,11 +9,13 @@ import { FrostedModal } from './FrostedModal';
 import { StepFlowBar } from './StepFlowBar';
 import {
   ArrowLeftRight,
+  CheckCircle2,
   Film,
+  Globe,
   HelpCircle,
+  ShieldAlert,
   Sliders,
   Sparkles,
-  Target,
 } from 'lucide-react';
 
 export const ProjectSetupView: React.FC = () => {
@@ -22,10 +24,6 @@ export const ProjectSetupView: React.FC = () => {
     language,
     theme,
     setProjectName,
-    setEstimationMode,
-    setTargetVideos,
-    setFinalDurationMinutes,
-    setDefaultShotsPerVideo,
     setReserveByPercent,
     setReserveByCount,
   } = useProjectStore();
@@ -39,11 +37,11 @@ export const ProjectSetupView: React.FC = () => {
     theme === 'dark' ? 'vv-card-hero-dark' : 'vv-card-hero-light';
   const inputClass =
     theme === 'dark' ? 'glass-input-dark' : 'glass-input-light';
-  const { assumptions, calculation } = project;
+  const { assumptions, calculation, exchange_rate } = project;
 
   return (
     <div className="space-y-6">
-      {/* Compact Context Header with Frosted Glass Guide Trigger */}
+      {/* Header Langkah 2 */}
       <div
         className={`${cardClass} rounded-[16px] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4`}
       >
@@ -53,28 +51,32 @@ export const ProjectSetupView: React.FC = () => {
               <Sliders className="w-3.5 h-3.5 text-[#0099ff]" />
               <span>
                 {isId
-                  ? 'Langkah 02 • Pengaturan Dasar'
-                  : 'Step 02 • Core Configuration'}
+                  ? 'Langkah 02 • Nama Proyek & Dana Jaga-Jaga'
+                  : 'Step 02 • Project Name & Safety Reserve'}
               </span>
             </span>
           </div>
           <h1 className="text-2xl font-medium tracking-[-0.035em]">
             {isId ? (
               <>
-                Pengaturan Proyek &{' '}
-                <span className="vv-accent text-[#0099ff]">Dana Cadangan</span>
+                Identitas Proyek &{' '}
+                <span className="vv-accent text-[#0099ff]">
+                  Dana Jaga-Jaga (Cadangan)
+                </span>
               </>
             ) : (
               <>
-                Project Settings &{' '}
-                <span className="vv-accent text-[#0099ff]">Reserve Budget</span>
+                Project Identity &{' '}
+                <span className="vv-accent text-[#0099ff]">
+                  Safety Reserve
+                </span>
               </>
             )}
           </h1>
           <p className="text-xs text-[var(--vv-text-muted)] mt-1">
             {isId
-              ? 'Tentukan identitas proyek, target hasil video akhir, serta persentase dana cadangan pembuatan ulang.'
-              : 'Set your project identity, target video output, and redo reserve percentage.'}
+              ? 'Tentukan nama proyek dan persentase dana jaga-jaga cadangan. Seluruh rincian adegan diatur terpusat di Langkah 3.'
+              : 'Set your project name and contingency reserve. All scene details are configured centrally in Step 3.'}
           </p>
         </div>
 
@@ -85,17 +87,15 @@ export const ProjectSetupView: React.FC = () => {
         >
           <HelpCircle className="w-3.5 h-3.5 text-[#0099ff]" />
           <span>
-            {isId
-              ? 'Penjelasan Cara Hitung & Cadangan'
-              : 'How Modes & Reserve Work'}
+            {isId ? 'Panduan Dana Jaga-Jaga' : 'Safety Reserve Guide'}
           </span>
         </button>
       </div>
 
-      {/* Main 2-Column Hierarchy Layout */}
+      {/* Main 2-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         {/* =================================================================
-         * TIER 2 (Left 6 Cols): Project Identity & Target Output Workspace
+         * KOLOM KIRI (6 Cols): Identitas Proyek & Alur Kerja Bersih
          * ================================================================= */}
         <div
           className={`${cardClass} lg:col-span-6 rounded-[18px] p-6 flex flex-col justify-between space-y-5`}
@@ -108,9 +108,7 @@ export const ProjectSetupView: React.FC = () => {
                 </span>
                 <Film className="w-4 h-4 text-[#0099ff]" />
                 <span>
-                  {isId
-                    ? 'Identitas Proyek & Target Video Jadi'
-                    : 'Project Identity & Target Output'}
+                  {isId ? 'Identitas Proyek' : 'Project Identity'}
                 </span>
               </h2>
             </div>
@@ -140,121 +138,48 @@ export const ProjectSetupView: React.FC = () => {
               )}
             </div>
 
-            {/* Mode Estimasi (Clean Segmented Control) */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-medium text-[var(--vv-text-strong)]">
+            {/* Penjelasan Alur Kerja Terpusat */}
+            <div className="vv-card-quiet p-4 space-y-3 rounded-[14px]">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--vv-text-strong)]">
+                <Sparkles className="w-4 h-4 text-[#0099ff]" />
+                <span>
                   {isId
-                    ? 'Cara Menghitung Kebutuhan Proyek'
-                    : 'How to Calculate Project Needs'}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsGuideOpen(true)}
-                  className="text-[11px] text-[#0099ff] hover:underline"
-                >
-                  {isId ? 'Apa bedanya?' : 'What is the difference?'}
-                </button>
-              </div>
-              <div className="grid grid-cols-2 p-1 rounded-[10px] bg-[var(--vv-field)] border border-[var(--vv-border)]">
-                <button
-                  type="button"
-                  onClick={() => setEstimationMode('per_shot')}
-                  className={`py-2 px-3 rounded-[7px] text-xs font-medium transition flex items-center justify-center gap-1.5 ${
-                    assumptions.estimation_mode === 'per_shot'
-                      ? 'bg-[#0068ad] text-white shadow-sm'
-                      : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
-                  }`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  {isId ? 'Rincian per Adegan' : 'Scene-by-Scene'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEstimationMode('target_final')}
-                  className={`py-2 px-3 rounded-[7px] text-xs font-medium transition flex items-center justify-center gap-1.5 ${
-                    assumptions.estimation_mode === 'target_final'
-                      ? 'bg-[#0068ad] text-white shadow-sm'
-                      : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
-                  }`}
-                >
-                  <Target className="w-3.5 h-3.5" />
-                  {isId ? 'Dari Jumlah Video Jadi' : 'By Final Videos'}
-                </button>
-              </div>
-            </div>
-
-            {/* Target Videos & Final Duration */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="vv-card-quiet p-3.5">
-                <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
-                  {isId ? 'Target Jumlah Video Jadi' : 'Target Final Videos'}
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={1}
-                  value={assumptions.target_videos}
-                  onChange={(e) => setTargetVideos(Number(e.target.value))}
-                  className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                />
-                <span className="block text-[11px] text-[var(--vv-text-muted)] mt-1.5">
-                  {isId
-                    ? `Rata-rata: ${formatCurrencyIdr(calculation.cost_per_video_idr, language)} / video`
-                    : `Avg: ${formatCurrencyUsd(calculation.cost_per_video_usd, language)} / video`}
+                    ? 'Alur Kerja Rapi & Tanpa Input Dobel'
+                    : 'Clean Single-Source Workflow'}
                 </span>
               </div>
-
-              <div className="vv-card-quiet p-3.5">
-                <label className="block text-xs font-medium text-[var(--vv-text-strong)] mb-1.5">
+              <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
+                {isId
+                  ? 'Anda tidak perlu mengisi jumlah adegan atau perkiraan durasi di sini. Seluruh rincian gambar, adegan, dan durasi detik video diatur sepenuhnya dan langsung di Langkah 3 (Daftar Pekerjaan AI).'
+                  : 'You do not need to enter scene counts here. All images, scenes, and clip durations are managed directly and centrally in Step 3.'}
+              </p>
+              <div className="flex items-center gap-2 text-[11px] text-[#0099ff] font-medium pt-1 border-t border-[var(--vv-border)]">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>
                   {isId
-                    ? 'Total Durasi Video (Menit)'
-                    : 'Total Duration (Minutes)'}
-                </label>
-                <input
-                  type="number"
-                  min={0}
-                  step={0.25}
-                  value={assumptions.final_duration_minutes}
-                  onChange={(e) =>
-                    setFinalDurationMinutes(Number(e.target.value))
-                  }
-                  className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                />
-                <span className="block text-[11px] text-[var(--vv-text-muted)] mt-1.5">
-                  {isId
-                    ? `Rata-rata: ${formatCurrencyIdr(calculation.cost_per_minute_idr, language)} / menit`
-                    : `Avg: ${formatCurrencyUsd(calculation.cost_per_minute_usd, language)} / min`}
+                    ? 'Dana jaga-jaga di sebelah kanan akan otomatis terhubung ke semua adegan Anda.'
+                    : 'The safety reserve on the right automatically connects to all your scenes.'}
                 </span>
               </div>
             </div>
 
-            {/* Conditional Default Shots per Video in Target Final Mode */}
-            {assumptions.estimation_mode === 'target_final' && (
-              <div className="p-4 rounded-[12px] bg-[#0099ff]/10 border border-[#0099ff]/30">
-                <label className="block text-xs font-semibold text-[#7acaff] mb-1.5">
-                  {isId
-                    ? 'Rata-rata Jumlah Adegan di Setiap Video'
-                    : 'Average Scenes per Final Video'}
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={assumptions.default_shots_per_video}
-                  onChange={(e) =>
-                    setDefaultShotsPerVideo(Number(e.target.value))
-                  }
-                  className={`${inputClass} w-full px-3.5 py-2 rounded-[10px] text-sm font-semibold tabular-nums text-right`}
-                />
-              </div>
-            )}
+            {/* Info Kurs Acuan */}
+            <div className="vv-card-quiet p-3.5 flex items-center justify-between text-xs rounded-[12px]">
+              <span className="text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-[#0099ff]" />
+                <span>{isId ? 'Patokan Kurs Dolar:' : 'USD Exchange Rate:'}</span>
+              </span>
+              <strong className="tabular-nums text-[var(--vv-text-strong)]">
+                {exchange_rate.rate
+                  ? `1 USD = ${formatCurrencyIdr(exchange_rate.rate, language)}`
+                  : t.unavailableLabel}
+              </strong>
+            </div>
           </div>
         </div>
 
         {/* =================================================================
-         * TIER 1 DOMINANT FOCAL POINT (Right 6 Cols):
-         * Live Reserve Simulator & Bidirectional Sync (.vv-card-hero-*)
+         * KOLOM KANAN (6 Cols): Dana Jaga-Jaga (Cadangan) Otomatis Terhubung
          * ================================================================= */}
         <div
           className={`${heroCardClass} lg:col-span-6 rounded-[18px] p-6 flex flex-col justify-between space-y-5`}
@@ -266,8 +191,8 @@ export const ProjectSetupView: React.FC = () => {
                 <ArrowLeftRight className="w-4 h-4 text-[#ffb840]" />
                 <span>
                   {isId
-                    ? 'Dana Cadangan Buat Ulang (Otomatis Terhubung)'
-                    : 'Redo Reserve Simulator (Auto-Synced)'}
+                    ? 'Dana Jaga-Jaga Proyek (Cadangan Tambahan)'
+                    : 'Project Safety Reserve (Contingency Buffer)'}
                 </span>
               </h2>
               <span className="vv-badge-pill">
@@ -284,10 +209,10 @@ export const ProjectSetupView: React.FC = () => {
               </span>
             </div>
 
-            {/* Quick Reserve Preset Pills */}
+            {/* Pilihan Cepat Preset Cadangan */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="text-xs text-[var(--vv-text-muted)]">
-                {isId ? 'Pilihan Cepat Cadangan:' : 'Quick Reserve Presets:'}
+                {isId ? 'Pilihan Cepat Jaga-Jaga:' : 'Quick Reserve Presets:'}
               </span>
               <div className="flex items-center gap-1.5">
                 {[
@@ -311,9 +236,9 @@ export const ProjectSetupView: React.FC = () => {
               </div>
             </div>
 
-            {/* Two Synced Input Boxes */}
+            {/* Dua Kotak Input Sinkron */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-stretch">
-              {/* Box A: Reserve Percentage */}
+              {/* Kotak A: Persentase Cadangan */}
               <div
                 className={`p-4 rounded-[14px] border transition flex flex-col justify-between ${
                   assumptions.reserve_input_mode === 'percent'
@@ -322,7 +247,9 @@ export const ProjectSetupView: React.FC = () => {
                 }`}
               >
                 <label className="block text-xs font-semibold mb-2">
-                  {isId ? 'Persentase Cadangan (%)' : 'Reserve Percentage (%)'}
+                  {isId
+                    ? 'Persentase Jaga-Jaga (%)'
+                    : 'Reserve Percentage (%)'}
                 </label>
                 <div className="relative">
                   <input
@@ -348,7 +275,7 @@ export const ProjectSetupView: React.FC = () => {
                 />
               </div>
 
-              {/* Box B: Extra Reserve Tries */}
+              {/* Kotak B: Jumlah Percobaan Tambahan */}
               <div
                 className={`p-4 rounded-[14px] border transition flex flex-col justify-between ${
                   assumptions.reserve_input_mode === 'count'
@@ -357,7 +284,9 @@ export const ProjectSetupView: React.FC = () => {
                 }`}
               >
                 <label className="block text-xs font-semibold mb-2">
-                  {isId ? 'Jumlah Cadangan Buat Ulang' : 'Extra Reserve Tries'}
+                  {isId
+                    ? 'Jumlah Kali Jaga-Jaga Tambahan'
+                    : 'Extra Reserve Generations'}
                 </label>
                 <input
                   type="number"
@@ -369,14 +298,14 @@ export const ProjectSetupView: React.FC = () => {
                 />
                 <div className="text-[11px] text-[var(--vv-text-muted)] mt-3 text-right tabular-nums">
                   {isId
-                    ? `${calculation.planned_generations} awal + ${calculation.reserve_generations} cadangan = ${calculation.budgeted_generations}x`
+                    ? `${calculation.planned_generations} awal + ${calculation.reserve_generations} jaga-jaga = ${calculation.budgeted_generations}x`
                     : `${calculation.planned_generations} initial + ${calculation.reserve_generations} reserve = ${calculation.budgeted_generations}x`}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Dominant Live Impact Box */}
+          {/* Kotak Rangkuman Dampak Anggaran */}
           <div className="p-4 rounded-[14px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)] space-y-2.5 text-xs">
             <div className="flex justify-between items-center">
               <span className="text-[var(--vv-text-muted)]">
@@ -433,80 +362,66 @@ export const ProjectSetupView: React.FC = () => {
         }
       />
 
-      {/* =====================================================================
-       * FROSTED GLASS MODAL: Panduan Mode Hitung & Dana Cadangan AI
-       * ===================================================================== */}
+      {/* Modal Panduan */}
       <FrostedModal
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
         theme={theme}
-        maxWidth="2xl"
+        maxWidth="lg"
         badgeLabel={isId ? 'Panduan Pengaturan Proyek' : 'Project Setup Guide'}
         title={
           isId ? (
             <>
-              Memahami Cara Hitung &{' '}
-              <span className="vv-accent text-[#0099ff]">Dana Cadangan AI</span>
+              Apa itu{' '}
+              <span className="vv-accent text-[#0099ff]">
+                Dana Jaga-Jaga (Cadangan)?
+              </span>
             </>
           ) : (
             <>
-              Understanding Calculation Modes &{' '}
-              <span className="vv-accent text-[#0099ff]">AI Reserve Budget</span>
+              What is the{' '}
+              <span className="vv-accent text-[#0099ff]">
+                Safety Reserve?
+              </span>
             </>
           )
         }
         subtitle={
           isId
-            ? 'Penjelasan singkat dengan bahasa sehari-hari agar Anda dapat memilih pengaturan yang paling pas.'
-            : 'A plain-language explanation so you can choose the best settings for your project.'
+            ? 'Penjelasan mengapa dana jaga-jaga dibutuhkan saat memproduksi konten dengan AI.'
+            : 'Explanation of why a contingency reserve is needed when generating content with AI.'
         }
       >
         <div className="space-y-4 text-xs">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="vv-card-quiet p-4 space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-sm text-[#0099ff]">
-                <Sparkles className="w-4 h-4" />
-                <span>
-                  {isId ? 'Mode 1: Rincian per Adegan' : 'Mode 1: Scene-by-Scene'}
-                </span>
-              </div>
-              <p className="text-[var(--vv-text-muted)] leading-relaxed">
-                {isId
-                  ? 'Gunakan mode ini jika Anda ingin mencatat setiap adegan atau gambar satu per satu sesuai daftar cerita (storyboard). Jumlah adegan yang Anda ketik adalah jumlah total yang dihitung.'
-                  : 'Use this mode when listing each specific scene or image individually. The scene count you enter is the exact count calculated.'}
-              </p>
-            </div>
-
-            <div className="vv-card-quiet p-4 space-y-2">
-              <div className="flex items-center gap-2 font-semibold text-sm text-[#0099ff]">
-                <Target className="w-4 h-4" />
-                <span>
-                  {isId
-                    ? 'Mode 2: Dari Jumlah Video Jadi'
-                    : 'Mode 2: By Total Final Videos'}
-                </span>
-              </div>
-              <p className="text-[var(--vv-text-muted)] leading-relaxed">
-                {isId
-                  ? 'Gunakan mode ini jika Anda ingin membuat banyak video dengan pola yang sama (misal: 5 video iklan sosmed). Jumlah adegan di daftar pekerjaan akan otomatis dikalikan dengan Target Jumlah Video Jadi.'
-                  : 'Use this mode when producing multiple videos with a similar structure (e.g., 5 social ads). Scene counts are automatically multiplied by your Target Final Videos.'}
-              </p>
-            </div>
-          </div>
-
-          <div className="vv-card-quiet p-4 space-y-2 border-[#ffb840]/30">
+          <div className="vv-card-quiet p-4 space-y-2 border-[#ffb840]/30 rounded-[12px]">
             <div className="flex items-center gap-2 font-semibold text-sm text-[#ffb840]">
-              <ArrowLeftRight className="w-4 h-4" />
+              <ShieldAlert className="w-4 h-4" />
               <span>
                 {isId
-                  ? 'Mengapa Perlu Dana Cadangan Buat Ulang?'
-                  : 'Why Set a Redo Reserve?'}
+                  ? 'Asuransi & Toleransi Revisi Proyek'
+                  : 'Project Insurance & Revision Tolerance'}
               </span>
             </div>
             <p className="text-[var(--vv-text-muted)] leading-relaxed">
               {isId
-                ? 'Saat membuat video dengan AI, terkadang gerakan kamera atau ekspresi wajah belum langsung sempurna di percobaan pertama. Menyisihkan cadangan 15% hingga 25% menjaga agar anggaran Anda tetap aman tanpa takut kekurangan biaya di tengah produksi.'
-                : 'When generating AI video, motion or details may take a few extra tries to look right. Setting a 15%–25% reserve keeps your budget safe from unexpected overruns.'}
+                ? 'Saat membuat video atau gambar dengan AI, terkadang hasil pertama belum tentu 100% sesuai selera (misal: ada glitch visual atau pose kurang pas). Menyiapkan dana jaga-jaga 10% hingga 20% memastikan tim Anda memiliki cadangan biaya yang aman tanpa takut kehabisan anggaran di tengah jalan.'
+                : 'When generating AI video or images, the first result might not always be perfect. Setting aside a 10%–20% reserve ensures your team has a safe contingency budget without fearing unexpected overruns.'}
+            </p>
+          </div>
+
+          <div className="vv-card-quiet p-4 space-y-2 rounded-[12px]">
+            <div className="flex items-center gap-2 font-semibold text-sm text-[#0099ff]">
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                {isId
+                  ? 'Bagaimana Dana Ini Terhubung ke Adegan?'
+                  : 'How Does This Connect to Scenes?'}
+              </span>
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Di Langkah 3 (Daftar Pekerjaan AI), Anda hanya perlu menentukan berapa banyak gambar atau adegan yang ingin dibuat dan berapa variasi pilihannya. Sistem akan otomatis menambahkan persentase jaga-jaga dari sini ke setiap adegan secara proporsional.'
+                : 'In Step 3 (AI Production List), you simply define how many images or scenes you need and their variation counts. The system automatically applies this safety percentage to every stage proportionally.'}
             </p>
           </div>
         </div>
