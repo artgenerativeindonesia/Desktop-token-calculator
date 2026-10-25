@@ -12,6 +12,19 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.5] - Perbaikan Akurasi Hasil Perkalian Cadangan (7 gambar × 10 cadangan = 70x buat)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.5`
+
+### Diperbaiki (Fixed)
+1. **Penghapusan Penambahan Cadangan Ganda**:
+   - Memperbaiki bug di mana mesin kalkulasi sebelumnya menambahkan sisa cadangan global (+10) di atas hasil perkalian ($7 \times 10 = 70 + 10 = 80\text{x}$).
+   - Sekarang hasil perhitungan tepat murni perkalian langsung: $7\text{ gambar} \times 10\text{ cadangan} = \mathbf{70\text{x buat}}$ (dan total biaya serta Credit dihitung tepat untuk 70 kali buat, bukan 80).
+2. **Pembersihan Nilai Cadangan Tambahan**:
+   - Memastikan `reserve_generations_override` dan `reserve_percent` selalu di-reset ke 0 saat mode perkalian cadangan aktif, sehingga tidak ada lagi angka siluman yang menambah jumlah generasi di latar belakang.
+
+---
+
 ## Versi [1.2.4] - Penyesuaian Rumus Perkalian Cadangan Langkah 2 Sesuai Keinginan Pengguna
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.4`

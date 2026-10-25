@@ -374,7 +374,6 @@ export const ProductionPlannerView: React.FC = () => {
                     {(() => {
                       const cadanganCount =
                         assumptions.default_attempts_per_shot ||
-                        assumptions.reserve_generations_override ||
                         item.attempts_per_item ||
                         1;
                       const itemTotalGenerations =
@@ -816,7 +815,6 @@ export const ProductionPlannerView: React.FC = () => {
                             onChange={(e) => {
                               const cadanganMultiplier =
                                 assumptions.default_attempts_per_shot ||
-                                assumptions.reserve_generations_override ||
                                 item.attempts_per_item ||
                                 1;
                               updateProductionItemField(item.item_id, {
@@ -906,7 +904,6 @@ export const ProductionPlannerView: React.FC = () => {
                       {(() => {
                         const cadanganCount =
                           assumptions.default_attempts_per_shot ||
-                          assumptions.reserve_generations_override ||
                           item.attempts_per_item ||
                           1;
                         const itemTotalGenerations =

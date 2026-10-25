@@ -156,38 +156,37 @@ interface ProjectStoreState {
 }
 
 function recalculateProject(project: ProjectFile): ProjectFile {
-  const totalPlanned = project.items.reduce((sum, item) => {
-    const qty = Math.max(0, Math.floor(item.quantity));
-    const effQty =
-      project.assumptions.estimation_mode === 'target_final' &&
-      item.use_project_target_multiplier
-        ? qty * Math.max(1, Math.floor(project.assumptions.target_videos))
-        : qty;
-    return sum + effQty * Math.max(0, Math.floor(item.attempts_per_item));
-  }, 0);
+  const cadanganMultiplier =
+    project.assumptions.default_attempts_per_shot ||
+    project.assumptions.reserve_generations_override ||
+    1;
 
-  // Sinkronkan nilai pasangan 2 arah (R <-> Greserve) agar selalu selaras
-  const syncedReserve = calculateBidirectionalReserve(
-    totalPlanned,
-    project.assumptions.reserve_input_mode,
-    project.assumptions.reserve_percent,
-    project.assumptions.reserve_generations_override
-  );
+  // Pastikan setiap baris pekerjaan menggunakan faktor perkalian cadangan yang selaras
+  const items = project.items.map((item) => ({
+    ...item,
+    attempts_per_item:
+      item.attempts_per_item > 0 ? item.attempts_per_item : cadanganMultiplier,
+  }));
 
+  // Sesuai model perkalian cadangan: Total = Kebutuhan x Cadangan Langkah 2.
+  // Cadangan tidak lagi ditambahkan ganda di atas hasil perkalian (reserve override = 0, reserve percent = 0).
   const syncedAssumptions: BudgetAssumptions = {
     ...project.assumptions,
-    reserve_percent: syncedReserve.effectiveReservePercent,
-    reserve_generations_override: syncedReserve.reserveGenerations,
+    default_attempts_per_shot: cadanganMultiplier,
+    reserve_percent: 0,
+    reserve_generations_override: 0,
+    reserve_input_mode: 'count',
   };
 
   const calculation = calculateProjectBudget(
-    project.items,
+    items,
     syncedAssumptions,
     project.exchange_rate
   );
 
   return {
     ...project,
+    items,
     assumptions: syncedAssumptions,
     calculation,
     updated_at: new Date().toISOString(),
@@ -577,7 +576,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           assumptions: {
             ...state.project.assumptions,
             default_attempts_per_shot: cleanMultiplier,
-            reserve_generations_override: cleanMultiplier,
+            reserve_generations_override: 0,
             reserve_percent: 0,
             reserve_input_mode: 'count',
           },
@@ -602,7 +601,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
             ...state.project.assumptions,
             default_attempts_per_shot: cleanCount,
             reserve_input_mode: 'count',
-            reserve_generations_override: cleanCount,
+            reserve_generations_override: 0,
             reserve_percent: 0,
           },
         }),

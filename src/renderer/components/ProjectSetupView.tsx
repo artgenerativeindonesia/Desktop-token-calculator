@@ -182,14 +182,8 @@ export const ProjectSetupView: React.FC = () => {
         {/* =================================================================
          * KOLOM KANAN (6 Cols): Dana Jaga-Jaga (Cadangan) Otomatis Terhubung
          * ================================================================= */}
-        {/* =================================================================
-         * KOLOM KANAN (6 Cols): Dana Jaga-Jaga (Cadangan) Otomatis Terhubung
-         * ================================================================= */}
         {(() => {
-          const cadanganCount =
-            assumptions.default_attempts_per_shot ||
-            assumptions.reserve_generations_override ||
-            2;
+          const cadanganCount = assumptions.default_attempts_per_shot || 2;
 
           return (
             <div
