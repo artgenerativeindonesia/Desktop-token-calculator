@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import {
   CATEGORY_LABELS,
@@ -10,6 +10,7 @@ import {
 import { StatusBadge } from './StatusBadge';
 import { FrostedModal } from './FrostedModal';
 import { StepFlowBar } from './StepFlowBar';
+import { InteractiveGlowLine } from './InteractiveGlowLine';
 import { ProcessCategory } from '../../shared/types/project';
 import {
   AlertTriangle,
@@ -35,6 +36,7 @@ const ALL_CATEGORIES: ProcessCategory[] = [
 export const BudgetSummaryView: React.FC = () => {
   const { project, language, theme, setActiveTab } = useProjectStore();
   const [isFullAuditModalOpen, setIsFullAuditModalOpen] = useState(false);
+  const heroCardRef = useRef<HTMLDivElement | null>(null);
 
   const t = UI_TEXT[language];
   const isId = language === 'id';
@@ -83,7 +85,19 @@ export const BudgetSummaryView: React.FC = () => {
       {/* =====================================================================
        * TIER 1: DOMINANT FOCAL POINT — EXECUTIVE BUDGET HERO CARD
        * ===================================================================== */}
-      <div className={`${heroCardClass} rounded-[18px] p-6 md:p-7`}>
+      <div
+        ref={heroCardRef}
+        className={`${heroCardClass} rounded-[18px] p-6 md:p-7 relative overflow-hidden`}
+      >
+        {/* Garis Animasi Glowing Line Interaktif di Bibir Atas Kartu Utama */}
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <InteractiveGlowLine
+            parentRef={heroCardRef}
+            variant="hero"
+            colorScheme="blue"
+            thickness={1.5}
+          />
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
           {/* Left 7 Cols: Title, Status, and Executive Summary Boxes */}
           <div className="lg:col-span-7 space-y-4">

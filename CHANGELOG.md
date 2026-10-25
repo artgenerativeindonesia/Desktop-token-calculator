@@ -12,6 +12,26 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.6.0] - Fitur Animasi Glowing Line Interaktif & Elegan (Studio Specular Light Beam)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.6.0`
+
+### Ditambahkan (Added)
+1. **Komponen Animasi Garis Pendar Interaktif (`InteractiveGlowLine`)**:
+   - Menambahkan garis animasi berpendar (*glowing line*) modern, minimalis, dan mewah yang terinspirasi dari estetika studio Apple visionOS & Visuvate Studio.
+   - **Tiga Mode Interaksi Halus**:
+     - **Mode Pendar Standby (*Ambient Sweep*)**: Saat kursor diam, garis memancarkan osilasi pendaran lembut bolak-balik (7 detik) seperti sapuan laser studio yang tenang dan tidak melelahkan mata.
+     - **Mode Pelacak Kursor (*Interactive Cursor Tracking*)**: Begitu kursor mouse digerakkan di sekitar bilah header atau kartu utama, berkas pendaran cahaya (*specular beam*) dan titik intan kilau (*sparkle diamond dot*) meluncur mulus mengikuti posisi horizontal mouse secara *real-time*.
+     - **Efek Sentuh / Gelombang (*Ripple Shockwave*)**: Saat garis disentuh atau diklik, terpancar gelombang cahaya melingkar (*shockwave*) yang responsif dan memuaskan.
+2. **Penerapan Terintegrasi pada Bilah Utama & Kartu Hero**:
+   - Terpasang tepat di bawah bilah menu atas (*Top Bar Header*) di seluruh halaman aplikasi, terhubung dengan gerakan kursor di seluruh area header.
+   - Terpasang di bibir atas kartu utama total anggaran (*Tier 1 Hero Budget Card*) pada halaman Beranda (*Dashboard*) dan Rekapitulasi Anggaran (*Budget Summary*).
+3. **Penyelarasan Warna Adaptif (*Dark & Light Mode*)**:
+   - Pada **Mode Gelap (*Dark Mode*)**: Memancarkan pendaran biru sian studio elektrik (*Electric Cyan* & *Ice Blue*) dengan bias bayangan halus (*ambient aura blur*).
+   - Pada **Mode Terang (*White Mode*)**: Menggunakan pantulan safir biru tua yang tegas dan jernih (*Deep Sapphire Sheen*), tetap elegan tanpa merusak kontras.
+
+---
+
 ## Versi [1.5.2] - Peningkatan Kontras Warna Hijau & Lencana Status pada Mode Terang (White Mode Aesthetics)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.5.2`
