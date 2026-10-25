@@ -69,7 +69,37 @@ export const DashboardView: React.FC = () => {
   const heroCardClass =
     theme === 'dark' ? 'vv-card-hero-dark' : 'vv-card-hero-light';
   const calc = project.calculation;
+  const fx = project.exchange_rate;
 
+  const totalSceneQuantity = project.items.reduce(
+    (sum, item) => sum + Math.max(0, Math.floor(item.quantity)),
+    0
+  );
+
+  const cadanganMultiplier =
+    project.assumptions.default_attempts_per_shot ||
+    project.assumptions.reserve_generations_override ||
+    1;
+
+  // Rata-rata per adegan pokok
+  const avgCostPerItemIdr =
+    totalSceneQuantity > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / totalSceneQuantity
+      : null;
+  const avgCostPerItemUsd =
+    totalSceneQuantity > 0 ? calc.total_cost_usd / totalSceneQuantity : 0;
+
+  // Rata-rata per 1x generasi AI
+  const avgCostPerGenIdr =
+    calc.budgeted_generations > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / calc.budgeted_generations
+      : null;
+  const avgCostPerGenUsd =
+    calc.budgeted_generations > 0
+      ? calc.total_cost_usd / calc.budgeted_generations
+      : 0;
+
+  const hasExplicitReserveCost = (calc.reserve_cost_usd || 0) > 0;
   const baseSharePercent =
     calc.total_cost_usd > 0
       ? Math.round((calc.base_cost_usd / calc.total_cost_usd) * 100)
@@ -158,8 +188,8 @@ export const DashboardView: React.FC = () => {
 
             <p className="text-xs text-[var(--vv-text-muted)] mt-2 leading-relaxed max-w-xl">
               {isId
-                ? `Merencanakan ${project.items.length} tahap pembuatan AI untuk target ${project.assumptions.target_videos} video jadi (${project.assumptions.final_duration_minutes} menit).`
-                : `Planning ${project.items.length} AI production stages for ${project.assumptions.target_videos} final videos (${project.assumptions.final_duration_minutes} min).`}
+                ? `Merencanakan ${project.items.length} tahap pembuatan AI (${totalSceneQuantity} adegan pokok) • Dikalikan ${cadanganMultiplier} cadangan Langkah 2 = ${calc.budgeted_generations} kali pembuatan AI.`
+                : `Planning ${project.items.length} AI stages (${totalSceneQuantity} base scenes) • Multiplied by ${cadanganMultiplier} Step 2 reserve = ${calc.budgeted_generations} total AI generations.`}
             </p>
           </div>
 
@@ -236,40 +266,62 @@ export const DashboardView: React.FC = () => {
               {formatCurrencyIdr(calc.total_cost_idr, language)}
             </div>
             <div className="text-lg font-semibold tabular-nums text-[#0099ff] mt-1">
-              {formatCurrencyUsd(calc.total_cost_usd, language)}{' '}
-              <span className="text-xs font-normal text-[var(--vv-text-muted)]">
-                ({calc.budgeted_generations} {isId ? 'kali buat' : 'total tries'})
-              </span>
+              {formatCurrencyUsd(calc.total_cost_usd, language)}
+            </div>
+            <div className="text-xs text-[var(--vv-text-muted)] mt-1.5 font-mono flex items-center justify-end gap-1.5">
+              <span>{totalSceneQuantity} {isId ? 'adegan' : 'scenes'}</span>
+              <span>&times;</span>
+              <span>{cadanganMultiplier} {isId ? 'cadangan' : 'reserve'}</span>
+              <span>=</span>
+              <strong className="text-[var(--vv-text-strong)]">
+                {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+              </strong>
             </div>
           </div>
 
-          {/* Visual Proportion Bar: Base vs Reserve */}
-          <div className="space-y-2 pt-3 border-t border-[var(--vv-border)]">
-            <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden flex">
-              <div
-                style={{ width: `${baseSharePercent}%` }}
-                className="bg-[#0099ff] transition-all duration-300"
-                title={t.baseCost}
-              />
-              <div
-                style={{ width: `${reserveSharePercent}%` }}
-                className="bg-[#ffb840] transition-all duration-300"
-                title={t.reserveCost}
-              />
+          {/* Visual Proportion Bar / Credit Readout */}
+          {hasExplicitReserveCost ? (
+            <div className="space-y-2 pt-3 border-t border-[var(--vv-border)]">
+              <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden flex">
+                <div
+                  style={{ width: `${baseSharePercent}%` }}
+                  className="bg-[#0099ff] transition-all duration-300"
+                  title={t.baseCost}
+                />
+                <div
+                  style={{ width: `${reserveSharePercent}%` }}
+                  className="bg-[#ffb840] transition-all duration-300"
+                  title={t.reserveCost}
+                />
+              </div>
+              <div className="flex items-center justify-between text-[11px] tabular-nums">
+                <span className="text-[var(--vv-text-strong)] flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-[#0099ff]" />
+                  {t.baseCost}:{' '}
+                  <strong>{formatCurrencyUsd(calc.base_cost_usd, language)}</strong>
+                </span>
+                <span className="text-[#ffb840] flex items-center gap-1.5">
+                  <span className="size-2 rounded-full bg-[#ffb840]" />
+                  {isId ? 'Cadangan' : 'Reserve'} ({calc.effective_reserve_percent}%):{' '}
+                  <strong>+{formatCurrencyUsd(calc.reserve_cost_usd, language)}</strong>
+                </span>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-[11px] tabular-nums">
-              <span className="text-[var(--vv-text-strong)] flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-[#0099ff]" />
-                {t.baseCost}:{' '}
-                <strong>{formatCurrencyUsd(calc.base_cost_usd, language)}</strong>
-              </span>
-              <span className="text-[#ffb840] flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-[#ffb840]" />
-                {isId ? 'Cadangan' : 'Reserve'} ({calc.effective_reserve_percent}%):{' '}
-                <strong>+{formatCurrencyUsd(calc.reserve_cost_usd, language)}</strong>
-              </span>
+          ) : (
+            <div className="pt-3 border-t border-[var(--vv-border)] flex items-center justify-between text-xs">
+              <div className="flex items-center gap-1.5 text-[var(--vv-text-muted)] text-[11px]">
+                <Coins className="w-3.5 h-3.5 text-[#0099ff] shrink-0" />
+                <span>
+                  {calc.total_credit !== null
+                    ? `${calc.total_credit.toLocaleString()} Credit Higgsfield`
+                    : (isId ? 'Credit belum dihitung' : 'Credits unconfigured')}
+                </span>
+              </div>
+              <div className="text-[11px] font-mono text-[var(--vv-text-subtle)]">
+                {fx.rate ? `~${formatCurrencyIdr(fx.rate, language)}/USD` : ''}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -277,106 +329,116 @@ export const DashboardView: React.FC = () => {
        * TIER 2: SECONDARY SCANNING ZONE — 3 BALANCED SUPPORTING CARDS
        * ===================================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Supporting Card 1: Rencana Awal vs Cadangan Buat Ulang */}
+        {/* Supporting Card 1: Rumus Kali Pembuatan AI (Model Perhitungan Terbaru) */}
         <div
           className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
-              {isId ? 'Rincian Kali Pembuatan AI' : 'AI Generation Breakdown'}
+              {isId ? 'Rumus Kali Pembuatan AI' : 'AI Generation Breakdown'}
             </span>
-            <Sliders className="w-4 h-4 text-[#ffb840]" />
+            <Sliders className="w-4 h-4 text-[#0099ff]" />
           </div>
 
           <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
             <div className="vv-card-quiet p-3">
               <div className="text-[11px] text-[var(--vv-text-muted)]">
-                {t.plannedGenerations}
+                {isId ? 'Kebutuhan Adegan' : 'Base Scene Items'}
               </div>
               <div className="text-base font-bold tabular-nums text-right mt-1">
-                {calc.planned_generations}x
+                {totalSceneQuantity}{' '}
+                <span className="text-xs font-normal text-[var(--vv-text-muted)]">
+                  {isId ? 'adegan' : 'items'}
+                </span>
               </div>
-              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
-                {formatCurrencyIdr(calc.base_cost_idr, language)}
-              </div>
-            </div>
-
-            <div className="vv-card-quiet p-3">
-              <div className="text-[11px] text-[#ffb840]">
-                {t.reserveGenerations}
-              </div>
-              <div className="text-base font-bold tabular-nums text-[#ffb840] text-right mt-1">
-                +{calc.reserve_generations}x
-              </div>
-              <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
-                {formatCurrencyIdr(calc.reserve_cost_idr, language)}
-              </div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('setup')}
-            className="text-xs font-medium text-[#0099ff] hover:underline inline-flex items-center justify-end gap-1"
-          >
-            <span>
-              {isId
-                ? `Ubah Dana Cadangan (${calc.effective_reserve_percent}%)`
-                : `Adjust Reserve (${calc.effective_reserve_percent}%)`}
-            </span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
-
-        {/* Supporting Card 2: Rata-rata Biaya Hasil Akhir */}
-        <div
-          className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
-              {isId ? 'Rata-rata Biaya Output' : 'Average Output Cost'}
-            </span>
-            <Film className="w-4 h-4 text-[#0099ff]" />
-          </div>
-
-          <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
-            <div className="vv-card-quiet p-3">
-              <div className="text-[11px] text-[var(--vv-text-muted)]">
-                {isId ? 'Per 1 Video Jadi' : 'Per Final Video'}
-              </div>
-              <div className="text-sm font-bold tabular-nums text-right mt-1">
-                {formatCurrencyIdr(calc.cost_per_video_idr, language)}
-              </div>
-              <div className="text-[11px] text-[#0099ff] tabular-nums text-right">
-                {formatCurrencyUsd(calc.cost_per_video_usd, language)}
+              <div className="text-[10px] text-[var(--vv-text-subtle)] tabular-nums text-right">
+                {isId ? `${project.items.length} tahap di Langkah 3` : `${project.items.length} stages in Step 3`}
               </div>
             </div>
 
             <div className="vv-card-quiet p-3">
-              <div className="text-[11px] text-[var(--vv-text-muted)]">
-                {isId ? 'Per 1 Menit Video' : 'Per Video Minute'}
+              <div className="text-[11px] text-[#0099ff]">
+                {isId ? 'Cadangan Langkah 2' : 'Step 2 Reserve'}
               </div>
-              <div className="text-sm font-bold tabular-nums text-right mt-1">
-                {formatCurrencyIdr(calc.cost_per_minute_idr, language)}
+              <div className="text-base font-bold tabular-nums text-[#0099ff] text-right mt-1">
+                {cadanganMultiplier}{' '}
+                <span className="text-xs font-normal text-[var(--vv-text-muted)]">
+                  {isId ? 'cadangan' : 'reserve'}
+                </span>
               </div>
-              <div className="text-[11px] text-[#0099ff] tabular-nums text-right">
-                {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
+              <div className="text-[10px] text-[var(--vv-text-subtle)] tabular-nums text-right">
+                {isId ? 'Jatah coba per adegan' : 'Tries per scene'}
               </div>
             </div>
           </div>
 
-          <div className="text-[11px] text-[var(--vv-text-muted)] flex items-center justify-between">
-            <span>
-              {isId
-                ? `Target: ${project.assumptions.target_videos} video (${project.assumptions.final_duration_minutes} mnt)`
-                : `Target: ${project.assumptions.target_videos} videos (${project.assumptions.final_duration_minutes} min)`}
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-[var(--vv-border)]">
+            <span className="text-[11px] text-[var(--vv-text-muted)] font-mono">
+              = {calc.budgeted_generations} {isId ? 'kali buat' : 'total tries'}
             </span>
             <button
               type="button"
               onClick={() => setActiveTab('setup')}
-              className="text-[#0099ff] font-medium hover:underline"
+              className="text-xs font-medium text-[#0099ff] hover:underline inline-flex items-center justify-end gap-1"
             >
-              {isId ? 'Ubah Target' : 'Edit Target'}
+              <span>{isId ? 'Ubah di Langkah 2' : 'Edit in Step 2'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Supporting Card 2: Rata-rata Biaya Produksi AI (Per Adegan & Per 1x Buat) */}
+        <div
+          className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)]">
+              {isId ? 'Rata-rata Biaya Produksi' : 'Average Production Cost'}
+            </span>
+            <Film className="w-4 h-4 text-[#ffb840]" />
+          </div>
+
+          <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
+                {isId ? 'Rata-rata per 1 Adegan' : 'Per 1 Final Scene'}
+              </div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1 truncate">
+                {avgCostPerItemIdr !== null
+                  ? formatCurrencyIdr(avgCostPerItemIdr, language)
+                  : '-'}
+              </div>
+              <div className="text-[11px] text-[#ffb840] tabular-nums text-right truncate">
+                {formatCurrencyUsd(avgCostPerItemUsd, language)}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3">
+              <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
+                {isId ? 'Rata-rata per 1x Buat' : 'Per 1 AI Try'}
+              </div>
+              <div className="text-sm font-bold tabular-nums text-right mt-1 truncate">
+                {avgCostPerGenIdr !== null
+                  ? formatCurrencyIdr(avgCostPerGenIdr, language)
+                  : '-'}
+              </div>
+              <div className="text-[11px] text-[#0099ff] tabular-nums text-right truncate">
+                {formatCurrencyUsd(avgCostPerGenUsd, language)}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between text-xs pt-2 border-t border-[var(--vv-border)]">
+            <span className="text-[11px] text-[var(--vv-text-muted)]">
+              {isId ? 'Sudah termasuk cadangan' : 'Includes retry reserve'}
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveTab('planner')}
+              className="text-[#0099ff] font-medium hover:underline inline-flex items-center gap-1 text-xs"
+            >
+              <span>{isId ? 'Atur di Langkah 3' : 'Edit in Step 3'}</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -538,8 +600,8 @@ export const DashboardView: React.FC = () => {
         stepTitle={t.navDashboard}
         nextStepHint={
           isId
-            ? 'Langkah selanjutnya: Periksa nama proyek, target jumlah video jadi, dan persentase dana cadangan.'
-            : 'Next step: Configure your project name, target video output, and reserve percentage.'
+            ? 'Langkah selanjutnya: Tentukan nama proyek dan angka cadangan percobaan per adegan.'
+            : 'Next step: Configure your project name and define your scene retry reserve factor.'
         }
         nextTab="setup"
         nextLabel={

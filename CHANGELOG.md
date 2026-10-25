@@ -12,6 +12,32 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.5.1] - Penyelarasan Tampilan Beranda Sesuai Model Perhitungan Terbaru (Perkalian Cadangan Langkah 2)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.5.1`
+
+### Diubah (Changed)
+1. **Penyelarasan Kartu Utama Total Anggaran di Beranda**:
+   - Menghapus tampilan persentase cadangan usang (`Cadangan (0%): +$0`) pada kartu hero utama beranda.
+   - Menggantinya dengan visualisasi rumus perhitungan terbaru yang transparan:
+     `[Jumlah Adegan Pokok] adegan × [Cadangan] cadangan = [Total] kali buat`.
+   - Menampilkan ringkasan poin Credit Higgsfield aktif beserta kurs konversi Rupiah di baris penutup kartu.
+2. **Pembaruan Kartu Metrik Pendukung 1 (Rumus Kali Pembuatan AI)**:
+   - Mengganti pemisahan lama (generasi pokok vs generasi cadangan) menjadi format dua pilar terstruktur:
+     - Pilar Kiri: *Kebutuhan Adegan Pokok* (dihitung dari Langkah 3).
+     - Pilar Kanan: *Cadangan Langkah 2* (faktor pengali jatah coba per adegan).
+   - Menambahkan ringkasan hasil perkalian kali buat dan tautan langsung untuk mengubah cadangan di Langkah 2.
+3. **Pembaruan Kartu Metrik Pendukung 2 (Rata-rata Biaya Produksi Nyata)**:
+   - Menghapus pembagian biaya berbasis target video manual yang tidak lagi digunakan.
+   - Menggantinya dengan dua indikator nyata yang sangat dibutuhkan produser/kreator video:
+     - *Rata-rata per 1 Adegan Jadi* (sudah mencakup jatah cadangan percobaan).
+     - *Rata-rata per 1x Klik Buat AI* (biaya rata-rata satu kali percobaan generate).
+4. **Penyelarasan Kalimat Penjelas & Panduan Langkah Bawah**:
+   - Memperbarui deskripsi proyek di pojok kiri atas beranda agar langsung menampilkan jumlah adegan pokok, pengali cadangan, dan total kali buat.
+   - Memperbarui petunjuk bilah alur (*StepFlowBar*) di bagian bawah agar selaras menuju Langkah 2.
+
+---
+
 ## Versi [1.5.0] - Fitur Sidebar Pinned Footer (Kiri Bawah Selalu Terlihat Tanpa Perlu Scroll)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.5.0`
