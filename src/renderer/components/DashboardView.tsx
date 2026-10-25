@@ -10,7 +10,6 @@ import {
 import { StatusBadge } from './StatusBadge';
 import { FrostedModal } from './FrostedModal';
 import { StepFlowBar } from './StepFlowBar';
-import { InteractiveGlowLine } from './InteractiveGlowLine';
 import {
   AlertTriangle,
   ArrowRight,
@@ -60,7 +59,6 @@ export const DashboardView: React.FC = () => {
   } = useProjectStore();
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const heroCardRef = useRef<HTMLDivElement | null>(null);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -235,18 +233,8 @@ export const DashboardView: React.FC = () => {
 
         {/* Right 5 Columns: THE DOMINANT FOCAL POINT (Total Seluruh Anggaran) */}
         <div
-          ref={heroCardRef}
-          className={`${heroCardClass} lg:col-span-5 rounded-[18px] p-6 md:p-7 flex flex-col justify-between relative overflow-hidden`}
+          className={`${heroCardClass} lg:col-span-5 rounded-[18px] p-6 md:p-7 flex flex-col justify-between`}
         >
-          {/* Garis Animasi Glowing Line Interaktif di Bibir Atas Kartu Utama */}
-          <div className="absolute top-0 left-0 right-0 z-20">
-            <InteractiveGlowLine
-              parentRef={heroCardRef}
-              variant="hero"
-              colorScheme="blue"
-              thickness={1.5}
-            />
-          </div>
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="vv-blue-dot" />

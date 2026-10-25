@@ -53,16 +53,6 @@
   --vv-amber-border: rgba(245, 158, 11, 0.35);
   --vv-amber-text: #fcd34d;
   --vv-amber-icon: #f59e0b;
-
-  /* Interactive Glowing Line Tokens (Dark Mode - Neon Studio Aesthetics) */
-  --vv-glow-beam-blue: linear-gradient(90deg, transparent 0%, rgba(0, 153, 255, 0.2) 20%, rgba(122, 202, 255, 0.95) 48%, #ffffff 50%, rgba(122, 202, 255, 0.95) 52%, rgba(0, 153, 255, 0.25) 80%, transparent 100%);
-  --vv-glow-aura-blue: radial-gradient(ellipse at center, rgba(0, 153, 255, 0.5) 0%, rgba(0, 104, 173, 0.15) 50%, transparent 75%);
-  --vv-glow-shadow-blue: 0 0 16px 2px rgba(0, 153, 255, 0.75), 0 0 32px 4px rgba(122, 202, 255, 0.4);
-  --vv-glow-dot-blue: #7acaff;
-  --vv-glow-beam-emerald: linear-gradient(90deg, transparent 0%, rgba(16, 185, 129, 0.15) 20%, rgba(52, 211, 153, 0.9) 48%, #ffffff 50%, rgba(52, 211, 153, 0.9) 52%, rgba(16, 185, 129, 0.2) 80%, transparent 100%);
-  --vv-glow-aura-emerald: radial-gradient(ellipse at center, rgba(16, 185, 129, 0.45) 0%, rgba(5, 150, 105, 0.12) 50%, transparent 75%);
-  --vv-glow-shadow-emerald: 0 0 14px 2px rgba(16, 185, 129, 0.7), 0 0 28px 4px rgba(52, 211, 153, 0.35);
-  --vv-glow-dot-emerald: #34d399;
 }
 
 .vv-theme-light {
@@ -101,16 +91,6 @@
   --vv-amber-border: rgba(217, 119, 6, 0.35);
   --vv-amber-text: #b45309;
   --vv-amber-icon: #d97706;
-
-  /* Interactive Glowing Line Tokens (Light Mode - High Contrast Deep Sapphire & Emerald) */
-  --vv-glow-beam-blue: linear-gradient(90deg, transparent 0%, rgba(0, 104, 173, 0.15) 20%, rgba(0, 153, 255, 0.85) 48%, #0068ad 50%, rgba(0, 153, 255, 0.85) 52%, rgba(0, 104, 173, 0.2) 80%, transparent 100%);
-  --vv-glow-aura-blue: radial-gradient(ellipse at center, rgba(0, 153, 255, 0.35) 0%, rgba(0, 104, 173, 0.12) 50%, transparent 75%);
-  --vv-glow-shadow-blue: 0 0 12px 1px rgba(0, 153, 255, 0.55), 0 1px 4px rgba(0, 104, 173, 0.3);
-  --vv-glow-dot-blue: #0068ad;
-  --vv-glow-beam-emerald: linear-gradient(90deg, transparent 0%, rgba(5, 150, 105, 0.15) 20%, rgba(4, 120, 87, 0.85) 48%, #047857 50%, rgba(4, 120, 87, 0.85) 52%, rgba(5, 150, 105, 0.2) 80%, transparent 100%);
-  --vv-glow-aura-emerald: radial-gradient(ellipse at center, rgba(5, 150, 105, 0.35) 0%, rgba(4, 120, 87, 0.10) 50%, transparent 75%);
-  --vv-glow-shadow-emerald: 0 0 10px 1px rgba(5, 150, 105, 0.5), 0 1px 3px rgba(4, 120, 87, 0.3);
-  --vv-glow-dot-emerald: #047857;
 }
 
 .vv-badge-emerald {
@@ -489,66 +469,3 @@ h1, h2, h3, h4 {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(154, 154, 154, 0.48);
 }
-
-/* ============================================================================
- * INTERACTIVE GLOWING LINE SYSTEM (Visuvate Studio Specular Light Beam)
- * ============================================================================ */
-
-@keyframes vvAmbientGlowSweep {
-  0% {
-    left: -12%;
-    opacity: 0.35;
-  }
-  48% {
-    opacity: 0.90;
-  }
-  50% {
-    left: 88%;
-    opacity: 0.90;
-  }
-  98% {
-    opacity: 0.35;
-  }
-  100% {
-    left: -12%;
-    opacity: 0.35;
-  }
-}
-
-@keyframes vvAuraBreathe {
-  0%, 100% {
-    opacity: 0.35;
-    transform: translateY(-50%) scaleY(0.9);
-  }
-  50% {
-    opacity: 0.75;
-    transform: translateY(-50%) scaleY(1.3);
-  }
-}
-
-.vv-glow-ambient {
-  animation: vvAmbientGlowSweep 7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
-}
-
-.vv-aura-ambient {
-  animation: vvAuraBreathe 4s ease-in-out infinite;
-}
-
-.vv-glow-beam-blue {
-  background: var(--vv-glow-beam-blue);
-  box-shadow: var(--vv-glow-shadow-blue);
-}
-
-.vv-glow-aura-blue {
-  background: var(--vv-glow-aura-blue);
-}
-
-.vv-glow-beam-emerald {
-  background: var(--vv-glow-beam-emerald);
-  box-shadow: var(--vv-glow-shadow-emerald);
-}
-
-.vv-glow-aura-emerald {
-  background: var(--vv-glow-aura-emerald);
-}
-

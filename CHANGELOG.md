@@ -12,23 +12,26 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
-## Versi [1.6.0] - Fitur Animasi Glowing Line Interaktif & Elegan (Studio Specular Light Beam)
+## Versi [1.6.1] - Pemulihan Performa Cepat & Ringan (Pencabutan Animasi Glowing Line Sesuai Permintaan)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.6.1`
+
+### Diubah (Changed)
+1. **Pencabutan Seluruh Komponen & Script Animasi Glowing Line**:
+   - Menghapus komponen `InteractiveGlowLine` dari bilah menu atas (*Top Header*) dan bibir kartu utama (*Hero Budget Card*).
+   - Menghapus seluruh efek pendaran blur, titik intan kursor, dan script pemantau pergerakan mouse (*mouse listeners*) yang membebani kinerja grafis/prosesor komputer.
+2. **Pemulihan Performa Ringan & Bebas Lemot (Kondisi Versi 1.5.2)**:
+   - Kecepatan respons, kelancaran navigasi antarmuka, dan efisiensi memori aplikasi telah kembali 100% cepat, enteng, dan responsif persis seperti pada Versi 1.5.2.
+   - Tetap mempertahankan seluruh penyempurnaan kontras warna hijau dan kenyamanan membaca pada Mode Terang (*White Mode*).
+
+---
+
+## Versi [1.6.0] - Eksperimen Animasi Glowing Line Interaktif (Diarsipkan)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.6.0`
 
 ### Ditambahkan (Added)
-1. **Komponen Animasi Garis Pendar Interaktif (`InteractiveGlowLine`)**:
-   - Menambahkan garis animasi berpendar (*glowing line*) modern, minimalis, dan mewah yang terinspirasi dari estetika studio Apple visionOS & Visuvate Studio.
-   - **Tiga Mode Interaksi Halus**:
-     - **Mode Pendar Standby (*Ambient Sweep*)**: Saat kursor diam, garis memancarkan osilasi pendaran lembut bolak-balik (7 detik) seperti sapuan laser studio yang tenang dan tidak melelahkan mata.
-     - **Mode Pelacak Kursor (*Interactive Cursor Tracking*)**: Begitu kursor mouse digerakkan di sekitar bilah header atau kartu utama, berkas pendaran cahaya (*specular beam*) dan titik intan kilau (*sparkle diamond dot*) meluncur mulus mengikuti posisi horizontal mouse secara *real-time*.
-     - **Efek Sentuh / Gelombang (*Ripple Shockwave*)**: Saat garis disentuh atau diklik, terpancar gelombang cahaya melingkar (*shockwave*) yang responsif dan memuaskan.
-2. **Penerapan Terintegrasi pada Bilah Utama & Kartu Hero**:
-   - Terpasang tepat di bawah bilah menu atas (*Top Bar Header*) di seluruh halaman aplikasi, terhubung dengan gerakan kursor di seluruh area header.
-   - Terpasang di bibir atas kartu utama total anggaran (*Tier 1 Hero Budget Card*) pada halaman Beranda (*Dashboard*) dan Rekapitulasi Anggaran (*Budget Summary*).
-3. **Penyelarasan Warna Adaptif (*Dark & Light Mode*)**:
-   - Pada **Mode Gelap (*Dark Mode*)**: Memancarkan pendaran biru sian studio elektrik (*Electric Cyan* & *Ice Blue*) dengan bias bayangan halus (*ambient aura blur*).
-   - Pada **Mode Terang (*White Mode*)**: Menggunakan pantulan safir biru tua yang tegas dan jernih (*Deep Sapphire Sheen*), tetap elegan tanpa merusak kontras.
+1. Eksperimen penambahan garis pendar interaktif (telah dicabut kembali pada Versi 1.6.1 karena menyebabkan performa berat/lemot pada komputer pengguna).
 
 ---
 

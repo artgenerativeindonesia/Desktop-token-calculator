@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActiveNavTab, useProjectStore } from './store/projectStore';
 import {
   formatCurrencyIdr,
@@ -12,7 +12,6 @@ import { BudgetSummaryView } from './components/BudgetSummaryView';
 import { DataSettingsView } from './components/DataSettingsView';
 import { ExportPdfView } from './components/ExportPdfView';
 import { FrostedModal } from './components/FrostedModal';
-import { InteractiveGlowLine } from './components/InteractiveGlowLine';
 import {
   ArrowRight,
   BarChart3,
@@ -55,7 +54,6 @@ export const App: React.FC = () => {
 
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isQuickBudgetModalOpen, setIsQuickBudgetModalOpen] = useState(false);
-  const headerRef = useRef<HTMLElement>(null);
 
   // Status Minimize / Buka-Tutup Sidebar (Mode Minimalis Ikon)
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
@@ -503,8 +501,7 @@ export const App: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Visuvate Studio Editor Top Bar */}
         <header
-          ref={headerRef}
-          className={`${headerClass} sticky top-0 z-20 px-6 py-3 flex flex-wrap items-center justify-between gap-3 relative`}
+          className={`${headerClass} sticky top-0 z-20 px-6 py-3 flex flex-wrap items-center justify-between gap-3`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
             {isSidebarCollapsed && (
@@ -618,16 +615,6 @@ export const App: React.FC = () => {
                 )}
               </span>
             </button>
-          </div>
-
-          {/* Garis Animasi Glowing Line Interaktif Studio */}
-          <div className="absolute -bottom-[1px] left-0 right-0 z-30">
-            <InteractiveGlowLine
-              parentRef={headerRef}
-              variant="header"
-              colorScheme="blue"
-              thickness={1.5}
-            />
           </div>
         </header>
 
