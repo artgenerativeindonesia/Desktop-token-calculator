@@ -152,10 +152,10 @@ export const DashboardView: React.FC = () => {
                 </span>
               </span>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                   hasUnsavedChanges
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/25'
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                    ? 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/25'
+                    : 'vv-badge-emerald'
                 }`}
               >
                 {hasUnsavedChanges ? t.unsavedBadge : t.savedBadge}
@@ -243,10 +243,10 @@ export const DashboardView: React.FC = () => {
               </span>
             </div>
             <span
-              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                 calc.is_complete
-                  ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
-                  : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
+                  ? 'vv-badge-emerald'
+                  : 'bg-amber-500/15 text-amber-500 dark:text-amber-300 border-amber-500/30'
               }`}
             >
               {calc.is_complete ? (
@@ -478,7 +478,7 @@ export const DashboardView: React.FC = () => {
                   ? formatCurrencyIdr(project.exchange_rate.rate, language)
                   : t.unavailableLabel}
               </div>
-              <div className="text-[10px] text-emerald-400 text-right mt-0.5 truncate">
+              <div className="text-[10px] vv-text-emerald font-medium text-right mt-0.5 truncate">
                 {project.exchange_rate.source_name}
               </div>
             </div>
@@ -544,7 +544,7 @@ export const DashboardView: React.FC = () => {
               className="vv-btn-secondary px-3.5 py-2 text-xs"
             >
               {calc.warnings.length === 0 ? (
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <ShieldCheck className="w-3.5 h-3.5 vv-text-emerald" />
               ) : (
                 <AlertTriangle className="w-3.5 h-3.5 text-[#ffb840]" />
               )}
@@ -717,7 +717,7 @@ export const DashboardView: React.FC = () => {
                 }}
                 className="vv-btn-secondary py-2.5 px-3.5 text-xs justify-start"
               >
-                <FlaskConical className="w-4 h-4 text-emerald-400 shrink-0" />
+                <FlaskConical className="w-4 h-4 vv-text-emerald shrink-0" />
                 <span className="truncate">{t.btnLoadPrdTest}</span>
               </button>
             </div>
@@ -912,7 +912,7 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {calc.warnings.length === 0 ? (
-            <div className="flex items-center gap-2.5 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-[12px] p-4">
+            <div className="flex items-center gap-2.5 text-xs vv-badge-emerald rounded-[12px] p-4">
               <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>
                 {isId

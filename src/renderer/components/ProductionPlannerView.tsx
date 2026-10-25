@@ -73,7 +73,7 @@ export const ProductionPlannerView: React.FC = () => {
 
   const tierBadgeClass = (badge?: string) => {
     if (badge === 'NEW')
-      return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+      return 'vv-badge-emerald';
     if (badge === 'PREMIUM')
       return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
     if (badge === 'POPULER')

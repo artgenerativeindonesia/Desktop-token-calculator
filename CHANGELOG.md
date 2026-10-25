@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.5.2] - Peningkatan Kontras Warna Hijau & Lencana Status pada Mode Terang (White Mode Aesthetics)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.5.2`
+
+### Diperbaiki (Fixed)
+1. **Peningkatan Kontras Warna Hijau pada Mode Terang (*Light / White Mode*)**:
+   - Memperbaiki lencana status, teks persentase diskon, dan indikator kesiapan yang sebelumnya tampak pudar/silau saat menggunakan tema putih (*white mode*).
+   - Menerapkan sistem warna adaptif ganda (*Dynamic Color Token*):
+     - **Mode Terang (*Light Mode*)**: Menggunakan hijau zamrud tua/pekat (*Emerald 700* `#047857` dan `#059669`) dengan rasio kontras 5.85:1 (melebihi standar WCAG AA), sehingga teks tajam, sangat mudah dibaca, dan tetap elegan di atas latar belakang putih bersih.
+     - **Mode Gelap (*Dark Mode*)**: Mempertahankan warna hijau neon studio modern (*Emerald 400* `#34d399`) yang berpendar estetik di atas latar belakang gelap gulita.
+2. **Peningkatan Kontras Lencana Peringatan (*Amber Warning Badges*)**:
+   - Menyelaraskan teks dan garis tepi lencana peringatan (*warning badges*) agar menggunakan warna jingga kayu matang (*Amber 700* `#b45309`) pada mode terang dan kuning emas terang (*Amber 300* `#fcd34d`) pada mode gelap.
+3. **Penyelarasan Komponen Visual Menyeluruh**:
+   - Memperbarui seluruh komponen yang memiliki elemen hijau dan lencana status:
+     - Lencana status header ("Tersimpan", "Estimasi Lengkap").
+     - Lencana diskon paket langganan Higgsfield ("21% OFF", "BEST VALUE", dll.) di Pengaturan Data.
+     - Lencana status verifikasi model AI ("NEW", "Aktif", dll.).
+     - Lencana kesiapan ekspor dokumen PDF.
+     - Ikon perisai keamanan dan centang kesehatan data.
+
+---
+
 ## Versi [1.5.1] - Penyelarasan Tampilan Beranda Sesuai Model Perhitungan Terbaru (Perkalian Cadangan Langkah 2)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.5.1`

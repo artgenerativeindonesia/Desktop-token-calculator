@@ -41,6 +41,18 @@
   --vv-blue-500: #0099ff;
   --vv-blue-700: #0068ad;
   --vv-amber: #ffb840;
+
+  /* Emerald Status Tokens (Dark Mode Neon Glow) */
+  --vv-emerald-bg: rgba(16, 185, 129, 0.15);
+  --vv-emerald-border: rgba(16, 185, 129, 0.32);
+  --vv-emerald-text: #34d399;
+  --vv-emerald-icon: #10b981;
+
+  /* Amber Status Tokens (Dark Mode Warm Amber Glow) */
+  --vv-amber-bg: rgba(245, 158, 11, 0.15);
+  --vv-amber-border: rgba(245, 158, 11, 0.35);
+  --vv-amber-text: #fcd34d;
+  --vv-amber-icon: #f59e0b;
 }
 
 .vv-theme-light {
@@ -67,6 +79,38 @@
   --vv-blue-500: #0099ff;
   --vv-blue-700: #0068ad;
   --vv-amber: #d97706;
+
+  /* Emerald Status Tokens (Light Mode Deep Forest - High Contrast & Readable on White) */
+  --vv-emerald-bg: rgba(16, 185, 129, 0.10);
+  --vv-emerald-border: rgba(5, 150, 105, 0.35);
+  --vv-emerald-text: #047857;
+  --vv-emerald-icon: #059669;
+
+  /* Amber Status Tokens (Light Mode Warm Honey - High Contrast & Readable on White) */
+  --vv-amber-bg: rgba(217, 119, 6, 0.10);
+  --vv-amber-border: rgba(217, 119, 6, 0.35);
+  --vv-amber-text: #b45309;
+  --vv-amber-icon: #d97706;
+}
+
+.vv-badge-emerald {
+  background-color: var(--vv-emerald-bg);
+  border-color: var(--vv-emerald-border);
+  color: var(--vv-emerald-text);
+}
+
+.vv-text-emerald {
+  color: var(--vv-emerald-text);
+}
+
+.vv-badge-amber {
+  background-color: var(--vv-amber-bg);
+  border-color: var(--vv-amber-border);
+  color: var(--vv-amber-text);
+}
+
+.vv-text-amber {
+  color: var(--vv-amber-text);
 }
 
 body {

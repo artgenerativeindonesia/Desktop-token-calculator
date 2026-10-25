@@ -144,7 +144,7 @@ export const App: React.FC = () => {
 
   const themeScopeClass =
     theme === 'dark'
-      ? 'vv-theme-dark apple-bg-dark'
+      ? 'dark vv-theme-dark apple-bg-dark'
       : 'vv-theme-light apple-bg-light';
   const sidebarClass =
     theme === 'dark' ? 'glass-sidebar-dark' : 'glass-sidebar-light';
@@ -526,10 +526,10 @@ export const App: React.FC = () => {
             </span>
 
             <span
-              className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${
                 calc.is_complete
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                  : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                  ? 'vv-badge-emerald'
+                  : 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/25'
               }`}
             >
               {calc.is_complete ? t.completeEstimate : t.incompleteEstimate}
@@ -628,7 +628,7 @@ export const App: React.FC = () => {
                   : banner.type === 'warning'
                   ? 'bg-amber-500/15 border-amber-400/35 text-amber-300'
                   : banner.type === 'success'
-                  ? 'bg-emerald-500/15 border-emerald-400/35 text-emerald-300'
+                  ? 'vv-badge-emerald'
                   : 'bg-[#0099ff]/15 border-[#0099ff]/35 text-[#7acaff]'
               }`}
             >
@@ -705,7 +705,7 @@ export const App: React.FC = () => {
                 }}
                 className="vv-btn-secondary px-3.5 py-2 text-xs"
               >
-                <FlaskConical className="w-3.5 h-3.5 text-emerald-400" />
+                <FlaskConical className="w-3.5 h-3.5 vv-text-emerald" />
                 <span>{t.btnLoadPrdTest}</span>
               </button>
             </div>

@@ -161,7 +161,7 @@ export const DataSettingsView: React.FC = () => {
     if (!badge || badge === 'STANDARD') return null;
     if (badge === 'NEW') {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider vv-badge-emerald">
           NEW
         </span>
       );
@@ -484,7 +484,7 @@ export const DataSettingsView: React.FC = () => {
                       </div>
                     </div>
                     {plan.discount_badge && (
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0 shadow-sm">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full vv-badge-emerald whitespace-nowrap shrink-0 shadow-sm">
                         {plan.discount_badge}
                       </span>
                     )}
@@ -571,7 +571,7 @@ export const DataSettingsView: React.FC = () => {
                     {isId ? 'Paket Terpilih Sebagai Patokan' : 'Active Benchmark Plan'}
                   </span>
                   {selectedPlanObj.discount_badge && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full vv-badge-emerald">
                       {selectedPlanObj.discount_badge}
                     </span>
                   )}
@@ -608,7 +608,7 @@ export const DataSettingsView: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-[var(--vv-border)] pb-4">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 vv-text-emerald" />
               <span>
                 {isId
                   ? `Daftar Lengkap Model & Harga Resmi Higgsfield AI (${filteredCatalog.length} dari ${catalog.length} Model)`

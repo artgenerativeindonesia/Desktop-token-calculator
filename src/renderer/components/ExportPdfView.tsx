@@ -203,7 +203,7 @@ export const ExportPdfView: React.FC = () => {
                 </label>
               </div>
             ) : (
-              <div className="flex items-center justify-between gap-2 text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-[12px] p-3">
+              <div className="flex items-center justify-between gap-2 text-xs vv-badge-emerald rounded-[12px] p-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>

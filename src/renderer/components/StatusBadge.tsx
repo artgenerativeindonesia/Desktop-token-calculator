@@ -28,7 +28,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     case 'verified':
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-emerald-500/15 text-emerald-400 border-emerald-400/30 ${paddingClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full font-semibold border vv-badge-emerald ${paddingClass}`}
         >
           <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
           {label}

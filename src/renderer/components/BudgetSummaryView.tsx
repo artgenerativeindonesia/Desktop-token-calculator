@@ -97,10 +97,10 @@ export const BudgetSummaryView: React.FC = () => {
                 </span>
               </span>
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-medium border ${
+                className={`inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-semibold border ${
                   calc.is_complete
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
-                    : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                    ? 'vv-badge-emerald'
+                    : 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/25'
                 }`}
               >
                 {calc.is_complete ? (
