@@ -153,16 +153,16 @@ export const App: React.FC = () => {
 
   return (
     <div className={`${themeScopeClass} min-h-screen flex flex-col lg:flex-row`}>
-      {/* Visuvate Studio Architectural Sidebar Rail (Bisa Di-minimize / Buka-Tutup) */}
+      {/* Visuvate Studio Architectural Sidebar Rail (Bisa Di-minimize / Buka-Tutup & Terkunci di Bawah) */}
       <aside
         className={`${sidebarClass} w-full ${
-          isSidebarCollapsed ? 'lg:w-[72px] p-2.5' : 'lg:w-[276px] p-4'
-        } shrink-0 flex flex-col justify-between lg:min-h-screen sticky top-0 z-30 select-none transition-all duration-300 ease-in-out`}
+          isSidebarCollapsed ? 'lg:w-[72px] p-2.5' : 'lg:w-[276px] p-3.5'
+        } shrink-0 flex flex-col justify-between lg:h-screen lg:max-h-screen sticky top-0 z-30 select-none transition-all duration-300 ease-in-out`}
       >
-        <div>
-          {/* Studio Brand Emblem & Header */}
+        {/* ZONA 1: Studio Brand Emblem & Header (Atas Diam) */}
+        <div className="shrink-0">
           {isSidebarCollapsed ? (
-            <div className="flex flex-col items-center gap-2 mb-3 border-b border-[var(--vv-border)] pb-3">
+            <div className="flex flex-col items-center gap-2 mb-2.5 border-b border-[var(--vv-border)] pb-2.5">
               <div
                 title="Higgsfield Studio Budget Workspace"
                 className="grid size-9 place-items-center rounded-[8px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)]"
@@ -186,7 +186,7 @@ export const App: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between px-2 py-1.5 mb-3 border-b border-[var(--vv-border)] pb-3">
+            <div className="flex items-center justify-between px-1.5 py-1 mb-2.5 border-b border-[var(--vv-border)] pb-2.5">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="grid size-8 place-items-center rounded-[7px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)] shrink-0">
                   <svg
@@ -226,27 +226,30 @@ export const App: React.FC = () => {
           )}
 
           {!isSidebarCollapsed && (
-            <div className="px-2.5 mb-4 animate-in fade-in duration-200">
-              <div className="text-[14px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)]">
+            <div className="px-1.5 mb-2.5 animate-in fade-in duration-200">
+              <div className="text-[13px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)] truncate">
                 {t.appTitle}
               </div>
-              <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5 leading-relaxed">
+              <div className="text-[10.5px] text-[var(--vv-text-muted)] mt-0.5 leading-relaxed truncate">
                 {t.appSubtitle}
               </div>
             </div>
           )}
+        </div>
 
+        {/* ZONA 2: Daftar Menu Langkah Alur (Scroll Halus Independen Tanpa Scrollbar Kasar) */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-h-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-1 space-y-2">
           {/* Primary Guided Workflow Section (Steps 01 - 05) */}
           {!isSidebarCollapsed ? (
-            <div className="px-2.5 mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
+            <div className="px-1.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
               <span>{isId ? 'Alur Langkah Utama' : 'Guided Workflow'}</span>
               <span className="tabular-nums">01 — 05</span>
             </div>
           ) : (
-            <div className="my-1.5 border-t border-[var(--vv-border)]/50" />
+            <div className="my-1 border-t border-[var(--vv-border)]/50" />
           )}
 
-          <nav className="space-y-1.5">
+          <nav className="space-y-1">
             {coreWorkflowItems.map((item) => {
               const isActive = activeTab === item.id;
 
@@ -287,13 +290,13 @@ export const App: React.FC = () => {
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
+                  className={`w-full flex items-center justify-between px-2.5 py-2 rounded-[9px] text-left transition-all ${
                     isActive
                       ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
                       : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
                       className={`text-[10px] tabular-nums font-mono ${
                         isActive ? 'text-white/85' : 'text-[var(--vv-text-subtle)]'
@@ -303,11 +306,11 @@ export const App: React.FC = () => {
                     </span>
                     <span className="shrink-0">{item.icon}</span>
                     <div className="min-w-0">
-                      <div className="text-[12.5px] truncate leading-tight">
+                      <div className="text-[12px] truncate leading-tight">
                         {item.label}
                       </div>
                       <div
-                        className={`text-[10px] truncate mt-0.5 ${
+                        className={`text-[9.5px] truncate mt-0.5 ${
                           isActive ? 'text-white/75' : 'text-[var(--vv-text-subtle)]'
                         }`}
                       >
@@ -315,10 +318,10 @@ export const App: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                  <div className="flex items-center gap-1.5 shrink-0 ml-1.5">
                     {item.badge !== undefined && (
                       <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] tabular-nums ${
+                        className={`px-1.5 py-0.2 rounded-full text-[9.5px] tabular-nums ${
                           isActive
                             ? 'bg-white/20 text-white'
                             : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] border border-[var(--vv-border)]'
@@ -340,12 +343,12 @@ export const App: React.FC = () => {
           <div
             className={
               !isSidebarCollapsed
-                ? 'mt-4 pt-3 border-t border-[var(--vv-border)]'
-                : 'mt-2 pt-2 border-t border-[var(--vv-border)]'
+                ? 'mt-3 pt-2.5 border-t border-[var(--vv-border)]'
+                : 'mt-1.5 pt-1.5 border-t border-[var(--vv-border)]'
             }
           >
             {!isSidebarCollapsed && (
-              <div className="px-2.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
+              <div className="px-1.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
                 <span>{isId ? 'Data & Referensi' : 'Data & Reference'}</span>
                 <span className="tabular-nums">06</span>
               </div>
@@ -370,13 +373,13 @@ export const App: React.FC = () => {
             ) : (
               <button
                 onClick={() => setActiveTab('settings')}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
+                className={`w-full flex items-center justify-between px-2.5 py-2 rounded-[9px] text-left transition-all ${
                   activeTab === 'settings'
                     ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
                     : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
                 }`}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
                   <span
                     className={`text-[10px] tabular-nums font-mono ${
                       activeTab === 'settings'
@@ -388,11 +391,11 @@ export const App: React.FC = () => {
                   </span>
                   <Database className="w-4 h-4 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[12.5px] truncate leading-tight">
+                    <div className="text-[12px] truncate leading-tight">
                       {t.navDataSettings}
                     </div>
                     <div
-                      className={`text-[10px] truncate mt-0.5 ${
+                      className={`text-[9.5px] truncate mt-0.5 ${
                         activeTab === 'settings'
                           ? 'text-white/75'
                           : 'text-[var(--vv-text-subtle)]'
@@ -410,88 +413,88 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Sidebar Bottom Compact Budget Trigger & Save Action */}
-        {isSidebarCollapsed ? (
-          <div className="mt-3 pt-3 border-t border-[var(--vv-border)] flex flex-col items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsQuickBudgetModalOpen(true)}
-              title={`${t.totalBudget}: ${formatCurrencyIdr(
-                calc.total_cost_idr,
-                language
-              )} (${formatCurrencyUsd(calc.total_cost_usd, language)}) • ${
-                isId ? 'Klik untuk intip rincian cepat' : 'Click to peek quick budget'
-              }`}
-              className="size-11 mx-auto flex flex-col items-center justify-center rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[#0099ff]/15 hover:border-[#0099ff]/50 border border-[var(--vv-border)] text-[#0099ff] transition group"
-            >
-              <Eye className="w-4 h-4 group-hover:scale-110 transition" />
-              <span className="text-[8px] font-mono font-bold mt-0.5 text-[var(--vv-text-muted)]">
-                Rp
-              </span>
-            </button>
+        {/* ZONA 3: Sidebar Bottom (Pinned / Terkunci Permanen di Kiri Bawah & Ramping) */}
+        <div className="shrink-0 pt-2.5 border-t border-[var(--vv-border)] mt-auto">
+          {isSidebarCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsQuickBudgetModalOpen(true)}
+                title={`${t.totalBudget}: ${formatCurrencyIdr(
+                  calc.total_cost_idr,
+                  language
+                )} (${formatCurrencyUsd(calc.total_cost_usd, language)}) • ${
+                  isId ? 'Klik untuk intip rincian cepat' : 'Click to peek quick budget'
+                }`}
+                className="size-11 mx-auto flex flex-col items-center justify-center rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[#0099ff]/15 hover:border-[#0099ff]/50 border border-[var(--vv-border)] text-[#0099ff] transition group"
+              >
+                <Eye className="w-4 h-4 group-hover:scale-110 transition" />
+                <span className="text-[8px] font-mono font-bold mt-0.5 text-[var(--vv-text-muted)]">
+                  Rp
+                </span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => saveProjectFile(false)}
-              title={`${t.btnSaveProject}${
-                hasUnsavedChanges
-                  ? isId
-                    ? ' (Ada perubahan belum disimpan)'
-                    : ' (Unsaved changes)'
-                  : ''
-              }`}
-              className="relative size-11 mx-auto flex items-center justify-center rounded-[10px] vv-btn-primary transition shadow-md"
-            >
-              <Save className="w-4 h-4" />
-              {hasUnsavedChanges && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ffb840] ring-2 ring-[var(--vv-card-surface)]" />
-              )}
-            </button>
-          </div>
-        ) : (
-          <div className="mt-5 pt-3.5 border-t border-[var(--vv-border)] space-y-2.5">
-            <button
-              type="button"
-              onClick={() => setIsQuickBudgetModalOpen(true)}
-              title={
-                isId
-                  ? 'Klik untuk melihat ringkasan cepat anggaran dalam jendela kaca buram'
-                  : 'Click to inspect quick budget breakdown in a frosted glass window'
-              }
-              className="w-full text-left p-3 rounded-[12px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition group"
-            >
-              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--vv-text-muted)]">
-                <span>{t.totalBudget}</span>
-                <span className="inline-flex items-center gap-1 text-[#0099ff] group-hover:underline">
-                  <Eye className="w-3 h-3" />
-                  <span>{isId ? 'Intip Rincian' : 'Peek'}</span>
-                </span>
-              </div>
-              <div className="text-base font-bold tabular-nums text-[#0099ff] text-right mt-1">
-                {formatCurrencyIdr(calc.total_cost_idr, language)}
-              </div>
-              <div className="flex items-center justify-between text-[11px] tabular-nums text-[var(--vv-text-muted)] mt-0.5">
-                <span>
-                  {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
-                </span>
-                <span className="font-semibold text-[var(--vv-text-strong)]">
-                  {formatCurrencyUsd(calc.total_cost_usd, language)}
-                </span>
-              </div>
-            </button>
+              <button
+                type="button"
+                onClick={() => saveProjectFile(false)}
+                title={`${t.btnSaveProject}${
+                  hasUnsavedChanges
+                    ? isId
+                      ? ' (Ada perubahan belum disimpan)'
+                      : ' (Unsaved changes)'
+                    : ''
+                }`}
+                className="relative size-11 mx-auto flex items-center justify-center rounded-[10px] vv-btn-primary transition shadow-md"
+              >
+                <Save className="w-4 h-4" />
+                {hasUnsavedChanges && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ffb840] ring-2 ring-[var(--vv-card-surface)]" />
+                )}
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setIsQuickBudgetModalOpen(true)}
+                title={
+                  isId
+                    ? 'Klik untuk melihat ringkasan cepat anggaran dalam jendela kaca buram'
+                    : 'Click to inspect quick budget breakdown in a frosted glass window'
+                }
+                className="w-full text-left px-3 py-2 rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition group shadow-sm"
+              >
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--vv-text-muted)]">
+                  <span className="truncate">{t.totalBudget}</span>
+                  <span className="inline-flex items-center gap-1 text-[#0099ff] group-hover:underline text-[10px] shrink-0 font-medium">
+                    <Eye className="w-3 h-3" />
+                    <span>{isId ? 'Rincian' : 'Peek'}</span>
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between mt-1 gap-1">
+                  <div className="text-sm font-bold tabular-nums text-[#0099ff] truncate">
+                    {formatCurrencyIdr(calc.total_cost_idr, language)}
+                  </div>
+                  <div className="text-[10px] tabular-nums text-[var(--vv-text-muted)] shrink-0 font-mono">
+                    {calc.budgeted_generations}x • {formatCurrencyUsd(calc.total_cost_usd, language)}
+                  </div>
+                </div>
+              </button>
 
-            <button
-              onClick={() => saveProjectFile(false)}
-              className="vv-btn-primary w-full py-2.5 px-4 text-xs"
-            >
-              <Save className="w-3.5 h-3.5" />
-              <span>{t.btnSaveProject}</span>
-              {hasUnsavedChanges && (
-                <span className="w-2 h-2 rounded-full bg-[#ffb840]" />
-              )}
-            </button>
-          </div>
-        )}
+              <button
+                type="button"
+                onClick={() => saveProjectFile(false)}
+                className="vv-btn-primary w-full py-2 px-3 text-xs flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span className="font-semibold">{t.btnSaveProject}</span>
+                {hasUnsavedChanges && (
+                  <span className="w-2 h-2 rounded-full bg-[#ffb840] ring-1 ring-white/50" />
+                )}
+              </button>
+            </div>
+          )}
+        </div>
       </aside>
 
       {/* Main Content Area */}

@@ -12,6 +12,25 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.5.0] - Fitur Sidebar Pinned Footer (Kiri Bawah Selalu Terlihat Tanpa Perlu Scroll)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.5.0`
+
+### Ditambahkan (Added)
+1. **Penguncian Permanen Kiri Bawah (*Pinned Footer Architecture*)**:
+   - Bagian bawah sidebar (*Total Anggaran Estimasi* dan tombol *Simpan Proyek*) kini dipaku permanen di dasar layar (`lg:h-screen lg:max-h-screen`, `shrink-0 mt-auto`).
+   - Bagian kiri bawah selalu terlihat 100% di semua ukuran layar monitor laptop tanpa pernah terdorong keluar layar atau membutuhkan scroll halaman.
+2. **Kartu Anggaran Ramping Vertikal (*Slim & Compact Layout*)**:
+   - Menata ulang kotak anggaran kiri bawah menjadi 35% lebih hemat ruang vertikal:
+     - Baris atas: Label *"Total Anggaran"* dan tautan cepat *"Rincian"* dengan ikon mata.
+     - Baris bawah: Nilai nominal Rupiah tebal berdampingan seimbang dengan angka USD dan frekuensi percobaan (`20x • $240.00`).
+   - Tombol *Simpan Proyek* dibuat dengan tinggi presisi yang pas (`py-2`), menghemat ruang layar tanpa mengurangi kenyamanan klik.
+3. **Menu Tengah Auto-Fit dengan Gulir Halus Mandiri (*Smooth Independent Scroll*)**:
+   - Area daftar langkah (01 sampai 05) dan Data Referensi (06) kini memiliki ruang fleksibel mandiri (`flex-1 overflow-y-auto`).
+   - Jarak padding antar menu otomatis disesuaikan agar pas dalam satu layar monitor standar. Jika monitor pengguna sangat pendek, hanya menu alur tengah yang dapat digulir dengan roda mouse tanpa memunculkan scrollbar tebal yang mengganggu pemandangan, sementara bagian atas dan bawah tetap diam terkunci.
+
+---
+
 ## Versi [1.4.0] - Fitur Sidebar Menu Dapat Di-minimize (Buka/Tutup dengan Mode Ikon Elegan & Minimalis)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.4.0`
