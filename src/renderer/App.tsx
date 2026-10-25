@@ -80,9 +80,9 @@ export const App: React.FC = () => {
       id: 'setup',
       index: '02',
       label: t.navSetup,
-      stepDesc: isId ? 'Target video & dana cadangan' : 'Targets & reserve',
+      stepDesc: isId ? 'Nama proyek & dana cadangan' : 'Project & reserve',
       icon: <Sliders className="w-4 h-4" />,
-      badge: `${calc.effective_reserve_percent}%`,
+      badge: `${project.assumptions.default_attempts_per_shot || 1}x`,
     },
     {
       id: 'planner',

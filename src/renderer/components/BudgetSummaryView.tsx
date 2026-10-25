@@ -18,8 +18,8 @@ import {
   Coins,
   Eye,
   FileDown,
-  Film,
   Layers,
+  Sparkles,
 } from 'lucide-react';
 
 const ALL_CATEGORIES: ProcessCategory[] = [
@@ -43,11 +43,40 @@ export const BudgetSummaryView: React.FC = () => {
     theme === 'dark' ? 'vv-card-hero-dark' : 'vv-card-hero-light';
   const calc = project.calculation;
 
+  const cadanganMultiplier =
+    project.assumptions.default_attempts_per_shot ||
+    project.assumptions.reserve_generations_override ||
+    1;
+
+  const totalSceneQuantity = project.items.reduce(
+    (sum, item) => sum + Math.max(0, Math.floor(item.quantity)),
+    0
+  );
+
+  const hasExplicitReserveCost = (calc.reserve_cost_usd || 0) > 0;
   const baseSharePercent =
     calc.total_cost_usd > 0
       ? Math.round((calc.base_cost_usd / calc.total_cost_usd) * 100)
       : 100;
   const reserveSharePercent = Math.max(0, 100 - baseSharePercent);
+
+  // Rata-rata per adegan pokok
+  const avgCostPerItemIdr =
+    totalSceneQuantity > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / totalSceneQuantity
+      : null;
+  const avgCostPerItemUsd =
+    totalSceneQuantity > 0 ? calc.total_cost_usd / totalSceneQuantity : 0;
+
+  // Rata-rata per 1x generasi AI
+  const avgCostPerGenIdr =
+    calc.budgeted_generations > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / calc.budgeted_generations
+      : null;
+  const avgCostPerGenUsd =
+    calc.budgeted_generations > 0
+      ? calc.total_cost_usd / calc.budgeted_generations
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -56,7 +85,7 @@ export const BudgetSummaryView: React.FC = () => {
        * ===================================================================== */}
       <div className={`${heroCardClass} rounded-[18px] p-6 md:p-7`}>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-          {/* Left 7 Cols: Title, Status, and 3-Row Executive Summary */}
+          {/* Left 7 Cols: Title, Status, and Executive Summary Boxes */}
           <div className="lg:col-span-7 space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <span className="vv-badge-pill">
@@ -103,41 +132,77 @@ export const BudgetSummaryView: React.FC = () => {
               </h1>
               <p className="text-xs text-[var(--vv-text-muted)] mt-1">
                 {isId
-                  ? 'Seluruh angka di halaman ini dihitung otomatis dan sama persis dengan dokumen PDF yang akan Anda cetak.'
-                  : 'All figures on this page are calculated automatically and match the PDF report you export.'}
+                  ? 'Seluruh angka di halaman ini dihitung otomatis dari susunan adegan di Langkah 3 dan cadangan di Langkah 2.'
+                  : 'All figures on this page are calculated automatically from scenes in Step 3 and reserve in Step 2.'}
               </p>
             </div>
 
-            {/* Clean 2-Box Split for Base Cost vs Reserve Cost */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <div className="vv-card-quiet p-3.5">
-                <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
-                  <span>{t.baseCost}</span>
-                  <span className="font-mono">{calc.planned_generations}x</span>
+            {/* Clean 2-Box Split */}
+            {hasExplicitReserveCost ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="vv-card-quiet p-3.5">
+                  <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
+                    <span>{t.baseCost}</span>
+                    <span className="font-mono">{calc.planned_generations}x</span>
+                  </div>
+                  <div className="text-base font-bold tabular-nums text-right mt-1">
+                    {formatCurrencyIdr(calc.base_cost_idr, language)}
+                  </div>
+                  <div className="text-xs text-[#0099ff] tabular-nums text-right">
+                    {formatCurrencyUsd(calc.base_cost_usd, language)}
+                  </div>
                 </div>
-                <div className="text-base font-bold tabular-nums text-right mt-1">
-                  {formatCurrencyIdr(calc.base_cost_idr, language)}
-                </div>
-                <div className="text-xs text-[#0099ff] tabular-nums text-right">
-                  {formatCurrencyUsd(calc.base_cost_usd, language)}
-                </div>
-              </div>
 
-              <div className="vv-card-quiet p-3.5">
-                <div className="flex items-center justify-between text-[11px] text-[#ffb840]">
-                  <span>
-                    {t.reserveCost} ({calc.effective_reserve_percent}%)
-                  </span>
-                  <span className="font-mono">+{calc.reserve_generations}x</span>
-                </div>
-                <div className="text-base font-bold tabular-nums text-[#ffb840] text-right mt-1">
-                  {formatCurrencyIdr(calc.reserve_cost_idr, language)}
-                </div>
-                <div className="text-xs text-[var(--vv-text-muted)] tabular-nums text-right">
-                  {formatCurrencyUsd(calc.reserve_cost_usd, language)}
+                <div className="vv-card-quiet p-3.5">
+                  <div className="flex items-center justify-between text-[11px] text-[#ffb840]">
+                    <span>
+                      {t.reserveCost} ({calc.effective_reserve_percent}%)
+                    </span>
+                    <span className="font-mono">+{calc.reserve_generations}x</span>
+                  </div>
+                  <div className="text-base font-bold tabular-nums text-[#ffb840] text-right mt-1">
+                    {formatCurrencyIdr(calc.reserve_cost_idr, language)}
+                  </div>
+                  <div className="text-xs text-[var(--vv-text-muted)] tabular-nums text-right">
+                    {formatCurrencyUsd(calc.reserve_cost_usd, language)}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                <div className="vv-card-quiet p-3.5">
+                  <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
+                    <span>{isId ? 'Kebutuhan Adegan Pokok' : 'Base Scene Items'}</span>
+                    <span className="font-mono text-[#0099ff]">{project.items.length} {isId ? 'tahap' : 'stages'}</span>
+                  </div>
+                  <div className="text-xl font-bold tabular-nums text-[var(--vv-text-primary)] text-right mt-1">
+                    {totalSceneQuantity}{' '}
+                    <span className="text-xs font-normal text-[var(--vv-text-muted)]">
+                      {isId ? 'adegan / gambar' : 'items'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[var(--vv-text-muted)] text-right mt-0.5">
+                    {isId ? 'Disusun pada Langkah 3' : 'Configured in Step 3'}
+                  </div>
+                </div>
+
+                <div className="vv-card-quiet p-3.5">
+                  <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
+                    <span>{isId ? 'Cadangan Langkah 2' : 'Step 2 Reserve'}</span>
+                    <span className="font-mono text-[#0099ff]">{cadanganMultiplier}x</span>
+                  </div>
+                  <div className="text-xl font-bold tabular-nums text-[#0099ff] text-right mt-1">
+                    {cadanganMultiplier}{' '}
+                    <span className="text-xs font-normal text-[var(--vv-text-muted)]">
+                      {isId ? 'cadangan' : 'reserve'}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[var(--vv-text-muted)] text-right mt-0.5">
+                    {isId ? 'Jatah coba per adegan' : 'Retry attempts per scene'}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right 5 Cols: Dominant Grand Total Box + Primary Export CTA */}
@@ -159,28 +224,48 @@ export const BudgetSummaryView: React.FC = () => {
               <div className="text-lg font-semibold tabular-nums text-[#0099ff] mt-1">
                 {formatCurrencyUsd(calc.total_cost_usd, language)}
               </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] mt-1.5">
+                {totalSceneQuantity} {isId ? 'adegan' : 'scenes'} &times; {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'} ={' '}
+                <strong className="text-[var(--vv-text-strong)]">
+                  {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+                </strong>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden flex">
-                <div
-                  style={{ width: `${baseSharePercent}%` }}
-                  className="bg-[#0099ff]"
-                />
-                <div
-                  style={{ width: `${reserveSharePercent}%` }}
-                  className="bg-[#ffb840]"
-                />
+            {hasExplicitReserveCost ? (
+              <div className="space-y-2">
+                <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden flex">
+                  <div
+                    style={{ width: `${baseSharePercent}%` }}
+                    className="bg-[#0099ff]"
+                  />
+                  <div
+                    style={{ width: `${reserveSharePercent}%` }}
+                    className="bg-[#ffb840]"
+                  />
+                </div>
+                <div className="flex justify-between text-[10px] text-[var(--vv-text-muted)]">
+                  <span>
+                    {baseSharePercent}% {isId ? 'Biaya Utama' : 'Base Cost'}
+                  </span>
+                  <span className="text-[#ffb840]">
+                    {reserveSharePercent}% {isId ? 'Dana Cadangan' : 'Reserve'}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-[10px] text-[var(--vv-text-muted)]">
-                <span>
-                  {baseSharePercent}% {isId ? 'Biaya Utama' : 'Base Cost'}
-                </span>
-                <span className="text-[#ffb840]">
-                  {reserveSharePercent}% {isId ? 'Dana Cadangan' : 'Reserve'}
+            ) : (
+              <div className="p-3 rounded-[12px] bg-[var(--vv-field)] border border-[var(--vv-border)] flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2 text-[var(--vv-text-muted)]">
+                  <Coins className="w-4 h-4 text-[#0099ff]" />
+                  <span>{isId ? 'Total Credit Platform' : 'Total Credits'}</span>
+                </div>
+                <span className="font-bold text-[var(--vv-text-primary)] font-mono">
+                  {calc.total_credit !== null
+                    ? `${calc.total_credit.toLocaleString()} Credits`
+                    : '-'}
                 </span>
               </div>
-            </div>
+            )}
 
             <button
               type="button"
@@ -190,8 +275,8 @@ export const BudgetSummaryView: React.FC = () => {
               <FileDown className="w-4 h-4" />
               <span>
                 {isId
-                  ? 'Pratinjau & Simpan Laporan PDF'
-                  : 'Preview & Save PDF Report'}
+                  ? 'Lanjut ke Langkah 5: Cetak Dokumen PDF'
+                  : 'Continue to Step 5: Save PDF Report'}
               </span>
             </button>
           </div>
@@ -202,64 +287,67 @@ export const BudgetSummaryView: React.FC = () => {
        * TIER 2: SECONDARY SCANNING ZONE — UNIT ECONOMICS & VISUAL CATEGORY SHARE
        * ===================================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left 5 Cols: Rata-rata Biaya Hasil Akhir & Credit */}
+        {/* Left 5 Cols: Rata-rata Biaya Satuan & Credit */}
         <div
           className={`${cardClass} lg:col-span-5 rounded-[16px] p-6 flex flex-col justify-between space-y-4`}
         >
           <div className="flex items-center justify-between border-b border-[var(--vv-border)] pb-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--vv-text-muted)] flex items-center gap-2">
-              <Film className="w-4 h-4 text-[#0099ff]" />
+              <Sparkles className="w-4 h-4 text-[#0099ff]" />
               <span>
                 {isId
-                  ? 'Rata-rata Biaya Hasil Akhir & Credit'
-                  : 'Average Output Costs & Credits'}
+                  ? 'Rata-rata Biaya Satuan & Credit'
+                  : 'Average Unit Costs & Credits'}
               </span>
             </h2>
           </div>
 
           <div className="space-y-3">
+            {/* Rata-rata per adegan pokok */}
             <div className="vv-card-quiet p-3.5 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-[var(--vv-text-primary)]">
-                  {t.costPerVideo}
+                  {isId ? 'Rata-rata per 1 Adegan / Gambar' : 'Avg Cost per Scene / Image'}
                 </div>
                 <div className="text-[11px] text-[var(--vv-text-muted)]">
                   {isId
-                    ? `Target ${project.assumptions.target_videos} video jadi`
-                    : `For ${project.assumptions.target_videos} final videos`}
+                    ? `${totalSceneQuantity} adegan (masing-masing ${cadanganMultiplier} jatah coba)`
+                    : `${totalSceneQuantity} items (${cadanganMultiplier} attempts each)`}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-base font-bold tabular-nums text-[var(--vv-text-primary)]">
-                  {formatCurrencyIdr(calc.cost_per_video_idr, language)}
+                  {formatCurrencyIdr(avgCostPerItemIdr, language)}
                 </div>
                 <div className="text-xs text-[#0099ff] tabular-nums">
-                  {formatCurrencyUsd(calc.cost_per_video_usd, language)}
+                  {formatCurrencyUsd(avgCostPerItemUsd, language)}
                 </div>
               </div>
             </div>
 
+            {/* Rata-rata per 1x generasi AI */}
             <div className="vv-card-quiet p-3.5 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-[var(--vv-text-primary)]">
-                  {t.costPerMinute}
+                  {isId ? 'Rata-rata per 1x Pembuatan AI' : 'Avg Cost per 1 AI Generation'}
                 </div>
                 <div className="text-[11px] text-[var(--vv-text-muted)]">
                   {isId
-                    ? `Total durasi ${project.assumptions.final_duration_minutes} menit`
-                    : `For ${project.assumptions.final_duration_minutes} total min`}
+                    ? `Tarif per satu kali tombol generate`
+                    : `Rate per single generation run`}
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-base font-bold tabular-nums text-[var(--vv-text-primary)]">
-                  {formatCurrencyIdr(calc.cost_per_minute_idr, language)}
+                  {formatCurrencyIdr(avgCostPerGenIdr, language)}
                 </div>
                 <div className="text-xs text-[#0099ff] tabular-nums">
-                  {formatCurrencyUsd(calc.cost_per_minute_usd, language)}
+                  {formatCurrencyUsd(avgCostPerGenUsd, language)}
                 </div>
               </div>
             </div>
 
+            {/* Total Credit */}
             <div className="p-3.5 rounded-[12px] bg-[#0099ff]/10 border border-[#0099ff]/30 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-[#7acaff] flex items-center gap-1.5">
@@ -268,8 +356,8 @@ export const BudgetSummaryView: React.FC = () => {
                 </div>
                 <div className="text-[10px] text-[var(--vv-text-muted)] mt-0.5">
                   {isId
-                    ? 'Poin pemakaian platform AI'
-                    : 'Platform AI usage points'}
+                    ? `Untuk total ${calc.budgeted_generations} kali proses AI`
+                    : `For total ${calc.budgeted_generations} AI runs`}
                 </div>
               </div>
               <div className="text-lg font-bold tabular-nums text-[#7acaff]">
@@ -278,6 +366,17 @@ export const BudgetSummaryView: React.FC = () => {
                   : t.unavailableLabel}
               </div>
             </div>
+
+            {/* Optional Target Final Metrics if explicit */}
+            {project.assumptions.estimation_mode === 'target_final' &&
+              calc.cost_per_video_usd !== null && (
+                <div className="vv-card-quiet p-3 flex items-center justify-between text-xs">
+                  <span className="text-[var(--vv-text-muted)]">{t.costPerVideo}</span>
+                  <span className="font-bold tabular-nums">
+                    {formatCurrencyIdr(calc.cost_per_video_idr, language)} ({formatCurrencyUsd(calc.cost_per_video_usd, language)})
+                  </span>
+                </div>
+              )}
           </div>
         </div>
 
@@ -326,7 +425,12 @@ export const BudgetSummaryView: React.FC = () => {
                   </div>
                   <div className="h-2 w-full rounded-full bg-[var(--vv-tint)] overflow-hidden">
                     <div
-                      style={{ width: `${Math.max(pct, cSum.item_count > 0 ? 4 : 0)}%` }}
+                      style={{
+                        width: `${Math.max(
+                          pct,
+                          cSum.item_count > 0 ? 4 : 0
+                        )}%`,
+                      }}
                       className="h-full rounded-full bg-[#0099ff] transition-all duration-300"
                     />
                   </div>
@@ -338,7 +442,7 @@ export const BudgetSummaryView: React.FC = () => {
       </div>
 
       {/* =====================================================================
-       * TIER 3: STREAMLINED 5-COLUMN STAGE SUMMARY + POPUP FOR FULL 10-COL AUDIT
+       * TIER 3: STREAMLINED STAGE SUMMARY + POPUP FOR FULL AUDIT
        * ===================================================================== */}
       <div className={`${cardClass} rounded-[16px] p-6`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-[var(--vv-border)]">
@@ -350,8 +454,8 @@ export const BudgetSummaryView: React.FC = () => {
             </h2>
             <p className="text-xs text-[var(--vv-text-subtle)] mt-0.5">
               {isId
-                ? 'Menampilkan kolom utama agar mudah dibaca. Klik tombol di kanan untuk melihat rincian lengkap 10 kolom.'
-                : 'Showing key columns for easy reading. Click the button on the right to inspect the full 10-column audit table.'}
+                ? 'Menampilkan kebutuhan gambar/adegan dan perkalian cadangan tiap tahap.'
+                : 'Showing scene requirements and reserve multiplier per stage.'}
             </p>
           </div>
 
@@ -381,50 +485,64 @@ export const BudgetSummaryView: React.FC = () => {
                   {isId ? 'Model AI' : 'AI Model'}
                 </th>
                 <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Total Kali Buat' : 'Total Tries'}
+                  {isId ? 'Kebutuhan & Cadangan' : 'Requirements & Reserve'}
                 </th>
                 <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Total Biaya (USD)' : 'Total Cost (USD)'}
+                  {isId ? 'Pemakaian Credit' : 'Platform Credit'}
                 </th>
                 <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Total Biaya (Rupiah)' : 'Total Cost (IDR)'}
+                  {isId ? 'Subtotal Anggaran' : 'Subtotal Cost'}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--vv-border)]">
-              {calc.item_results.map((row, idx) => (
-                <tr
-                  key={row.item_id}
-                  className="hover:bg-[var(--vv-tint-weak)] transition-colors"
-                >
-                  <td className="py-3 font-mono text-[11px] text-[var(--vv-text-subtle)]">
-                    {String(idx + 1).padStart(2, '0')}
-                  </td>
-                  <td className="py-3 font-semibold">
-                    <div>{row.label}</div>
-                    <div className="text-[10px] text-[var(--vv-text-muted)] font-normal">
-                      {SHORT_CATEGORY_LABELS[row.category][language]}
-                    </div>
-                  </td>
-                  <td className="py-3 text-[var(--vv-text-strong)]">
-                    {row.model_name}
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
-                    <strong className="text-[var(--vv-text-primary)]">
-                      {row.budgeted_generations}x
-                    </strong>{' '}
-                    <span className="text-[10px]">
-                      ({row.planned_generations}+{row.reserve_generations})
-                    </span>
-                  </td>
-                  <td className="py-3 text-right font-semibold tabular-nums">
-                    {formatCurrencyUsd(row.total_cost_usd, language)}
-                  </td>
-                  <td className="py-3 text-right font-bold tabular-nums text-[#0099ff]">
-                    {formatCurrencyIdr(row.total_cost_idr, language)}
-                  </td>
-                </tr>
-              ))}
+              {calc.item_results.map((row, idx) => {
+                const attemptsCount =
+                  row.attempts_per_item || cadanganMultiplier;
+                return (
+                  <tr
+                    key={row.item_id}
+                    className="hover:bg-[var(--vv-tint-weak)] transition-colors"
+                  >
+                    <td className="py-3 font-mono text-[11px] text-[var(--vv-text-subtle)]">
+                      {String(idx + 1).padStart(2, '0')}
+                    </td>
+                    <td className="py-3 font-semibold">
+                      <div>{row.label}</div>
+                      <div className="text-[10px] text-[var(--vv-text-muted)] font-normal">
+                        {SHORT_CATEGORY_LABELS[row.category][language]}
+                      </div>
+                    </td>
+                    <td className="py-3 text-[var(--vv-text-strong)]">
+                      {row.model_name}
+                    </td>
+                    <td className="py-3 text-right tabular-nums">
+                      <strong className="text-[var(--vv-text-primary)]">
+                        {row.budgeted_generations}x buat
+                      </strong>
+                      <div className="text-[10px] text-[#0099ff]">
+                        {row.effective_quantity} item &times; {attemptsCount} cadangan
+                      </div>
+                    </td>
+                    <td className="py-3 text-right tabular-nums text-[#7acaff]">
+                      <strong>{row.total_credit !== null ? `${row.total_credit} cr` : '-'}</strong>
+                      {row.unit_credit !== null && (
+                        <div className="text-[10px] text-[var(--vv-text-muted)]">
+                          @{row.unit_credit} cr
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 text-right tabular-nums">
+                      <div className="font-bold text-[#0099ff]">
+                        {formatCurrencyIdr(row.total_cost_idr, language)}
+                      </div>
+                      <div className="text-[11px] text-[var(--vv-text-muted)]">
+                        ({formatCurrencyUsd(row.total_cost_usd, language)})
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -450,7 +568,7 @@ export const BudgetSummaryView: React.FC = () => {
       />
 
       {/* =====================================================================
-       * FROSTED GLASS MODAL: Tabel Rincian Audit 10 Kolom Lengkap
+       * FROSTED GLASS MODAL: Tabel Rincian Audit Lengkap per Adegan
        * ===================================================================== */}
       <FrostedModal
         isOpen={isFullAuditModalOpen}
@@ -479,8 +597,8 @@ export const BudgetSummaryView: React.FC = () => {
         }
         subtitle={
           isId
-            ? 'Menampilkan pemisahan antara Biaya Utama, Biaya Cadangan, Pemakaian Credit, serta Status Verifikasi untuk setiap adegan.'
-            : 'Displays the exact split between Base Cost, Reserve Cost, Credits, and Verification Status for every stage.'
+            ? 'Menampilkan rincian kebutuhan item, faktor cadangan pengali, pemakaian credit, dan subtotal biaya untuk setiap tahap.'
+            : 'Displays exact item count, reserve multiplier factor, platform credits, and subtotal for every stage.'
         }
       >
         <div className="overflow-x-auto">
@@ -495,67 +613,74 @@ export const BudgetSummaryView: React.FC = () => {
                   {isId ? 'Model & Jenis AI' : 'Model & AI Type'}
                 </th>
                 <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Kali Buat (Awal + Cadangan)' : 'Tries (Init + Res)'}
+                  {isId ? 'Kebutuhan & Cadangan' : 'Requirements & Reserve'}
                 </th>
                 <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Biaya Utama' : 'Base Cost'}
-                </th>
-                <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Biaya Cadangan' : 'Reserve Cost'}
-                </th>
-                <th className="py-2.5 text-right font-medium">Total (USD)</th>
-                <th className="py-2.5 text-right font-medium">
-                  {isId ? 'Total (Rupiah)' : 'Total (IDR)'}
+                  {isId ? 'Tarif Satuan' : 'Unit Price'}
                 </th>
                 <th className="py-2.5 text-right font-medium">Credit</th>
+                <th className="py-2.5 text-right font-medium">
+                  {isId ? 'Subtotal (USD)' : 'Subtotal (USD)'}
+                </th>
+                <th className="py-2.5 text-right font-medium">
+                  {isId ? 'Subtotal (Rupiah)' : 'Subtotal (IDR)'}
+                </th>
                 <th className="py-2.5 text-center font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--vv-border)]">
-              {calc.item_results.map((row, idx) => (
-                <tr
-                  key={row.item_id}
-                  className="hover:bg-[var(--vv-tint-weak)] transition-colors"
-                >
-                  <td className="py-3 font-mono text-[11px] text-[var(--vv-text-subtle)]">
-                    {String(idx + 1).padStart(2, '0')}
-                  </td>
-                  <td className="py-3 font-semibold">{row.label}</td>
-                  <td className="py-3">
-                    <div>{row.model_name}</div>
-                    <div className="text-[10px] text-[var(--vv-text-muted)]">
-                      {CATEGORY_LABELS[row.category][language]}
-                    </div>
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-[var(--vv-text-muted)]">
-                    {row.planned_generations} + {row.reserve_generations} ={' '}
-                    <strong className="text-[var(--vv-text-primary)]">
-                      {row.budgeted_generations}
-                    </strong>
-                  </td>
-                  <td className="py-3 text-right tabular-nums">
-                    {formatCurrencyUsd(row.base_cost_usd, language)}
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-[#ffb840]">
-                    {formatCurrencyUsd(row.reserve_cost_usd, language)}
-                  </td>
-                  <td className="py-3 text-right font-bold tabular-nums text-[#0099ff]">
-                    {formatCurrencyUsd(row.total_cost_usd, language)}
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-[var(--vv-text-strong)]">
-                    {formatCurrencyIdr(row.total_cost_idr, language)}
-                  </td>
-                  <td className="py-3 text-right tabular-nums text-[#7acaff]">
-                    {row.total_credit !== null ? `${row.total_credit} cr` : '-'}
-                  </td>
-                  <td className="py-3 text-center">
-                    <StatusBadge
-                      status={row.pricing_status}
-                      language={language}
-                    />
-                  </td>
-                </tr>
-              ))}
+              {calc.item_results.map((row, idx) => {
+                const attemptsCount =
+                  row.attempts_per_item || cadanganMultiplier;
+                return (
+                  <tr
+                    key={row.item_id}
+                    className="hover:bg-[var(--vv-tint-weak)] transition-colors"
+                  >
+                    <td className="py-3 font-mono text-[11px] text-[var(--vv-text-subtle)]">
+                      {String(idx + 1).padStart(2, '0')}
+                    </td>
+                    <td className="py-3 font-semibold">{row.label}</td>
+                    <td className="py-3">
+                      <div>{row.model_name}</div>
+                      <div className="text-[10px] text-[var(--vv-text-muted)]">
+                        {CATEGORY_LABELS[row.category][language]}
+                      </div>
+                    </td>
+                    <td className="py-3 text-right tabular-nums">
+                      <strong className="text-[var(--vv-text-primary)]">
+                        {row.budgeted_generations}x buat
+                      </strong>
+                      <div className="text-[10px] text-[#0099ff]">
+                        {row.effective_quantity} item &times; {attemptsCount} cadangan
+                      </div>
+                    </td>
+                    <td className="py-3 text-right tabular-nums">
+                      {formatCurrencyUsd(row.unit_price_usd, language)}
+                    </td>
+                    <td className="py-3 text-right tabular-nums text-[#7acaff]">
+                      <strong>{row.total_credit !== null ? `${row.total_credit} cr` : '-'}</strong>
+                      {row.unit_credit !== null && (
+                        <div className="text-[10px] text-[var(--vv-text-muted)]">
+                          @{row.unit_credit} cr
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-3 text-right font-semibold tabular-nums">
+                      {formatCurrencyUsd(row.total_cost_usd, language)}
+                    </td>
+                    <td className="py-3 text-right font-bold tabular-nums text-[#0099ff]">
+                      {formatCurrencyIdr(row.total_cost_idr, language)}
+                    </td>
+                    <td className="py-3 text-center">
+                      <StatusBadge
+                        status={row.pricing_status}
+                        language={language}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

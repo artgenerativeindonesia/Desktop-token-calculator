@@ -5,7 +5,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ALL_PROCESS_CATEGORIES = exports.APP_VERSION = exports.CURRENT_SCHEMA_VERSION = void 0;
 exports.CURRENT_SCHEMA_VERSION = '1.0.0';
-exports.APP_VERSION = '1.2.6';
+exports.APP_VERSION = '1.2.7';
 exports.ALL_PROCESS_CATEGORIES = [
     'text_to_image',
     'image_to_image',

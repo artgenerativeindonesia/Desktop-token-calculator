@@ -12,6 +12,33 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.7] - Penyelarasan Langkah 4 (Ringkasan Biaya) Sesuai Model Perkalian Cadangan
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.7`
+
+### Diubah (Changed)
+1. **Penyelarasan Kartu Utama (Hero Card) Langkah 4**:
+   - Menghapus kotak split lama *"Biaya Utama vs Biaya Cadangan (0% / Rp 0)"* yang membingungkan pengguna.
+   - Menggantinya dengan 2 kotak ringkasan informatif:
+     - **Kebutuhan Adegan Pokok**: Menampilkan total adegan/gambar yang disusun pada Langkah 3.
+     - **Cadangan Langkah 2**: Menampilkan faktor pengali cadangan (misal `10x Cadangan`).
+   - Kartu total anggaran kini menampilkan rumus perkalian langsung yang transparan:
+     `X adegan × Y cadangan = Z kali buat`.
+   - Mengganti diagram batang 100% vs 0% dengan kartu ringkasan **Total Konsumsi Credit Platform**.
+2. **Pembaruan Metrik Biaya Rata-Rata Satuan**:
+   - Menampilkan metrik yang jauh lebih relevan untuk kebutuhan pengguna:
+     - **Rata-rata Biaya per 1 Adegan / Gambar**: Biaya total per adegan utuh (sudah termasuk jatah cadangan coba).
+     - **Rata-rata Biaya per 1x Pembuatan AI**: Biaya riil setiap kali menekan tombol generate AI.
+     - **Total Konsumsi Credit AI**: Total poin pemakaian platform Higgsfield.
+3. **Format Tabel Rincian per Tahap (Tabel Ringkas & Jendela Pop-up Detail)**:
+   - Menghapus tampilan lama `70x (70+0)` yang tampak seperti kendala teknis.
+   - Menggantinya dengan tampilan manusiawi: `70x buat` dengan keterangan `7 item × 10 cadangan`.
+   - Kolom tabel memperlihatkan pemakaian credit platform dan subtotal anggaran (Rupiah & USD) yang rapi.
+4. **Penyelarasan Navigasi Bilah Samping (Sidebar)**:
+   - Lencana penanda pada menu Langkah 02 kini menampilkan faktor pengali nyata (misal `10x`), bukan lagi persentase `0%`.
+
+---
+
 ## Versi [1.2.6] - Penyelarasan Format Dokumen PDF Langkah 5 Sesuai Model Perkalian Cadangan
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.6`
