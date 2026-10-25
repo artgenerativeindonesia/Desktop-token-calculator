@@ -44,6 +44,16 @@ export const ExportPdfView: React.FC = () => {
     theme === 'dark' ? 'glass-input-dark' : 'glass-input-light';
   const calc = project.calculation;
 
+  const cadanganMultiplier =
+    project.assumptions.default_attempts_per_shot ||
+    project.assumptions.reserve_generations_override ||
+    1;
+
+  const totalSceneQuantity = project.items.reduce(
+    (sum, item) => sum + Math.max(0, Math.floor(item.quantity)),
+    0
+  );
+
   const exportLang = project.export_settings?.export_language || language;
   const safeFileName = buildSafePdfFilename(
     project.project_name,
@@ -222,8 +232,24 @@ export const ExportPdfView: React.FC = () => {
                 {formatCurrencyIdr(calc.total_cost_idr, language)}
               </div>
               <div className="text-sm font-semibold tabular-nums text-[#0099ff] text-right mt-0.5">
-                {formatCurrencyUsd(calc.total_cost_usd, language)} &bull;{' '}
-                {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+                {formatCurrencyUsd(calc.total_cost_usd, language)}
+              </div>
+              <div className="text-[11px] font-medium text-[var(--vv-text-muted)] text-right mt-1">
+                {isId ? (
+                  <span>
+                    {totalSceneQuantity} adegan &times; {cadanganMultiplier} cadangan ={' '}
+                    <strong className="text-[var(--vv-text-strong)]">
+                      {calc.budgeted_generations} kali buat
+                    </strong>
+                  </span>
+                ) : (
+                  <span>
+                    {totalSceneQuantity} scenes &times; {cadanganMultiplier} reserve ={' '}
+                    <strong className="text-[var(--vv-text-strong)]">
+                      {calc.budgeted_generations} tries
+                    </strong>
+                  </span>
+                )}
               </div>
             </div>
 
@@ -413,44 +439,44 @@ export const ExportPdfView: React.FC = () => {
                 {
                   key: 'executive_summary',
                   label: isId
-                    ? 'Ringkasan Utama Anggaran (Total USD & Rupiah)'
-                    : 'Executive Budget Summary (Total USD & IDR)',
-                },
-                {
-                  key: 'unit_cost_metrics',
-                  label: isId
-                    ? 'Rata-rata Biaya per Video Jadi & per Menit'
-                    : 'Average Cost per Final Video & per Minute',
+                    ? '1. Ringkasan Utama Anggaran (Total Rupiah & USD)'
+                    : '1. Executive Budget Summary (Total IDR & USD)',
                 },
                 {
                   key: 'production_assumptions',
                   label: isId
-                    ? 'Pengaturan Proyek & Dana Cadangan'
-                    : 'Project Settings & Reserve Assumptions',
+                    ? '2. Pengaturan Proyek & Cadangan Langkah 2'
+                    : '2. Project Settings & Step 2 Reserve Factor',
                 },
                 {
                   key: 'stage_breakdown',
                   label: isId
-                    ? 'Tabel Rincian Biaya per Adegan / Tahap AI'
-                    : 'Stage-by-Stage Cost Breakdown Table',
+                    ? '3. Tabel Rincian Kebutuhan & Cadangan per Adegan'
+                    : '3. Scene Requirements & Reserve Breakdown Table',
                 },
                 {
                   key: 'credit_breakdown',
                   label: isId
-                    ? 'Rincian Pemakaian Poin Credit AI'
-                    : 'AI Platform Credit Usage Breakdown',
+                    ? '4. Rincian Pemakaian Poin Credit Platform AI'
+                    : '4. AI Platform Credit Usage Breakdown',
                 },
                 {
                   key: 'exchange_rate_info',
                   label: isId
-                    ? 'Informasi Sumber Nilai Kurs Dolar ke Rupiah'
-                    : 'USD to IDR Exchange Rate Source Info',
+                    ? '5. Informasi Nilai Kurs Dolar ke Rupiah'
+                    : '5. USD to IDR Exchange Rate Source Info',
+                },
+                {
+                  key: 'unit_cost_metrics',
+                  label: isId
+                    ? '6. Ringkasan Total Anggaran & Total Kali Buat'
+                    : '6. Total Budget & Total Generations Summary',
                 },
                 {
                   key: 'warnings_and_audit',
                   label: isId
-                    ? 'Catatan Kelengkapan Data & Verifikasi Harga'
-                    : 'Data Completeness & Price Verification Notes',
+                    ? '7. Catatan Kelengkapan Data & Status Harga'
+                    : '7. Data Completeness & Price Verification Notes',
                 },
               ] as const
             ).map((sec) => (

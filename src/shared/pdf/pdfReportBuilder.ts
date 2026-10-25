@@ -78,6 +78,12 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function getUnitNoun(qType: string, isId: boolean): string {
+  if (qType === 'asset') return isId ? 'gambar' : 'images';
+  if (qType === 'output') return isId ? 'hasil jadi' : 'outputs';
+  return isId ? 'adegan' : 'scenes';
+}
+
 /**
  * Menyusun dokumen HTML cetak lengkap 9 bagian wajib sesuai PRD Bab 12.2 & 12.4.
  * Mengambil hasil langsung dari Calculation Engine yang sama dengan UI (PRD NFR-02).
@@ -96,6 +102,26 @@ export function generatePdfReportHtml(
     project.assumptions,
     project.exchange_rate
   );
+
+  const cadanganMultiplier =
+    project.assumptions.default_attempts_per_shot ||
+    project.assumptions.reserve_generations_override ||
+    1;
+
+  const totalSceneQuantity = project.items.reduce(
+    (sum, item) => sum + Math.max(0, Math.floor(item.quantity)),
+    0
+  );
+
+  const sections = project.export_settings?.included_sections || {
+    executive_summary: true,
+    production_assumptions: true,
+    stage_breakdown: true,
+    credit_breakdown: true,
+    exchange_rate_info: true,
+    warnings_and_audit: true,
+    unit_cost_metrics: true,
+  };
 
   const exportDateStr =
     project.export_settings?.export_date || new Date().toISOString().slice(0, 10);
@@ -133,6 +159,12 @@ export function generatePdfReportHtml(
           ? 'Per Generasi'
           : 'Per Generation';
 
+      const attemptsCount = res.attempts_per_item || cadanganMultiplier;
+      const countBreakdown =
+        res.reserve_generations > 0
+          ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
+          : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
+
       return `
         <tr>
           <td style="text-align:center;">${idx + 1}</td>
@@ -146,23 +178,21 @@ export function generatePdfReportHtml(
             <strong>${escapeHtml(res.model_name)}</strong><br/>
             <span style="font-size:10px;color:#64748b;">${escapeHtml(paramSummary)}</span>
           </td>
-          <td class="num">${res.effective_quantity} &times; ${
-        res.attempts_per_item
-      } = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${
-        res.reserve_generations
-      } ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span></td>
+          <td class="num">${countBreakdown}</td>
           <td>${escapeHtml(unitLabel)}<br/><span class="num" style="font-size:10px;color:#475569;">${formatUsd(
         res.unit_price_usd,
         lang
       )}</span></td>
-          <td class="num">${formatUsd(res.base_cost_usd, lang)}</td>
-          <td class="num">${formatUsd(res.reserve_cost_usd, lang)}</td>
           <td class="num">
-            <strong>${formatUsd(res.total_cost_usd, lang)}</strong><br/>
-            <span style="font-size:10px;color:#475569;">${formatIdr(
-              res.total_cost_idr,
+            <strong>${res.total_credit !== null ? `${res.total_credit} cr` : '-'}</strong><br/>
+            <span style="font-size:10px;color:#64748b;">${res.unit_credit !== null ? `@${res.unit_credit} cr` : ''}</span>
+          </td>
+          <td class="num">
+            <strong>${formatIdr(res.total_cost_idr, lang)}</strong><br/>
+            <span style="font-size:10px;color:#475569;">(${formatUsd(
+              res.total_cost_usd,
               lang
-            )}</span>
+            )})</span>
           </td>
           <td>
             <span class="status-pill status-${res.pricing_status}">
@@ -182,7 +212,7 @@ export function generatePdfReportHtml(
           <td style="text-align:center;">${idx + 1}</td>
           <td>${escapeHtml(res.label)}</td>
           <td>${escapeHtml(res.model_name)}</td>
-          <td class="num">${res.budgeted_generations}</td>
+          <td class="num"><strong>${res.budgeted_generations}x</strong></td>
           <td class="num">${
             res.unit_credit !== null ? `${res.unit_credit} cr` : isId ? 'Tidak Tersedia' : 'N/A'
           }</td>
@@ -364,8 +394,10 @@ export function generatePdfReportHtml(
   </div>
 
   <!-- 2. RINGKASAN EKSEKUTIF (PRD Bab 12.2) -->
+  ${sections.executive_summary ? `
   <h2>1. ${isId ? 'Ringkasan Eksekutif' : 'Executive Summary'}</h2>
   <div class="grid-4">
+    ${calc.reserve_cost_usd && calc.reserve_cost_usd > 0 ? `
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Biaya Dasar' : 'Base Cost'}</div>
       <div class="metric-val">${formatUsd(calc.base_cost_usd, lang)}</div>
@@ -376,56 +408,62 @@ export function generatePdfReportHtml(
       <div class="metric-val">${formatUsd(calc.reserve_cost_usd, lang)}</div>
       <div class="metric-sub">${formatIdr(calc.reserve_cost_idr, lang)}</div>
     </div>
+    ` : `
     <div class="metric-card" style="background:#eff6ff;border-color:#93c5fd;">
-      <div class="metric-label" style="color:#1d4ed8;font-weight:700;">${isId ? 'Total Anggaran' : 'Total Budget'}</div>
-      <div class="metric-val" style="color:#1e3a8a;">${formatUsd(calc.total_cost_usd, lang)}</div>
-      <div class="metric-sub" style="color:#1e40af;font-weight:600;">${formatIdr(calc.total_cost_idr, lang)}</div>
+      <div class="metric-label" style="color:#1d4ed8;font-weight:700;">${isId ? 'Total Anggaran (Rupiah)' : 'Total Budget (IDR)'}</div>
+      <div class="metric-val" style="color:#1e3a8a;font-size:16px;">${formatIdr(calc.total_cost_idr, lang)}</div>
+      <div class="metric-sub" style="color:#1e40af;font-weight:600;">${formatUsd(calc.total_cost_usd, lang)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">${isId ? 'Cadangan Langkah 2' : 'Step 2 Reserve Multiplier'}</div>
+      <div class="metric-val">${cadanganMultiplier}x ${isId ? 'Cadangan' : 'Reserve'}</div>
+      <div class="metric-sub">${isId ? 'Pengali jatah coba adegan' : 'Retry multiplier per scene'}</div>
+    </div>
+    `}
+    <div class="metric-card">
+      <div class="metric-label">${isId ? 'Total Kali Buat AI' : 'Total AI Generations'}</div>
+      <div class="metric-val">${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</div>
+      <div class="metric-sub">${totalSceneQuantity} ${isId ? 'adegan / gambar pokok' : 'base scene items'}</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Total Konsumsi Credit' : 'Total Credit Consumption'}</div>
       <div class="metric-val">${
-        calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : isId ? 'Belum Tersedia' : 'N/A'
+        calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : isId ? 'Bebas / Rp 0' : 'Free / $0'
       }</div>
-      <div class="metric-sub">${calc.budgeted_generations} ${isId ? 'generasi dianggarkan' : 'budgeted generations'}</div>
+      <div class="metric-sub">${calc.budgeted_generations} ${isId ? 'kali proses AI' : 'total AI runs'}</div>
     </div>
   </div>
+  ` : ''}
 
   <!-- 3. ASUMSI PRODUKSI (PRD Bab 12.2) -->
+  ${sections.production_assumptions ? `
   <h2>2. ${isId ? 'Pengaturan Proyek & Dana Cadangan' : 'Project Settings & Reserve Budget'}</h2>
   <table>
     <tbody>
       <tr>
-        <th>${isId ? 'Cara Hitung Proyek' : 'Calculation Method'}</th>
-        <td>${
-          project.assumptions.estimation_mode === 'target_final'
-            ? isId
-              ? 'Dari Jumlah Video Jadi'
-              : 'By Total Final Videos'
-            : isId
-            ? 'Rincian per Adegan'
-            : 'Scene-by-Scene Detail'
-        }</td>
-        <th>${isId ? 'Target Jumlah Video Jadi' : 'Target Final Videos'}</th>
-        <td class="num">${project.assumptions.target_videos}</td>
+        <th>${isId ? 'Nama Proyek' : 'Project Name'}</th>
+        <td><strong>${escapeHtml(project.project_name)}</strong></td>
+        <th>${isId ? 'Cadangan Langkah 2' : 'Step 2 Reserve Factor'}</th>
+        <td class="num"><strong>${cadanganMultiplier} ${isId ? 'cadangan (' + cadanganMultiplier + 'x jatah buat)' : 'reserve (' + cadanganMultiplier + 'x tries)'}</strong></td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Durasi Video Jadi' : 'Total Final Duration'}</th>
-        <td class="num">${project.assumptions.final_duration_minutes} ${isId ? 'menit' : 'minutes'}</td>
-        <th>${isId ? 'Rencana Pembuatan Awal' : 'Initial Planned Generations'}</th>
-        <td class="num">${calc.planned_generations}</td>
-      </tr>
-      <tr>
-        <th>${isId ? 'Cadangan Buat Ulang' : 'Redo / Regeneration Reserve'}</th>
-        <td class="num">${calc.effective_reserve_percent}% (+${calc.reserve_generations} ${
-    isId ? 'kali buat' : 'generations'
-  })</td>
+        <th>${isId ? 'Total Kebutuhan Adegan' : 'Total Scene Requirements'}</th>
+        <td class="num">${totalSceneQuantity} ${isId ? 'adegan pokok' : 'base scenes'}</td>
         <th>${isId ? 'Total Kali Pembuatan AI' : 'Total Budgeted Generations'}</th>
-        <td class="num"><strong>${calc.budgeted_generations}</strong></td>
+        <td class="num"><strong>${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</strong></td>
+      </tr>
+      <tr>
+        <th>${isId ? 'Model Perhitungan' : 'Calculation Model'}</th>
+        <td>${isId ? 'Kebutuhan adegan × ' + cadanganMultiplier + ' cadangan = Total kali buat' : 'Scene requirement × ' + cadanganMultiplier + ' reserve = Total tries'}</td>
+        <th>${isId ? 'Patokan Kurs Dolar' : 'USD Exchange Rate'}</th>
+        <td class="num">${project.exchange_rate.rate ? '1 USD = ' + formatIdr(project.exchange_rate.rate, lang) : '-'}</td>
       </tr>
     </tbody>
   </table>
+  ` : ''}
 
   <!-- 4. RINCIAN PER TAHAP (PRD Bab 12.2) -->
+  ${sections.stage_breakdown ? `
   <h2>3. ${isId ? 'Rincian Anggaran per Tahap Produksi' : 'Stage-by-Stage Production Breakdown'}</h2>
   <table>
     <thead>
@@ -433,11 +471,10 @@ export function generatePdfReportHtml(
         <th style="width:28px;text-align:center;">No</th>
         <th>${isId ? 'Nama Adegan / Tahap & Jenis AI' : 'Stage / Scene & AI Type'}</th>
         <th>${isId ? 'Model AI & Pengaturan Kualitas' : 'Higgsfield Model & Settings'}</th>
-        <th class="num">${isId ? 'Kali Buat (Awal + Cadangan)' : 'Generations (Base + Reserve)'}</th>
+        <th class="num">${isId ? 'Kebutuhan & Cadangan' : 'Requirement & Reserve'}</th>
         <th>${isId ? 'Satuan & Harga' : 'Unit & Price'}</th>
-        <th class="num">${isId ? 'Biaya Utama' : 'Base Cost'}</th>
-        <th class="num">${isId ? 'Cadangan' : 'Reserve'}</th>
-        <th class="num">${isId ? 'Subtotal (USD / IDR)' : 'Subtotal (USD / IDR)'}</th>
+        <th class="num">${isId ? 'Pemakaian Credit' : 'Credit Cost'}</th>
+        <th class="num">${isId ? 'Subtotal Anggaran (IDR / USD)' : 'Subtotal (IDR / USD)'}</th>
         <th>${isId ? 'Status Data' : 'Data Status'}</th>
       </tr>
     </thead>
@@ -445,8 +482,10 @@ export function generatePdfReportHtml(
       ${itemRowsHtml}
     </tbody>
   </table>
+  ` : ''}
 
   <!-- 5. RINCIAN CREDIT (PRD Bab 12.2) -->
+  ${sections.credit_breakdown ? `
   <h2>4. ${isId ? 'Rincian Pemakaian Credit' : 'Credit Consumption Breakdown'}</h2>
   <p style="font-size:10px;color:#64748b;margin-top:0;">
     ${
@@ -470,8 +509,10 @@ export function generatePdfReportHtml(
       ${creditRowsHtml}
     </tbody>
   </table>
+  ` : ''}
 
   <!-- 6. KURS DAN SUMBER (PRD Bab 12.2) -->
+  ${sections.exchange_rate_info ? `
   <h2>5. ${isId ? 'Informasi Kurs Dolar ke Rupiah & Sumber Data' : 'Exchange Rate (USD/IDR) & Data Source'}</h2>
   <table>
     <tbody>
@@ -502,26 +543,44 @@ export function generatePdfReportHtml(
       </tr>
     </tbody>
   </table>
+  ` : ''}
 
   <!-- 7. TOTAL ANGGARAN & BIAYA UNIT (PRD Bab 12.2 Bagian 8 & 9) -->
+  ${sections.unit_cost_metrics ? `
   <h2>6. ${isId ? 'Total Anggaran & Rata-rata Biaya Hasil Akhir' : 'Total Budget & Average Output Costs'}</h2>
   <table>
     <tbody>
+      <tr style="background:#f8fafc;">
+        <th>${isId ? 'Total Kebutuhan Adegan Pokok' : 'Total Base Scene Requirements'}</th>
+        <td class="num">${totalSceneQuantity} ${isId ? 'adegan / gambar' : 'items'}</td>
+        <td class="num">${isId ? 'Dikalikan' : 'Multiplied by'} ${cadanganMultiplier} ${isId ? 'cadangan' : 'reserve'}</td>
+      </tr>
       <tr>
-        <th>${isId ? 'Total Biaya Utama (Awal)' : 'Total Initial Base Cost'}</th>
+        <th>${isId ? 'Total Kali Pembuatan AI' : 'Total Budgeted Generations'}</th>
+        <td class="num" colspan="2"><strong>${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</strong></td>
+      </tr>
+      <tr>
+        <th>${isId ? 'Total Konsumsi Credit Platform' : 'Total Platform Credits'}</th>
+        <td class="num" colspan="2"><strong>${calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : '-'}</strong></td>
+      </tr>
+      ${calc.reserve_cost_usd && calc.reserve_cost_usd > 0 ? `
+      <tr>
+        <th>${isId ? 'Biaya Dasar' : 'Base Cost'}</th>
         <td class="num">${formatUsd(calc.base_cost_usd, lang)}</td>
         <td class="num">${formatIdr(calc.base_cost_idr, lang)}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Biaya Cadangan (Buat Ulang)' : 'Total Redo Reserve Cost'}</th>
+        <th>${isId ? 'Biaya Cadangan' : 'Reserve Cost'}</th>
         <td class="num">${formatUsd(calc.reserve_cost_usd, lang)}</td>
         <td class="num">${formatIdr(calc.reserve_cost_idr, lang)}</td>
       </tr>
+      ` : ''}
       <tr style="background:#eff6ff;font-size:13px;">
         <th><strong>${isId ? 'TOTAL SELURUH ANGGARAN' : 'GRAND TOTAL BUDGET'}</strong></th>
         <td class="num"><strong>${formatUsd(calc.total_cost_usd, lang)}</strong></td>
         <td class="num"><strong>${formatIdr(calc.total_cost_idr, lang)}</strong></td>
       </tr>
+      ${project.assumptions.estimation_mode === 'target_final' && calc.cost_per_video_usd !== null ? `
       <tr>
         <th>${isId ? 'Rata-rata Biaya per 1 Video Jadi' : 'Average Cost per Final Video'}</th>
         <td class="num">${formatUsd(calc.cost_per_video_usd, lang)}</td>
@@ -532,14 +591,18 @@ export function generatePdfReportHtml(
         <td class="num">${formatUsd(calc.cost_per_minute_usd, lang)}</td>
         <td class="num">${formatIdr(calc.cost_per_minute_idr, lang)}</td>
       </tr>
+      ` : ''}
     </tbody>
   </table>
+  ` : ''}
 
   <!-- 8. ASUMSI DAN PERINGATAN AUDIT (PRD Bab 12.2 Bagian 7) -->
+  ${sections.warnings_and_audit ? `
   <h2>7. ${isId ? 'Catatan & Status Kelengkapan Data' : 'Notes & Data Completeness Status'}</h2>
   <ul style="margin:0;padding-left:18px;color:#334155;">
     ${warningsListHtml}
   </ul>
+  ` : ''}
 
   <div class="footer">
     <span>AI Video Budget Calculator v${APP_VERSION} &bull; Higgsfield Model Catalog Budgeting</span>

@@ -12,6 +12,30 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.6] - Penyelarasan Format Dokumen PDF Langkah 5 Sesuai Model Perkalian Cadangan
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.6`
+
+### Diubah (Changed)
+1. **Format Tabel Rincian Adegan Dokumen PDF Sesuai Model Perkalian Cadangan**:
+   - Menghapus tampilan kolom cadangan lama yang selalu bernilai `$0.00` atau `+0 cadangan` yang membingungkan.
+   - Kolom perhitungan adegan kini menampilkan rumus perkalian langsung yang bersih:
+     `7 gambar × 10 cadangan = 70x buat`.
+   - Kolom rincian biaya kini memperlihatkan konsumsi Credit Higgsfield serta Subtotal Rupiah & USD yang akurat.
+2. **Penyempurnaan 7 Bagian Resmi Dokumen PDF**:
+   - **Bagian 1 (Ringkasan Eksekutif)**: Menampilkan Total Anggaran (Rupiah & USD), Faktor Cadangan Langkah 2 (`10x Cadangan`), Total Kali Pembuatan AI, dan Total Konsumsi Credit.
+   - **Bagian 2 (Pengaturan Proyek & Cadangan Langkah 2)**: Menampilkan nama proyek, patokan kurs dolar, kebutuhan adegan, dan rumus perhitungan jelas (`Kebutuhan adegan × 10 cadangan = Total kali buat`).
+   - **Bagian 6 (Total Anggaran & Ringkasan Pembuatan)**: Menyajikan rekapan rapi jumlah adegan pokok, faktor cadangan pengali, total generasi AI, dan total anggaran tanpa menampilkan baris cadangan Rp 0 yang tidak relevan.
+3. **Pembaruan Layar Antarmuka Langkah 5 (Dokumen Siap Cetak)**:
+   - Kartu utama Langkah 5 kini menyajikan keterangan rumus pengali: `X adegan × Y cadangan = Z kali buat`.
+   - Jendela popup *Atur Isi Laporan* diperbarui penomorannya (Bagian 1 s/d 7) agar persis merefleksikan susunan dokumen PDF.
+
+### Diperbaiki (Fixed)
+1. **Fitur Pengaturan Bagian Dokumen PDF Berfungsi Dinamis**:
+   - Seluruh checkbox di dalam jendela "Atur Isi Laporan" kini terhubung langsung ke mesin pencetak PDF sehingga bagian yang tidak dicentang akan otomatis dihilangkan dari dokumen pratinjau dan hasil cetak PDF.
+
+---
+
 ## Versi [1.2.5] - Perbaikan Akurasi Hasil Perkalian Cadangan (7 gambar × 10 cadangan = 70x buat)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.5`
