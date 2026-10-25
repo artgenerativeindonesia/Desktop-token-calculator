@@ -12,6 +12,33 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.1] - Perbaikan Bahasa & Kejelasan Tampilan Input Perhitungan Adegan AI
+- **Tanggal Perubahan**: 25 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.1`
+
+### Ditambahkan (Added)
+1. **Komponen Bantuan Penjelasan (`InfoTip` / Ikon ? Interaktif)**:
+   - Menambahkan ikon `(?)` kecil di samping setiap nama kolom input dan istilah penting yang memunculkan penjelasan bahasa manusia sehari-hari saat kursor disentuh atau tombol Tab difokus.
+   - Menjelaskan arti 'Cadangan' (jatah percobaan ekstra jika AI kurang memuaskan) lengkap dengan asal hitungannya (misal: "20% dari 8 kali = 2 kali cadangan") dan tautan cepat *"Ubah persentase cadangan →"* menuju Langkah 2.
+2. **Kalimat Ringkasan Otomatis Berbahasa Awam**:
+   - Menampilkan kalimat utuh di bawah kolom input, misalnya: `4 gambar × dibuat 2 kali = 8 kali + 2 cadangan = 10 kali buat`.
+   - Untuk video yang ditagih per detik, otomatis menyertakan total detik video yang ditagih (misal: `5 kali buat × 8 detik = 40 detik video yang ditagih`).
+
+### Diubah (Changed)
+1. **Penyatuan Tempat Pengisian Angka (Single Source of Truth)**:
+   - Kotak input angka yang sebelumnya membingungkan karena ada di luar (kartu daftar) dan di dalam modal sekaligus, kini diubah:
+     - **Kartu di luar**: Menjadi ringkasan bersih dan informatif yang hanya dibaca (misal: `4 gambar × dibuat 2 kali → total 10 kali buat (sudah termasuk 2 cadangan)`).
+     - **Di dalam jendela 'Atur Detail'**: Menjadi satu-satunya tempat untuk mengetik dan mengatur angka, lengkap dengan panduan.
+2. **Nama Kolom Berupa Pertanyaan Ramah & Kontekstual**:
+   - Kolom yang sebelumnya hanya bertuliskan "Jumlah" dan "Coba" kini diubah menjadi pertanyaan jelas sesuai jenis asetnya:
+     - `Mau Buat Berapa Gambar?` (atau `Berapa Adegan?` / `Berapa File?`)
+     - `Tiap Gambar Dibuat Ulang Berapa Kali?`
+     - `Panjang Tiap Adegan (Detik)`
+3. **Penyempurnaan 'Satuan Hitung Harga'**:
+   - Mengubah tampilan yang sebelumnya mirip kotak isian menjadi label informasi bersih dengan ikon, menerangkan bahwa model ditagih per kali buat atau per detik, beserta tarif aslinya.
+
+---
+
 ## Versi [1.2.0] - Tambah Fitur Baru: Daftar Model Higgsfield Terbaru (75+ Model) & Sistem Pembaruan Harga 3-Lapis
 - **Tanggal Perubahan**: 25 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.0`

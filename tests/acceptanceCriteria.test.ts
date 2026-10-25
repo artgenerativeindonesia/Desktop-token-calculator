@@ -54,7 +54,7 @@ describe('PRD Bab 15 — Full Acceptance Criteria Suite (AC-01 s/d AC-14)', () =
       proj.calculation.total_cost_usd
     );
     // Pastikan tidak menyimpan riwayat estimasi internal (AC-11)
-    expect((loadRes.project as Record<string, unknown>).history).toBeUndefined();
+    expect((loadRes.project as unknown as Record<string, unknown>).history).toBeUndefined();
   });
 
   it('AC-02 (Kategori) & AC-03 (Model): Mendukung 7 kategori proses AI (termasuk Image to Image, Upscale Image, & Upscale Video) dan parameter dinamis sesuai katalog', () => {

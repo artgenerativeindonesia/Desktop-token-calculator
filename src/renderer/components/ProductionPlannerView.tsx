@@ -10,14 +10,16 @@ import {
   UI_TEXT,
 } from '../i18n/translations';
 import { getModelsByCategory } from '../../shared/catalog/higgsfieldCatalog';
-import { ProcessCategory } from '../../shared/types/project';
+import { ProcessCategory, QuantityType } from '../../shared/types/project';
 import { StatusBadge } from './StatusBadge';
 import { FrostedModal } from './FrostedModal';
 import { StepFlowBar } from './StepFlowBar';
+import { InfoTip } from './InfoTip';
 import {
   ChevronDown,
   ChevronUp,
   Copy,
+  Info,
   Layers,
   Plus,
   RotateCcw,
@@ -52,7 +54,27 @@ export const ProductionPlannerView: React.FC = () => {
     resetItemPricingToCatalog,
     toggleItemUnlimited,
     usdPerCredit,
+    setActiveTab,
   } = useProjectStore();
+
+  /** Kata benda sesuai jenis isi (gambar / adegan / file) */
+  const unitNoun = (qt: QuantityType) => {
+    if (language === 'id') {
+      return qt === 'shot' ? 'adegan' : qt === 'asset' ? 'file' : 'gambar';
+    }
+    return qt === 'shot' ? 'scenes' : qt === 'asset' ? 'files' : 'images';
+  };
+
+  /** Nama kolom berbentuk pertanyaan sederhana */
+  const quantityQuestion = (qt: QuantityType) =>
+    language === 'id'
+      ? `Mau Buat Berapa ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'}?`
+      : `How Many ${qt === 'shot' ? 'Scenes' : qt === 'asset' ? 'Files' : 'Images'}?`;
+
+  const attemptsQuestion = (qt: QuantityType) =>
+    language === 'id'
+      ? `Tiap ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'} Dibuat Ulang Berapa Kali?`
+      : `How Many Tries per ${qt === 'shot' ? 'Scene' : qt === 'asset' ? 'File' : 'Image'}?`;
 
   const tierBadgeClass = (badge?: string) => {
     if (badge === 'NEW')
@@ -352,52 +374,75 @@ export const ProductionPlannerView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Middle: Compact Quick-Adjust Numbers (Quantity & Tries) */}
-                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-                    <div className="vv-card-quiet px-3 py-1.5 flex items-center gap-2">
-                      <span className="text-[11px] text-[var(--vv-text-muted)]">
-                        {isId ? 'Jumlah:' : 'Qty:'}
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateProductionItemField(item.item_id, {
-                            quantity: Math.max(
-                              0,
-                              Math.floor(Number(e.target.value) || 0)
-                            ),
-                          })
-                        }
-                        className={`${inputClass} w-14 px-2 py-1 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                      />
-                    </div>
-
-                    <div className="vv-card-quiet px-3 py-1.5 flex items-center gap-2">
-                      <span className="text-[11px] text-[var(--vv-text-muted)]">
-                        {isId ? 'Coba:' : 'Tries:'}
-                      </span>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={item.attempts_per_item}
-                        onChange={(e) =>
-                          updateProductionItemField(item.item_id, {
-                            attempts_per_item: Math.max(
-                              0,
-                              Math.floor(Number(e.target.value) || 0)
-                            ),
-                          })
-                        }
-                        className={`${inputClass} w-14 px-2 py-1 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                      />
-                      <span className="text-[10px] text-[var(--vv-text-subtle)] tabular-nums">
-                        ({calcRow?.budgeted_generations}x)
-                      </span>
-                    </div>
+                  {/* Middle: Ringkasan hitungan (hanya dibaca — angka diubah lewat "Atur Detail") */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowManualPriceSection(
+                          item.pricing.status === 'manual'
+                        );
+                        setEditingItemId(item.item_id);
+                      }}
+                      title={
+                        isId
+                          ? 'Klik untuk mengubah angka di "Atur Detail"'
+                          : 'Click to change numbers in "Edit Details"'
+                      }
+                      className="vv-card-quiet px-3.5 py-2 text-left hover:border-[#0099ff]/45 transition"
+                    >
+                      <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
+                        <strong>{calcRow?.effective_quantity ?? item.quantity}</strong>{' '}
+                        {unitNoun(item.quantity_type)} &times;{' '}
+                        {isId ? 'dibuat' : 'made'}{' '}
+                        <strong>{item.attempts_per_item}</strong>{' '}
+                        {isId ? 'kali' : 'times'} &rarr;{' '}
+                        <span className="text-[#0099ff] font-semibold">
+                          {isId ? 'total' : 'total'}{' '}
+                          {calcRow?.budgeted_generations ?? 0}{' '}
+                          {isId ? 'kali buat' : 'generations'}
+                        </span>
+                      </div>
+                      <div className="text-[10px] text-[var(--vv-text-subtle)] mt-0.5">
+                        {isId
+                          ? `sudah termasuk ${calcRow?.reserve_generations ?? 0} cadangan`
+                          : `includes ${calcRow?.reserve_generations ?? 0} reserve`}
+                      </div>
+                    </button>
+                    <InfoTip align="right" width={270}>
+                      {isId ? (
+                        <>
+                          <strong>Dari mana angka ini?</strong>
+                          <br />
+                          {calcRow?.effective_quantity ?? item.quantity}{' '}
+                          {unitNoun(item.quantity_type)} &times; dibuat{' '}
+                          {item.attempts_per_item} kali ={' '}
+                          {calcRow?.planned_generations ?? 0} kali, ditambah{' '}
+                          {calcRow?.reserve_generations ?? 0} kali cadangan
+                          untuk berjaga-jaga = {calcRow?.budgeted_generations ?? 0}{' '}
+                          kali buat.
+                          <br />
+                          <span className="text-[#7acaff]">
+                            Untuk mengubah angkanya, klik &ldquo;Atur Detail&rdquo;.
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <strong>Where does this come from?</strong>
+                          <br />
+                          {calcRow?.effective_quantity ?? item.quantity}{' '}
+                          {unitNoun(item.quantity_type)} &times; made{' '}
+                          {item.attempts_per_item} times ={' '}
+                          {calcRow?.planned_generations ?? 0}, plus{' '}
+                          {calcRow?.reserve_generations ?? 0} reserve ={' '}
+                          {calcRow?.budgeted_generations ?? 0} generations.
+                          <br />
+                          <span className="text-[#7acaff]">
+                            Click &ldquo;Edit Details&rdquo; to change the numbers.
+                          </span>
+                        </>
+                      )}
+                    </InfoTip>
                   </div>
 
                   {/* Right: Focal Stage Subtotal + Frosted Modal Edit Trigger */}
@@ -712,116 +757,262 @@ export const ProductionPlannerView: React.FC = () => {
                   )}
                 </div>
 
-                {/* 3. Kuantitas, Berapa Kali Coba, & Durasi Detik */}
-                <div className="vv-card-quiet p-4">
-                  <div className="text-xs font-semibold text-[var(--vv-text-strong)] mb-3">
-                    {isId
-                      ? '4. Jumlah Adegan, Percobaan, & Durasi'
-                      : '4. Quantity, Tries, & Duration'}
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                    <div>
-                      <label className="block text-[11px] text-[var(--vv-text-muted)] mb-1">
-                        {QUANTITY_TYPE_LABELS[item.quantity_type][language]}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateProductionItemField(item.item_id, {
-                            quantity: Math.max(
-                              0,
-                              Math.floor(Number(e.target.value) || 0)
-                            ),
-                          })
-                        }
-                        className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                      />
-                      {assumptions.estimation_mode === 'target_final' &&
-                        item.use_project_target_multiplier && (
-                          <span className="block text-[10px] text-[#0099ff] mt-1 text-right">
-                            &times; {assumptions.target_videos} video ={' '}
-                            {calcRow?.effective_quantity}
-                          </span>
-                        )}
-                    </div>
+                {/* 3. Kuantitas, Berapa Kali Dibuat Ulang, & Durasi Detik */}
+                {(() => {
+                  const noun = unitNoun(item.quantity_type);
+                  const isPerSecond = item.pricing.pricing_unit === 'per_second';
+                  const showDuration =
+                    !!selectedModel?.supports_duration || isPerSecond;
+                  const fxRate = project.exchange_rate.rate;
+                  const unitUsd = item.pricing.price_value;
+                  const unitCredit = item.pricing.credit_cost;
+                  const unitIdr =
+                    unitUsd !== null && fxRate ? unitUsd * fxRate : null;
+                  const planned = calcRow?.planned_generations ?? 0;
+                  const reserve = calcRow?.reserve_generations ?? 0;
+                  const budgeted = calcRow?.budgeted_generations ?? 0;
+                  const effQty = calcRow?.effective_quantity ?? item.quantity;
+                  const usesTargetMultiplier =
+                    assumptions.estimation_mode === 'target_final' &&
+                    !!item.use_project_target_multiplier;
+                  const billedSeconds = budgeted * Math.max(0, item.duration_seconds);
+                  const unitLabel = PRICING_UNIT_LABELS[item.pricing.pricing_unit][language];
+                  const unitPriceText = [
+                    unitCredit !== null ? `${unitCredit} Credit` : null,
+                    unitIdr !== null
+                      ? formatCurrencyIdr(unitIdr, language)
+                      : unitUsd !== null
+                      ? formatCurrencyUsd(unitUsd, language)
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' • ');
 
-                    <div>
-                      <label className="block text-[11px] text-[var(--vv-text-muted)] mb-1">
-                        {isId ? 'Berapa Kali Coba / Adegan' : 'Tries per Scene'}
-                      </label>
-                      <input
-                        type="number"
-                        min={1}
-                        step={1}
-                        value={item.attempts_per_item}
-                        onChange={(e) =>
-                          updateProductionItemField(item.item_id, {
-                            attempts_per_item: Math.max(
-                              0,
-                              Math.floor(Number(e.target.value) || 0)
-                            ),
-                          })
-                        }
-                        className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                      />
-                      <span className="block text-[10px] text-[var(--vv-text-muted)] mt-1 text-right">
+                  return (
+                    <div className="vv-card-quiet p-4 space-y-4">
+                      <div className="text-xs font-semibold text-[var(--vv-text-strong)]">
                         {isId
-                          ? `${calcRow?.planned_generations} awal + ${calcRow?.reserve_generations} cadangan`
-                          : `${calcRow?.planned_generations} initial + ${calcRow?.reserve_generations} reserve`}
-                      </span>
-                    </div>
+                          ? '4. Berapa Banyak yang Ingin Dibuat?'
+                          : '4. How Much Do You Want to Make?'}
+                      </div>
 
-                    {selectedModel?.supports_duration ||
-                    item.pricing.pricing_unit === 'per_second' ? (
-                      <div>
-                        <label className="block text-[11px] text-[var(--vv-text-muted)] mb-1">
-                          {isId
-                            ? 'Durasi per Adegan (Detik)'
-                            : 'Scene Duration (Seconds)'}
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={60}
-                          step={1}
-                          value={item.duration_seconds}
-                          onChange={(e) =>
-                            updateProductionItemField(item.item_id, {
-                              duration_seconds: Math.max(
-                                0,
-                                Number(e.target.value) || 0
-                              ),
-                            })
-                          }
-                          className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
-                        />
-                        <span className="block text-[10px] text-[var(--vv-text-muted)] mt-1 text-right">
-                          {
-                            PRICING_UNIT_LABELS[item.pricing.pricing_unit][
-                              language
-                            ]
-                          }
-                        </span>
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-[11px] text-[var(--vv-text-subtle)] mb-1">
-                          {isId ? 'Satuan Hitung Harga' : 'Pricing Unit'}
-                        </label>
-                        <div className="px-3 py-2 rounded-[10px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] text-xs text-[var(--vv-text-muted)] text-right">
-                          {
-                            PRICING_UNIT_LABELS[item.pricing.pricing_unit][
-                              language
-                            ]
-                          }
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                        {/* Kolom 1: Mau buat berapa */}
+                        <div>
+                          <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
+                            <span>{quantityQuestion(item.quantity_type)}</span>
+                            <InfoTip>
+                              {isId
+                                ? `Jumlah ${noun} jadi yang Anda butuhkan untuk tahap ini. Contoh: butuh 4 ${noun} berbeda, isi 4.`
+                                : `The number of finished ${noun} you need for this stage. Example: need 4 different ${noun}, enter 4.`}
+                            </InfoTip>
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={item.quantity}
+                            onChange={(e) =>
+                              updateProductionItemField(item.item_id, {
+                                quantity: Math.max(
+                                  0,
+                                  Math.floor(Number(e.target.value) || 0)
+                                ),
+                              })
+                            }
+                            className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
+                          />
+                          {usesTargetMultiplier && (
+                            <span className="block text-[10px] text-[#0099ff] mt-1 text-right">
+                              {isId
+                                ? `× ${assumptions.target_videos} video = ${effQty} ${noun}`
+                                : `× ${assumptions.target_videos} videos = ${effQty} ${noun}`}
+                            </span>
+                          )}
                         </div>
+
+                        {/* Kolom 2: Dibuat ulang berapa kali */}
+                        <div>
+                          <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
+                            <span>{attemptsQuestion(item.quantity_type)}</span>
+                            <InfoTip align="center">
+                              {isId
+                                ? `Hasil AI jarang langsung pas di percobaan pertama. Isi berapa kali Anda biasanya membuat ulang satu ${noun} sampai mendapat hasil yang bagus. Contoh: biasanya 2 kali, isi 2.`
+                                : `AI results are rarely perfect on the first try. Enter how many times you usually regenerate one ${noun} until it looks right. Example: usually twice, enter 2.`}
+                            </InfoTip>
+                          </label>
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={item.attempts_per_item}
+                            onChange={(e) =>
+                              updateProductionItemField(item.item_id, {
+                                attempts_per_item: Math.max(
+                                  0,
+                                  Math.floor(Number(e.target.value) || 0)
+                                ),
+                              })
+                            }
+                            className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
+                          />
+                        </div>
+
+                        {/* Kolom 3: Durasi (jika ada) atau info cara tagih */}
+                        {showDuration ? (
+                          <div>
+                            <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
+                              <span>
+                                {isId
+                                  ? 'Panjang Tiap Adegan (Detik)'
+                                  : 'Length of Each Scene (Seconds)'}
+                              </span>
+                              <InfoTip align="right">
+                                {isPerSecond
+                                  ? isId
+                                    ? 'Berapa detik panjang satu klip video yang dibuat AI. Model ini ditagih per detik, jadi makin panjang makin mahal.'
+                                    : 'How many seconds each AI video clip lasts. This model charges per second, so longer clips cost more.'
+                                  : isId
+                                  ? 'Berapa detik panjang satu klip video. Untuk model ini, panjang klip tidak mengubah harga karena ditagih per kali buat.'
+                                  : 'How many seconds each clip lasts. For this model, length does not change the price because it charges per generation.'}
+                              </InfoTip>
+                            </label>
+                            <input
+                              type="number"
+                              min={1}
+                              max={60}
+                              step={1}
+                              value={item.duration_seconds}
+                              onChange={(e) =>
+                                updateProductionItemField(item.item_id, {
+                                  duration_seconds: Math.max(
+                                    0,
+                                    Number(e.target.value) || 0
+                                  ),
+                                })
+                              }
+                              className={`${inputClass} w-full px-3 py-2 rounded-[10px] text-sm font-bold tabular-nums text-right`}
+                            />
+                            <span className="block text-[10px] text-[var(--vv-text-muted)] mt-1 text-right">
+                              {isPerSecond
+                                ? isId
+                                  ? `Ditagih per detik video${unitPriceText ? ` • ${unitPriceText} per detik` : ''}`
+                                  : `Charged per video second${unitPriceText ? ` • ${unitPriceText} per second` : ''}`
+                                : isId
+                                ? `Ditagih per kali buat${unitPriceText ? ` • ${unitPriceText}` : ''}`
+                                : `Charged per generation${unitPriceText ? ` • ${unitPriceText}` : ''}`}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col justify-center gap-1 pt-1 sm:pt-5">
+                            <div className="flex items-center gap-1.5 text-[11px] text-[var(--vv-text-muted)]">
+                              <Info className="w-3.5 h-3.5 text-[#0099ff] shrink-0" />
+                              <span>
+                                {isId
+                                  ? `Model ini ditagih ${unitLabel}${
+                                      item.pricing.pricing_unit === 'per_generation'
+                                        ? ' (bukan per detik)'
+                                        : ''
+                                    }`
+                                  : `This model charges ${unitLabel}`}
+                              </span>
+                            </div>
+                            {unitPriceText && (
+                              <div className="text-xs font-semibold tabular-nums text-[var(--vv-text-strong)] pl-5">
+                                {unitPriceText}{' '}
+                                <span className="font-normal text-[var(--vv-text-muted)]">
+                                  {unitLabel}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+
+                      {/* Kalimat ringkasan otomatis */}
+                      <div className="rounded-[10px] border border-[#0099ff]/25 bg-[#0099ff]/[0.06] px-3.5 py-2.5 text-xs leading-relaxed text-[var(--vv-text-strong)]">
+                        <div className="tabular-nums">
+                          {isId ? (
+                            <>
+                              <strong>{effQty}</strong> {noun} &times; dibuat{' '}
+                              <strong>{item.attempts_per_item}</strong> kali ={' '}
+                              {planned} kali{' '}
+                              <span className="inline-flex items-center gap-1">
+                                + {reserve} cadangan
+                                <InfoTip align="center" width={280}>
+                                  <strong>Apa itu cadangan?</strong>
+                                  <br />
+                                  Cadangan = jatah percobaan tambahan untuk
+                                  berjaga-jaga jika hasil AI kurang bagus.
+                                  Saat ini cadangan proyek{' '}
+                                  {assumptions.reserve_percent}%, jadi tahap ini
+                                  mendapat {reserve} kali tambahan dari {planned}{' '}
+                                  kali.
+                                </InfoTip>
+                              </span>{' '}
+                              ={' '}
+                              <strong className="text-[#0099ff]">
+                                {budgeted} kali buat
+                              </strong>
+                              {isPerSecond && item.duration_seconds > 0 && (
+                                <>
+                                  {' '}
+                                  &times; {item.duration_seconds} detik ={' '}
+                                  <strong className="text-[#0099ff]">
+                                    {billedSeconds} detik video yang ditagih
+                                  </strong>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <strong>{effQty}</strong> {noun} &times; made{' '}
+                              <strong>{item.attempts_per_item}</strong> times ={' '}
+                              {planned}{' '}
+                              <span className="inline-flex items-center gap-1">
+                                + {reserve} reserve
+                                <InfoTip align="center" width={280}>
+                                  <strong>What is reserve?</strong>
+                                  <br />
+                                  Reserve = extra tries set aside in case AI
+                                  results are not good enough. The project
+                                  reserve is {assumptions.reserve_percent}%, so
+                                  this stage gets {reserve} extra out of{' '}
+                                  {planned}.
+                                </InfoTip>
+                              </span>{' '}
+                              ={' '}
+                              <strong className="text-[#0099ff]">
+                                {budgeted} generations
+                              </strong>
+                              {isPerSecond && item.duration_seconds > 0 && (
+                                <>
+                                  {' '}
+                                  &times; {item.duration_seconds} sec ={' '}
+                                  <strong className="text-[#0099ff]">
+                                    {billedSeconds} billed video seconds
+                                  </strong>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingItemId(null);
+                            setActiveTab('setup');
+                          }}
+                          className="mt-1 text-[11px] font-medium text-[#0099ff] hover:underline"
+                        >
+                          {isId
+                            ? 'Ubah persentase cadangan →'
+                            : 'Change reserve percentage →'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* 3b. Paket Unlimited Higgsfield (Bebas Credit / Rp 0) */}
                 <label
