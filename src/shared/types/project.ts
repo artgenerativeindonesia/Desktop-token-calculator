@@ -3,10 +3,25 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
+
+/** Label penanda status model seperti pada antarmuka asli Higgsfield */
+export type ModelTierBadge = 'NEW' | 'PREMIUM' | 'POPULER' | 'STANDARD';
+
+/** Preset Paket Langganan Credit Higgsfield untuk konversi Credit <-> USD otomatis */
+export interface HiggsfieldSubscriptionPlan {
+  plan_id: string;
+  name_id: string;
+  name_en: string;
+  monthly_price_usd: number;
+  monthly_credits: number;
+  usd_per_credit: number;
+  description_id: string;
+  description_en: string;
+}
 
 /** PRD Bab 9.4: Status verifikasi data */
 export type VerificationStatus =
@@ -81,6 +96,9 @@ export interface CatalogModelEntry {
   model_id: string;
   model_name: string;
   family: string;
+  tier_badge?: ModelTierBadge;
+  unlimited_eligible?: boolean;
+  is_custom_model?: boolean;
   supported_categories: ProcessCategory[];
   description_id: string;
   description_en: string;
@@ -126,6 +144,7 @@ export interface ProductionItem {
   duration_seconds: number; // Durasi per shot/klip jika relevan
   attempts_per_item: number; // A_i (jumlah percobaan yang direncanakan per shot/aset)
   use_project_target_multiplier?: boolean; // Pada mode target_final, kalikan dengan target_videos (V)
+  is_unlimited?: boolean; // True jika menggunakan kuota Paket Unlimited Higgsfield (Rp 0 / 0 Credit tambahan)
   model_selection: ModelSelection;
   pricing: Pricing;
   notes?: string;

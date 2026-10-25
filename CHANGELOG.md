@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.2.0] - Tambah Fitur Baru: Daftar Model Higgsfield Terbaru (75+ Model) & Sistem Pembaruan Harga 3-Lapis
+- **Tanggal Perubahan**: 25 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.2.0`
+
+### Ditambahkan (Added)
+1. **Daftar Model Higgsfield Terbaru & Lengkap (75+ model di 7 jenis pembuatan)**:
+   - Contoh: Soul 2.0, Soul Cinema, GPT Image 2.5, Nano Banana 2.1/Pro, Seedream 5.0, FLUX 3, Ideogram 4.5, Kling 3.0/Omni, Seedance 2.5, Google Veo 3.1, Wan 3.0, MiniMax Hailuo 2.3, Sora 2 Pro, Topaz GigaPixel, Topaz Hyperion, dan banyak lagi.
+   - Setiap model diberi **label penanda** seperti di Higgsfield: `NEW` (baru rilis), `PREMIUM` (kualitas tertinggi), `POPULER` (sering dipakai), serta tanda `Unlimited Ready` jika bisa dipakai gratis di paket Unlimited.
+2. **Sistem Pembaruan Harga 3-Lapis** (di halaman *Kurs & Daftar Harga*):
+   - **Lapis 1 — Sinkronkan Server**: Mengambil daftar harga terbaru dari server dokumentasi Higgsfield.
+   - **Lapis 2 — Pilih Paket Langganan Credit**: Pilih paket Anda (Standar API, Lite, Basic, Pro Bulanan, Pro Tahunan, Max, Team, Scale) agar nilai 1 Credit otomatis dihitung ke Dolar & Rupiah sesuai paket.
+   - **Lapis 3 — Tombol "+ Tambah Model Baru"**: Jika Higgsfield merilis model baru, cukup isi nama & jumlah Credit-nya, model langsung tersedia dan tersimpan permanen.
+3. **Kolom Pencarian Model**: Cari model dengan cepat (misal ketik "Kling") di antara 75+ model.
+4. **Centang "Termasuk Paket Unlimited Higgsfield (Rp 0)"** pada jendela *Atur Detail* setiap adegan. Adegan yang dicentang tidak menambah biaya dan diberi tanda `UNLIMITED • Rp 0`.
+
+### Diubah (Changed)
+- **Tampilan harga kini berdampingan**: Jumlah Credit + Harga USD + Perkiraan Rupiah (misal: "1.5 Credit • Rp 1.550") di daftar harga, pilihan model, dan ringkasan adegan.
+- **Ubah Harga Model kini terhubung otomatis**: Saat mengubah jumlah Credit, harga Dolar ikut terhitung sesuai paket langganan yang dipilih.
+- Setiap perubahan harga di daftar harga langsung memperbarui total anggaran proyek yang sedang dibuka.
+
+---
+
 ## Versi [1.1.0] - Tambah Fitur Baru: Jenis Pembuatan "Image to Image" serta Pemisahan "Upscale Image" & "Upscale Video"
 - **Tanggal Perubahan**: 22 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.1.0`

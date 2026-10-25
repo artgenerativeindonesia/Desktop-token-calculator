@@ -13,6 +13,7 @@ electron_1.contextBridge.exposeInMainWorld('api', {
     getCatalog: () => electron_1.ipcRenderer.invoke('catalog:get'),
     refreshCatalog: () => electron_1.ipcRenderer.invoke('catalog:refresh'),
     saveModelRateOverride: (override) => electron_1.ipcRenderer.invoke('catalog:save-override', override),
+    addCustomModel: (newModel) => electron_1.ipcRenderer.invoke('catalog:add-custom-model', newModel),
     resetCatalogOverrides: () => electron_1.ipcRenderer.invoke('catalog:reset-overrides'),
     exportPdf: (project, language) => electron_1.ipcRenderer.invoke('pdf:export', project, language),
 });

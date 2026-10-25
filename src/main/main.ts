@@ -2,6 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain } from 'electron';
 import path from 'path';
 import {
   AppLanguage,
+  CatalogModelEntry,
   Pricing,
   ProjectFile,
 } from '../shared/types/project';
@@ -17,6 +18,7 @@ import {
   loadMergedCatalog,
   refreshHiggsfieldCatalog,
   saveCustomRateOverride,
+  saveCustomUserModel,
 } from './connectors/pricingConnector';
 import { exportProjectToPdfFile } from './pdf/pdfExporter';
 import { buildSafePdfFilename } from '../shared/pdf/pdfReportBuilder';
@@ -194,6 +196,13 @@ function registerIpcHandlers(): void {
     clearCustomRateOverrides(catalogOverridesPath);
     return loadMergedCatalog(catalogOverridesPath);
   });
+
+  ipcMain.handle(
+    'catalog:add-custom-model',
+    async (_event, newModel: CatalogModelEntry) => {
+      return saveCustomUserModel(catalogOverridesPath, newModel);
+    }
+  );
 
   // 6. Ekspor Laporan PDF
   ipcMain.handle(

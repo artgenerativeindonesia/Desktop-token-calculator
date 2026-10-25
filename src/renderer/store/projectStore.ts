@@ -22,9 +22,12 @@ import {
   createSampleCommercialProject,
 } from '../../shared/engine/calculationEngine';
 import {
+  applyCreditPlanRateToCatalog,
+  DEFAULT_USD_PER_CREDIT,
   getDefaultParametersForModel,
   getModelsByCategory,
   HIGGSFIELD_MODEL_CATALOG,
+  HIGGSFIELD_SUBSCRIPTION_PLANS,
   resolveModelPricing,
 } from '../../shared/catalog/higgsfieldCatalog';
 import { validateProjectFileJson } from '../../shared/schema/projectSchema';
@@ -56,6 +59,8 @@ interface ProjectStoreState {
   language: AppLanguage;
   theme: GlassTheme;
   catalog: CatalogModelEntry[];
+  selectedCreditPlanId: string;
+  usdPerCredit: number;
   recentProjects: RecentProjectEntry[];
   isRefreshingFx: boolean;
   isRefreshingCatalog: boolean;
@@ -106,10 +111,12 @@ interface ProjectStoreState {
         | 'duration_seconds'
         | 'attempts_per_item'
         | 'use_project_target_multiplier'
+        | 'is_unlimited'
         | 'notes'
       >
     >
   ) => void;
+  toggleItemUnlimited: (itemId: string, isUnlimited: boolean) => void;
   changeItemCategory: (itemId: string, category: ProcessCategory) => void;
   changeItemModel: (itemId: string, modelId: string) => void;
   changeItemParameter: (
@@ -129,6 +136,11 @@ interface ProjectStoreState {
   refreshExchangeRateAuto: () => Promise<void>;
   setManualExchangeRate: (rateValue: number) => void;
   refreshCatalogAuto: () => Promise<void>;
+  applyCreditSubscriptionPlan: (
+    planId: string,
+    customUsdPerCredit?: number
+  ) => void;
+  addNewCustomModelToCatalog: (newModel: CatalogModelEntry) => Promise<void>;
   saveGlobalModelRateOverride: (
     modelId: string,
     priceUsd: number,
@@ -189,6 +201,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   language: 'id',
   theme: 'dark',
   catalog: HIGGSFIELD_MODEL_CATALOG,
+  selectedCreditPlanId: 'api_standard',
+  usdPerCredit: DEFAULT_USD_PER_CREDIT,
   recentProjects: [],
   isRefreshingFx: false,
   isRefreshingCatalog: false,
@@ -810,6 +824,20 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       };
     }),
 
+  toggleItemUnlimited: (itemId, isUnlimited) =>
+    set((state) => {
+      const items = state.project.items.map((item) =>
+        item.item_id === itemId ? { ...item, is_unlimited: isUnlimited } : item
+      );
+      return {
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          items,
+        }),
+      };
+    }),
+
   refreshExchangeRateAuto: async () => {
     set({ isRefreshingFx: true });
     try {
@@ -933,15 +961,56 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     creditCost,
     pricingUnit
   ) => {
+    let nextCatalog: CatalogModelEntry[] = [];
     if (window.api) {
-      const updatedCatalog = await window.api.saveModelRateOverride({
+      nextCatalog = await window.api.saveModelRateOverride({
         model_id: modelId,
         price_value: priceUsd,
         credit_cost: creditCost,
         pricing_unit: pricingUnit,
       });
-      set({ catalog: updatedCatalog });
+    } else {
+      const now = new Date().toISOString();
+      nextCatalog = get().catalog.map((m) => {
+        if (m.model_id !== modelId) return m;
+        return {
+          ...m,
+          retrieved_at: now,
+          pricing_variants: m.pricing_variants.map((v, idx) =>
+            idx === 0
+              ? {
+                  ...v,
+                  price_value: priceUsd,
+                  credit_cost: creditCost,
+                  pricing_unit: pricingUnit ?? v.pricing_unit,
+                  status: 'manual' as const,
+                }
+              : v
+          ),
+        };
+      });
     }
+    set((state) => {
+      const updatedItems = state.project.items.map((item) => {
+        if (item.model_selection.model_id !== modelId) return item;
+        const model = nextCatalog.find((m) => m.model_id === modelId);
+        if (!model) return item;
+        return {
+          ...item,
+          pricing: resolveModelPricing(
+            model,
+            item.model_selection.parameter_values
+          ),
+        };
+      });
+      return {
+        catalog: nextCatalog,
+        project: recalculateProject({
+          ...state.project,
+          items: updatedItems,
+        }),
+      };
+    });
     get().showBanner(
       'success',
       'Tarif manual model berhasil disimpan ke katalog lokal.',
@@ -950,16 +1019,114 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   },
 
   resetAllCatalogOverrides: async () => {
+    let resetCatalog = HIGGSFIELD_MODEL_CATALOG;
     if (window.api) {
-      const resetCatalog = await window.api.resetCatalogOverrides();
-      set({ catalog: resetCatalog });
-    } else {
-      set({ catalog: HIGGSFIELD_MODEL_CATALOG });
+      resetCatalog = await window.api.resetCatalogOverrides();
     }
+    set((state) => {
+      const updatedItems = state.project.items.map((item) => {
+        if (item.pricing.status === 'manual') return item;
+        const model = resetCatalog.find(
+          (m) => m.model_id === item.model_selection.model_id
+        );
+        if (!model) return item;
+        return {
+          ...item,
+          pricing: resolveModelPricing(
+            model,
+            item.model_selection.parameter_values
+          ),
+        };
+      });
+      return {
+        catalog: resetCatalog,
+        selectedCreditPlanId: 'api_standard',
+        usdPerCredit: DEFAULT_USD_PER_CREDIT,
+        project: recalculateProject({
+          ...state.project,
+          items: updatedItems,
+        }),
+      };
+    });
     get().showBanner(
       'info',
       'Seluruh tarif katalog telah dikembalikan ke data referensi resmi Higgsfield.',
       'All catalog rates have been reset to official Higgsfield reference data.'
+    );
+  },
+
+  applyCreditSubscriptionPlan: (planId, customUsdPerCredit) => {
+    const plan = HIGGSFIELD_SUBSCRIPTION_PLANS.find(
+      (p) => p.plan_id === planId
+    );
+    const rate =
+      customUsdPerCredit !== undefined &&
+      Number.isFinite(customUsdPerCredit) &&
+      customUsdPerCredit > 0
+        ? customUsdPerCredit
+        : plan?.usd_per_credit ?? DEFAULT_USD_PER_CREDIT;
+
+    const sourceLabel = plan
+      ? `Paket ${plan.name_id} ($${rate.toFixed(4)}/Credit)`
+      : `Tarif Credit Kustom ($${rate.toFixed(4)}/Credit)`;
+
+    set((state) => {
+      const updatedCatalog = applyCreditPlanRateToCatalog(
+        state.catalog,
+        rate
+      );
+      const updatedItems = state.project.items.map((item) => {
+        if (item.pricing.status === 'manual') return item;
+        const model = updatedCatalog.find(
+          (m) => m.model_id === item.model_selection.model_id
+        );
+        if (!model) return item;
+        return {
+          ...item,
+          pricing: resolveModelPricing(
+            model,
+            item.model_selection.parameter_values
+          ),
+        };
+      });
+      return {
+        selectedCreditPlanId: planId,
+        usdPerCredit: rate,
+        catalog: updatedCatalog,
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          items: updatedItems,
+        }),
+      };
+    });
+
+    get().showBanner(
+      'success',
+      `Patokan harga berhasil disesuaikan ke ${sourceLabel}. Seluruh model otomatis terhitung ulang.`,
+      `Pricing benchmark updated to ${sourceLabel}. All models recalculated automatically.`
+    );
+  },
+
+  addNewCustomModelToCatalog: async (newModel) => {
+    let nextCatalog: CatalogModelEntry[] = [];
+    if (window.api && window.api.addCustomModel) {
+      nextCatalog = await window.api.addCustomModel(newModel);
+    } else {
+      const current = get().catalog;
+      const idx = current.findIndex((m) => m.model_id === newModel.model_id);
+      if (idx >= 0) {
+        nextCatalog = [...current];
+        nextCatalog[idx] = newModel;
+      } else {
+        nextCatalog = [newModel, ...current];
+      }
+    }
+    set({ catalog: nextCatalog });
+    get().showBanner(
+      'success',
+      `Model baru "${newModel.model_name}" berhasil ditambahkan ke daftar harga Higgsfield.`,
+      `New model "${newModel.model_name}" added to the Higgsfield price catalog.`
     );
   },
 

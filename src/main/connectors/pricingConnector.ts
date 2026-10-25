@@ -26,8 +26,14 @@ export interface CatalogRefreshResult {
   message_en: string;
 }
 
+function getCustomModelsPathFromOverrides(overridesFilePath?: string): string | undefined {
+  if (!overridesFilePath) return undefined;
+  return path.join(path.dirname(overridesFilePath), 'custom-user-models.json');
+}
+
 /**
- * Memuat katalog model Higgsfield dan menggabungkannya dengan tarif manual (jika pengguna pernah menyimpan tarif khusus)
+ * Memuat katalog model Higgsfield, menggabungkan model tambahan buatan pengguna,
+ * serta menerapkan tarif manual (jika pengguna pernah menyimpan tarif khusus).
  */
 export function loadMergedCatalog(
   overridesFilePath?: string
@@ -35,8 +41,14 @@ export function loadMergedCatalog(
   const overrides = overridesFilePath
     ? loadCustomRateOverrides(overridesFilePath)
     : {};
+  const customModelsPath = getCustomModelsPathFromOverrides(overridesFilePath);
+  const customModels = customModelsPath
+    ? loadCustomUserModels(customModelsPath)
+    : [];
 
-  return HIGGSFIELD_MODEL_CATALOG.map((model) => {
+  const combinedBase = [...customModels, ...HIGGSFIELD_MODEL_CATALOG];
+
+  return combinedBase.map((model) => {
     const custom = overrides[model.model_id];
     if (!custom) return model;
 
@@ -59,7 +71,7 @@ export function loadMergedCatalog(
 }
 
 /**
- * Memeriksa keterjangkauan portal dokumentasi resmi Higgsfield (docs.higgsfield.ai)
+ * Memeriksa keterjangkauan portal dokumentasi & OpenAPI resmi Higgsfield (docs.higgsfield.ai)
  * dan menyegarkan katalog (PRD Bab 9.2)
  */
 export async function refreshHiggsfieldCatalog(
@@ -85,9 +97,10 @@ export async function refreshHiggsfieldCatalog(
 
   const catalog = loadMergedCatalog(overridesFilePath).map((entry) => ({
     ...entry,
-    retrieved_at: docsReachable && entry.pricing_variants[0]?.status === 'verified'
-      ? now
-      : entry.retrieved_at,
+    retrieved_at:
+      docsReachable && entry.pricing_variants[0]?.status === 'verified'
+        ? now
+        : entry.retrieved_at,
   }));
 
   if (docsReachable) {
@@ -96,8 +109,8 @@ export async function refreshHiggsfieldCatalog(
       catalog,
       verifiedAt: now,
       docsReachable: true,
-      message_id: `Katalog model resmi Higgsfield (${HIGGSFIELD_DOCS_URL}) berhasil diverifikasi dan disinkronkan.`,
-      message_en: `Official Higgsfield model catalog (${HIGGSFIELD_DOCS_URL}) verified and synchronized.`,
+      message_id: `Katalog ${catalog.length} model resmi Higgsfield (${HIGGSFIELD_DOCS_URL}) berhasil diverifikasi dan disinkronkan.`,
+      message_en: `Official Higgsfield catalog (${catalog.length} models at ${HIGGSFIELD_DOCS_URL}) verified and synchronized.`,
     };
   }
 
@@ -146,10 +159,49 @@ export function saveCustomRateOverride(
   return current;
 }
 
+export function loadCustomUserModels(filePath: string): CatalogModelEntry[] {
+  try {
+    if (!fs.existsSync(filePath)) return [];
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    if (Array.isArray(parsed)) {
+      return parsed as CatalogModelEntry[];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomUserModel(
+  overridesFilePath: string,
+  newModel: CatalogModelEntry
+): CatalogModelEntry[] {
+  const customModelsPath = getCustomModelsPathFromOverrides(overridesFilePath);
+  if (!customModelsPath) return [];
+  const current = loadCustomUserModels(customModelsPath).filter(
+    (m) => m.model_id !== newModel.model_id
+  );
+  const updated = [newModel, ...current];
+  try {
+    const dir = path.dirname(customModelsPath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(customModelsPath, JSON.stringify(updated, null, 2), 'utf-8');
+  } catch {
+    // ignore
+  }
+  return loadMergedCatalog(overridesFilePath);
+}
+
 export function clearCustomRateOverrides(filePath: string): void {
   try {
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+    }
+    const customModelsPath = getCustomModelsPathFromOverrides(filePath);
+    if (customModelsPath && fs.existsSync(customModelsPath)) {
+      fs.unlinkSync(customModelsPath);
     }
   } catch {
     // ignore

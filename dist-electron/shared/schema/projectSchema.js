@@ -57,6 +57,7 @@ exports.ProductionItemSchema = zod_1.z.object({
     duration_seconds: zod_1.z.number().nonnegative(),
     attempts_per_item: zod_1.z.number().int().nonnegative(),
     use_project_target_multiplier: zod_1.z.boolean().optional(),
+    is_unlimited: zod_1.z.boolean().optional(),
     model_selection: exports.ModelSelectionSchema,
     pricing: exports.PricingSchema,
     notes: zod_1.z.string().optional(),

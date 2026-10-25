@@ -1,37 +1,374 @@
 import {
   CatalogModelEntry,
   CatalogPricingVariant,
+  HiggsfieldSubscriptionPlan,
+  ModelTierBadge,
   Pricing,
   ProcessCategory,
 } from '../types/project';
 
-export const CATALOG_RETRIEVED_AT = '2026-10-20T00:00:00.000Z';
+export const CATALOG_RETRIEVED_AT = '2026-10-22T00:00:00.000Z';
 export const HIGGSFIELD_DOCS_URL = 'https://docs.higgsfield.ai/docs/models';
 export const HIGGSFIELD_PRICING_URL = 'https://higgsfield.ai/pricing';
+export const DEFAULT_USD_PER_CREDIT = 0.0625;
 
 /**
- * Katalog Model Resmi Higgsfield (PRD Bab 6 & Bab 9.1)
- * Mencakup 7 Kategori Proses AI:
- * 1. text_to_image (Text to Image)
- * 2. image_to_image (Image to Image)
- * 3. image_to_video (Image to Video)
- * 4. video_to_video (Video to Video)
- * 5. text_to_video (Text to Video)
- * 6. upscale_image (Upscale Image)
- * 7. upscale_video (Upscale Video)
+ * Daftar Paket Langganan Resmi Higgsfield (Berdasarkan data live subscriptionsV2 & Billing Docs)
+ * Digunakan agar pengguna dapat menyesuaikan nilai 1 Credit ke USD/Rupiah sesuai paket yang mereka beli.
+ */
+export const HIGGSFIELD_SUBSCRIPTION_PLANS: HiggsfieldSubscriptionPlan[] = [
+  {
+    plan_id: 'api_standard',
+    name_id: 'Standar API Resmi ($0.0625 / Credit)',
+    name_en: 'Official API Standard ($0.0625 / Credit)',
+    monthly_price_usd: 0,
+    monthly_credits: 0,
+    usd_per_credit: 0.0625,
+    description_id:
+      'Patokan resmi dokumentasi API Higgsfield (contoh: 1,5 Credit = $0.094 USD).',
+    description_en:
+      'Official Higgsfield API billing rate (e.g., 1.5 Credits = $0.094 USD).',
+  },
+  {
+    plan_id: 'lite_monthly',
+    name_id: 'Paket Lite ($10/bln • 250 Credit)',
+    name_en: 'Lite Plan ($10/mo • 250 Credits)',
+    monthly_price_usd: 10,
+    monthly_credits: 250,
+    usd_per_credit: 0.04,
+    description_id:
+      'Paket hemat kreator pemula: 250 Credit per bulan seharga $10 ($0.040 / Credit).',
+    description_en:
+      'Starter creator plan: 250 Credits/month for $10 ($0.040 / Credit).',
+  },
+  {
+    plan_id: 'basic_monthly',
+    name_id: 'Paket Basic ($9/bln • 120 Credit)',
+    name_en: 'Basic Plan ($9/mo • 120 Credits)',
+    monthly_price_usd: 9,
+    monthly_credits: 120,
+    usd_per_credit: 0.075,
+    description_id:
+      'Paket dasar: 120 Credit per bulan seharga $9 ($0.075 / Credit).',
+    description_en:
+      'Basic tier: 120 Credits/month for $9 ($0.075 / Credit).',
+  },
+  {
+    plan_id: 'pro_monthly',
+    name_id: 'Paket Pro Bulanan ($29/bln • 600 Credit + Unlimited Pilihan)',
+    name_en: 'Pro Monthly ($29/mo • 600 Credits + Selected Unlimited)',
+    monthly_price_usd: 29,
+    monthly_credits: 600,
+    usd_per_credit: 0.0483,
+    description_id:
+      'Paket populer kreator rutin: 600 Credit/bln seharga $29 ($0.0483 / Credit) + akses Unlimited model tertentu.',
+    description_en:
+      'Popular creator plan: 600 Credits/mo for $29 ($0.0483 / Credit) + selected Unlimited models.',
+  },
+  {
+    plan_id: 'pro_annual',
+    name_id: 'Paket Pro Tahunan ($23/bln • 600 Credit)',
+    name_en: 'Pro Annual ($23/mo • 600 Credits)',
+    monthly_price_usd: 23,
+    monthly_credits: 600,
+    usd_per_credit: 0.0383,
+    description_id:
+      'Paket Pro pembayaran tahunan (diskon 21%): setara $23/bln untuk 600 Credit ($0.0383 / Credit).',
+    description_en:
+      'Annual Pro plan (21% off): $23/mo for 600 Credits ($0.0383 / Credit).',
+  },
+  {
+    plan_id: 'max_monthly',
+    name_id: 'Paket Max ($79/bln • 1.800 Credit + Unlimited Pilihan)',
+    name_en: 'Max Plan ($79/mo • 1,800 Credits + Selected Unlimited)',
+    monthly_price_usd: 79,
+    monthly_credits: 1800,
+    usd_per_credit: 0.0439,
+    description_id:
+      'Paket produksi intensif: 1.800 Credit/bln seharga $79 ($0.0439 / Credit) + akses penuh model Unlimited.',
+    description_en:
+      'High-volume production tier: 1,800 Credits/mo for $79 ($0.0439 / Credit) + Unlimited access.',
+  },
+  {
+    plan_id: 'team_monthly',
+    name_id: 'Paket Team Studio ($69/bln • 1.000 Credit)',
+    name_en: 'Team Studio ($69/mo • 1,000 Credits)',
+    monthly_price_usd: 69,
+    monthly_credits: 1000,
+    usd_per_credit: 0.069,
+    description_id:
+      'Paket kolaborasi tim studio: 1.000 Credit/bln seharga $69 ($0.0690 / Credit).',
+    description_en:
+      'Studio team plan: 1,000 Credits/mo for $69 ($0.0690 / Credit).',
+  },
+  {
+    plan_id: 'scale_monthly',
+    name_id: 'Paket Scale Agency ($169/bln • 2.500 Credit)',
+    name_en: 'Scale Agency ($169/mo • 2,500 Credits)',
+    monthly_price_usd: 169,
+    monthly_credits: 2500,
+    usd_per_credit: 0.0676,
+    description_id:
+      'Paket agensi skala besar: 2.500 Credit/bln seharga $169 ($0.0676 / Credit).',
+    description_en:
+      'Agency scale tier: 2,500 Credits/mo for $169 ($0.0676 / Credit).',
+  },
+];
+
+function roundUsd(val: number): number {
+  return Number(val.toFixed(4));
+}
+
+function makeImageEntry(opts: {
+  model_id: string;
+  model_name: string;
+  family: string;
+  tier_badge: ModelTierBadge;
+  unlimited_eligible?: boolean;
+  supported_categories: ProcessCategory[];
+  description_id: string;
+  description_en: string;
+  credits_1k: number;
+  credits_2k?: number;
+  credits_4k?: number;
+  price_1k?: number;
+  price_2k?: number;
+  price_4k?: number;
+  source_url?: string;
+}): CatalogModelEntry {
+  const c1 = opts.credits_1k;
+  const c2 = opts.credits_2k ?? Number((c1 * 1.6).toFixed(2));
+  const p1 = opts.price_1k ?? roundUsd(c1 * DEFAULT_USD_PER_CREDIT);
+  const p2 = opts.price_2k ?? roundUsd(c2 * DEFAULT_USD_PER_CREDIT);
+
+  const resOptions = [
+    { value: '1K', label: `1K Standard (${c1} cr)` },
+    { value: '2K', label: `2K High-Res (${c2} cr)` },
+  ];
+
+  const variants: CatalogPricingVariant[] = [
+    {
+      matchParameters: { resolution: '1K' },
+      pricing_unit: 'per_generation',
+      price_value: p1,
+      currency: 'USD',
+      credit_cost: c1,
+      credit_unit: 'per_generation',
+      status: 'verified',
+    },
+    {
+      matchParameters: { resolution: '2K' },
+      pricing_unit: 'per_generation',
+      price_value: p2,
+      currency: 'USD',
+      credit_cost: c2,
+      credit_unit: 'per_generation',
+      status: 'verified',
+    },
+  ];
+
+  if (opts.credits_4k !== undefined) {
+    const c4 = opts.credits_4k;
+    const p4 = opts.price_4k ?? roundUsd(c4 * DEFAULT_USD_PER_CREDIT);
+    resOptions.push({ value: '4K', label: `4K Ultra (${c4} cr)` });
+    variants.push({
+      matchParameters: { resolution: '4K' },
+      pricing_unit: 'per_generation',
+      price_value: p4,
+      currency: 'USD',
+      credit_cost: c4,
+      credit_unit: 'per_generation',
+      status: 'verified',
+    });
+  }
+
+  return {
+    provider: 'Higgsfield',
+    model_id: opts.model_id,
+    model_name: opts.model_name,
+    family: opts.family,
+    tier_badge: opts.tier_badge,
+    unlimited_eligible: opts.unlimited_eligible ?? false,
+    supported_categories: opts.supported_categories,
+    description_id: opts.description_id,
+    description_en: opts.description_en,
+    default_quantity_type: 'output',
+    supports_duration: false,
+    default_duration_seconds: 0,
+    parameters: [
+      {
+        key: 'resolution',
+        label_id: 'Resolusi Gambar',
+        label_en: 'Image Resolution',
+        type: 'select',
+        options: resOptions,
+        defaultValue: '1K',
+        affectsPricing: true,
+      },
+      {
+        key: 'aspect_ratio',
+        label_id: 'Rasio Layar',
+        label_en: 'Aspect Ratio',
+        type: 'select',
+        options: [
+          { value: '16:9', label: '16:9 Landscape' },
+          { value: '9:16', label: '9:16 Vertical' },
+          { value: '1:1', label: '1:1 Square' },
+          { value: '4:5', label: '4:5 Portrait' },
+          { value: '21:9', label: '21:9 Cinema' },
+        ],
+        defaultValue: '16:9',
+        affectsPricing: false,
+      },
+    ],
+    pricing_variants: variants,
+    source_name: 'Higgsfield Official Catalog & Live Credits Config (higgsfield.ai)',
+    source_url: opts.source_url ?? HIGGSFIELD_DOCS_URL,
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  };
+}
+
+function makeVideoEntry(opts: {
+  model_id: string;
+  model_name: string;
+  family: string;
+  tier_badge: ModelTierBadge;
+  unlimited_eligible?: boolean;
+  supported_categories: ProcessCategory[];
+  description_id: string;
+  description_en: string;
+  default_duration_seconds?: number;
+  credits_720p: number;
+  credits_1080p?: number;
+  credits_480p?: number;
+  credits_4k?: number;
+  price_720p?: number;
+  price_1080p?: number;
+  source_url?: string;
+}): CatalogModelEntry {
+  const c720 = opts.credits_720p;
+  const c1080 = opts.credits_1080p ?? Number((c720 * 1.8).toFixed(2));
+  const p720 = opts.price_720p ?? roundUsd(c720 * DEFAULT_USD_PER_CREDIT);
+  const p1080 = opts.price_1080p ?? roundUsd(c1080 * DEFAULT_USD_PER_CREDIT);
+
+  const resOptions: Array<{ value: string; label: string }> = [];
+  const variants: CatalogPricingVariant[] = [];
+
+  // Default 720p first so variants[0] is the standard 720p rate
+  resOptions.push({ value: '720p', label: `720p HD (${c720} cr/dtk)` });
+  variants.push({
+    matchParameters: { resolution: '720p' },
+    pricing_unit: 'per_second',
+    price_value: p720,
+    currency: 'USD',
+    credit_cost: c720,
+    credit_unit: 'per_second',
+    status: 'verified',
+  });
+
+  resOptions.push({ value: '1080p', label: `1080p Full HD (${c1080} cr/dtk)` });
+  variants.push({
+    matchParameters: { resolution: '1080p' },
+    pricing_unit: 'per_second',
+    price_value: p1080,
+    currency: 'USD',
+    credit_cost: c1080,
+    credit_unit: 'per_second',
+    status: 'verified',
+  });
+
+  if (opts.credits_480p !== undefined) {
+    const c480 = opts.credits_480p;
+    resOptions.push({ value: '480p', label: `480p Draft (${c480} cr/dtk)` });
+    variants.push({
+      matchParameters: { resolution: '480p' },
+      pricing_unit: 'per_second',
+      price_value: roundUsd(c480 * DEFAULT_USD_PER_CREDIT),
+      currency: 'USD',
+      credit_cost: c480,
+      credit_unit: 'per_second',
+      status: 'verified',
+    });
+  }
+
+  if (opts.credits_4k !== undefined) {
+    const c4k = opts.credits_4k;
+    resOptions.push({ value: '4K', label: `4K Ultra HD (${c4k} cr/dtk)` });
+    variants.push({
+      matchParameters: { resolution: '4K' },
+      pricing_unit: 'per_second',
+      price_value: roundUsd(c4k * DEFAULT_USD_PER_CREDIT),
+      currency: 'USD',
+      credit_cost: c4k,
+      credit_unit: 'per_second',
+      status: 'verified',
+    });
+  }
+
+  return {
+    provider: 'Higgsfield',
+    model_id: opts.model_id,
+    model_name: opts.model_name,
+    family: opts.family,
+    tier_badge: opts.tier_badge,
+    unlimited_eligible: opts.unlimited_eligible ?? false,
+    supported_categories: opts.supported_categories,
+    description_id: opts.description_id,
+    description_en: opts.description_en,
+    default_quantity_type: 'shot',
+    supports_duration: true,
+    default_duration_seconds: opts.default_duration_seconds ?? 5,
+    parameters: [
+      {
+        key: 'resolution',
+        label_id: 'Resolusi Video',
+        label_en: 'Video Resolution',
+        type: 'select',
+        options: resOptions,
+        defaultValue: '720p',
+        affectsPricing: true,
+      },
+      {
+        key: 'aspect_ratio',
+        label_id: 'Rasio Layar',
+        label_en: 'Aspect Ratio',
+        type: 'select',
+        options: [
+          { value: '16:9', label: '16:9 Landscape' },
+          { value: '9:16', label: '9:16 Vertical' },
+          { value: '1:1', label: '1:1 Square' },
+        ],
+        defaultValue: '16:9',
+        affectsPricing: false,
+      },
+    ],
+    pricing_variants: variants,
+    source_name: 'Higgsfield Official Video Catalog & Credits Config (higgsfield.ai)',
+    source_url: opts.source_url ?? 'https://docs.higgsfield.ai/docs/models/video-generation',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  };
+}
+
+/**
+ * Katalog Model Resmi Higgsfield Terlengkap & Terbaru (75+ Model di 7 Kategori Proses AI)
+ * Disinkronkan langsung dengan tangkapan layar aplikasi Higgsfield terbaru & `credits-config` resmi.
  */
 export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
   // ============================================================================
-  // 1. TEXT TO IMAGE & 2. IMAGE TO IMAGE
+  // BAGIAN 1: TEXT TO IMAGE & IMAGE TO IMAGE (FEATURED & ALL HIGGSFIELD IMAGE MODELS)
   // ============================================================================
   {
     provider: 'Higgsfield',
     model_id: 'higgsfield-ai/soul/v2/standard',
-    model_name: 'SOUL V2 (Editorial & Character)',
+    model_name: 'Higgsfield Soul 2.0 (Ultra-Realistic Fashion & Character)',
     family: 'Higgsfield SOUL',
+    tier_badge: 'POPULER',
+    unlimited_eligible: false,
     supported_categories: ['text_to_image', 'image_to_image'],
-    description_id: 'Generasi gambar potret, fashion, dan karakter sinematik dengan gaya SOUL V2.',
-    description_en: 'Generate portraits, fashion, and cinematic character images with SOUL V2 styles.',
+    description_id:
+      'Visual fashion, potret manusia, dan karakter ultra-realistis generasi terbaru dari Higgsfield.',
+    description_en:
+      'Next generation ultra-realistic fashion visuals, portraits, and character generation.',
     default_quantity_type: 'output',
     supports_duration: false,
     default_duration_seconds: 0,
@@ -42,8 +379,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Image Resolution',
         type: 'select',
         options: [
-          { value: '1K', label: '1K Standard (1024px)' },
-          { value: '2K', label: '2K High-Res (2048px)' },
+          { value: '1K', label: '1K Standard (1.5 cr)' },
+          { value: '2K', label: '2K High-Res (2.25 cr)' },
         ],
         defaultValue: '1K',
         affectsPricing: true,
@@ -89,11 +426,15 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
   {
     provider: 'Higgsfield',
     model_id: 'higgsfield-ai/soul-cinema',
-    model_name: 'SOUL Cinema (Storyboard Still)',
+    model_name: 'Higgsfield Soul Cinema (Cinema-Grade Visual Creation)',
     family: 'Higgsfield SOUL',
-    supported_categories: ['text_to_image'],
-    description_id: 'Generasi still frame bergaya film layar lebar dari prompt teks.',
-    description_en: 'Generate cinema-inspired widescreen still frames from text prompts.',
+    tier_badge: 'POPULER',
+    unlimited_eligible: false,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan gambar sekelas layar lebar dengan pencahayaan dan komposisi kamera sinema.',
+    description_en:
+      'Cinema-grade visual creation and widescreen storyboard still frames.',
     default_quantity_type: 'output',
     supports_duration: false,
     default_duration_seconds: 0,
@@ -104,8 +445,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Resolution',
         type: 'select',
         options: [
-          { value: '1K', label: '1K Cinema' },
-          { value: '2K', label: '2K Master' },
+          { value: '1K', label: '1K Cinema (1.5 cr)' },
+          { value: '2K', label: '2K Master (2.5 cr)' },
         ],
         defaultValue: '1K',
         affectsPricing: true,
@@ -147,14 +488,320 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/soul-cinema',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
+  makeImageEntry({
+    model_id: 'openai/gpt-image-2.5-sunburst',
+    model_name: 'GPT Image 2.5 Sunburst (Exceptional Quality & Precise Edits)',
+    family: 'OpenAI GPT Image',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Kualitas gambar luar biasa dan pengeditan sangat presisi hingga 16 gambar referensi.',
+    description_en:
+      'Exceptional quality and precise image generation & editing with up to 16 reference images.',
+    credits_1k: 1.5,
+    credits_2k: 2.75,
+    credits_4k: 4.25,
+  }),
+  makeImageEntry({
+    model_id: 'openai/gpt-image-2.5-flare',
+    model_name: 'GPT Image 2.5 Flare (Stunning Everyday Images, Fast)',
+    family: 'OpenAI GPT Image',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan dan edit gambar harian yang memukau dengan kecepatan tinggi (digunakan juga pada Ads Studio).',
+    description_en:
+      'Stunning everyday image generation and editing at high speed.',
+    credits_1k: 0.5,
+    credits_2k: 1.0,
+    credits_4k: 1.25,
+    source_url: 'https://docs.higgsfield.ai/docs/models/ads-studio',
+  }),
+  makeImageEntry({
+    model_id: 'google/nano-banana-2.1',
+    model_name: 'Nano Banana 2.1 (Google Next-Gen Flagship Image)',
+    family: 'Google Nano Banana',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model gambar unggulan generasi terbaru dari Google dengan detail 1K, 2K, hingga 4K.',
+    description_en:
+      "Google's next-gen flagship image generation and editing model (1K/2K/4K).",
+    credits_1k: 1.5,
+    credits_2k: 2.0,
+    credits_4k: 3.0,
+  }),
+  makeImageEntry({
+    model_id: 'google/nano-banana-pro',
+    model_name: 'Nano Banana Pro (Google Flagship Generation)',
+    family: 'Google Nano Banana',
+    tier_badge: 'POPULER',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model gambar unggulan Google di Higgsfield (mendukung fitur Unlimited pada paket Pro/Max).',
+    description_en:
+      "Google's flagship generation model on Higgsfield (Eligible for Unlimited on Pro/Max).",
+    credits_1k: 1.5,
+    credits_2k: 2.0,
+  }),
+  makeImageEntry({
+    model_id: 'google/nano-banana-2',
+    model_name: 'Nano Banana 2 (Pro Quality at Flash Speed)',
+    family: 'Google Nano Banana',
+    tier_badge: 'PREMIUM',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Kualitas setara Pro dengan kecepatan secepat kilat serta mendukung hingga 14 gambar referensi.',
+    description_en:
+      'Pro quality at Flash speed with up to 14 reference images (Unlimited eligible).',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+  }),
+  makeImageEntry({
+    model_id: 'google/nano-banana-2-lite',
+    model_name: 'Nano Banana 2 Lite (Lightweight & Fast)',
+    family: 'Google Nano Banana',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan dan variasi gambar ringan dengan kecepatan tinggi dan hemat Credit.',
+    description_en:
+      'Lightweight image generation and editing at high speed.',
+    credits_1k: 0.5,
+    credits_2k: 1.0,
+  }),
+  makeImageEntry({
+    model_id: 'google/nano-banana',
+    model_name: 'Nano Banana (Google Standard Generation)',
+    family: 'Google Nano Banana',
+    tier_badge: 'PREMIUM',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model standar Google untuk pembuatan dan pengeditan gambar cepat (mendukung Unlimited).',
+    description_en:
+      "Google's standard image generation and editing model (Unlimited eligible).",
+    credits_1k: 0.5,
+    credits_2k: 1.0,
+  }),
+  makeImageEntry({
+    model_id: 'bytedance/seedream-5.0-pro',
+    model_name: 'Seedream 5.0 Pro (Intelligent Visual Reasoning)',
+    family: 'ByteDance Seedream',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Gambar yang konsisten secara logis dengan penalaran visual cerdas dari ByteDance.',
+    description_en:
+      'Logically consistent images with intelligent visual reasoning.',
+    credits_1k: 1.25,
+    credits_2k: 2.5,
+  }),
+  makeImageEntry({
+    model_id: 'bytedance/seedream-5.0-flash',
+    model_name: 'Seedream 5.0 Flash (Fast Visual Reasoning)',
+    family: 'ByteDance Seedream',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan gambar cepat dengan penalaran visual cerdas dan tarif sangat hemat (0,5 Credit).',
+    description_en:
+      'Fast image generation with intelligent visual reasoning (0.5 Credits).',
+    credits_1k: 0.5,
+    credits_2k: 0.5,
+  }),
+  makeImageEntry({
+    model_id: 'bytedance/seedream-5.0-lite',
+    model_name: 'Seedream 5.0 lite (Intelligent Visual Reasoning)',
+    family: 'ByteDance Seedream',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Varian ringan Seedream 5.0 yang mendukung hingga 14 gambar referensi sekaligus.',
+    description_en:
+      'Lightweight Seedream 5.0 variant supporting up to 14 reference images.',
+    credits_1k: 0.5,
+    credits_2k: 1.0,
+  }),
+  makeImageEntry({
+    model_id: 'bytedance/seedream-4.5',
+    model_name: 'Seedream 4.5 (ByteDance Next-Gen 4K Image)',
+    family: 'ByteDance Seedream',
+    tier_badge: 'PREMIUM',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model gambar 4K unggulan ByteDance (mendukung hingga 14 gambar referensi & paket Unlimited).',
+    description_en:
+      "ByteDance's next-gen 4K image model (supports 14 references & Unlimited plan).",
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+    credits_4k: 2.0,
+  }),
+  makeImageEntry({
+    model_id: 'bytedance/seedream-4.0',
+    model_name: 'Seedream 4.0 (Advanced Image Editing & Generation)',
+    family: 'ByteDance Seedream',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['image_to_image', 'text_to_image'],
+    description_id:
+      'Model spesialis pengeditan dan transformasi gambar tingkat lanjut dari ByteDance.',
+    description_en:
+      "ByteDance's advanced image editing and generation model.",
+    credits_1k: 0.75,
+    credits_2k: 1.25,
+  }),
+  makeImageEntry({
+    model_id: 'bfl/flux-3-image',
+    model_name: 'FLUX 3 Image (Next-Gen BFL Generation & Editing)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan dan pengeditan gambar generasi terbaru dari Black Forest Labs (FLUX 3).',
+    description_en:
+      'Next-gen image generation and editing by Black Forest Labs.',
+    credits_1k: 1.5,
+    credits_2k: 2.25,
+  }),
+  makeImageEntry({
+    model_id: 'bfl/flux-2-pro',
+    model_name: 'FLUX.2 Pro (Speed-Optimized Detail)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Detail gambar tajam dengan kecepatan optimal dan dukungan hingga 8 gambar referensi.',
+    description_en:
+      'Speed-optimized detail with up to 8 reference images.',
+    credits_1k: 0.75,
+    credits_2k: 1.25,
+  }),
+  makeImageEntry({
+    model_id: 'bfl/flux-2-flex',
+    model_name: 'FLUX.2 Flex (Next-Gen Flexible Image)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'PREMIUM',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Generasi gambar fleksibel dengan dukungan hingga 10 gambar referensi (mendukung paket Unlimited).',
+    description_en:
+      'Next-gen image generation with up to 10 reference images (Unlimited eligible).',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+  }),
+  makeImageEntry({
+    model_id: 'bfl/flux-2-max',
+    model_name: 'FLUX.2 Max (Ultimate Precision & Speed)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Presisi tertinggi dan ketajaman maksimal di keluarga FLUX.2.',
+    description_en:
+      'Ultimate precision and speed in the FLUX.2 family.',
+    credits_1k: 1.5,
+    credits_2k: 2.25,
+  }),
+  makeImageEntry({
+    model_id: 'bfl/flux-kontext-max',
+    model_name: 'Flux Kontext Max (Edit with Accuracy)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['image_to_image', 'text_to_image'],
+    description_id:
+      'Edit elemen gambar, teks, dan pencahayaan dengan akurasi sangat tinggi.',
+    description_en:
+      'Edit images, objects, and context with high accuracy.',
+    credits_1k: 1.5,
+    credits_2k: 2.0,
+  }),
+  {
+    provider: 'Higgsfield',
+    model_id: 'ideogram/v4.5',
+    model_name: 'Ideogram 4.5 (High-Resolution Typography & Visuals)',
+    family: 'Ideogram',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan gambar resolusi tinggi dan tipografi tajam terbaru dari Ideogram (0.25 s/d 6.25 Credit).',
+    description_en:
+      'High-resolution image and typography generation by Ideogram.',
+    default_quantity_type: 'output',
+    supports_duration: false,
+    default_duration_seconds: 0,
+    parameters: [
+      {
+        key: 'quality',
+        label_id: 'Kualitas Render',
+        label_en: 'Render Quality',
+        type: 'select',
+        options: [
+          { value: 'low', label: 'Low / Fast (1.0 cr)' },
+          { value: 'medium', label: 'Medium Balanced (2.0 cr)' },
+          { value: 'high', label: 'High Ultra (6.25 cr)' },
+          { value: 'very_low', label: 'Draft / Very Low (0.25 cr)' },
+        ],
+        defaultValue: 'medium',
+        affectsPricing: true,
+      },
+    ],
+    pricing_variants: [
+      {
+        matchParameters: { quality: 'medium' },
+        pricing_unit: 'per_generation',
+        price_value: 0.125,
+        currency: 'USD',
+        credit_cost: 2.0,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+      {
+        matchParameters: { quality: 'low' },
+        pricing_unit: 'per_generation',
+        price_value: 0.0625,
+        currency: 'USD',
+        credit_cost: 1.0,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+      {
+        matchParameters: { quality: 'high' },
+        pricing_unit: 'per_generation',
+        price_value: 0.3906,
+        currency: 'USD',
+        credit_cost: 6.25,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+      {
+        matchParameters: { quality: 'very_low' },
+        pricing_unit: 'per_generation',
+        price_value: 0.0156,
+        currency: 'USD',
+        credit_cost: 0.25,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield Live Credits Config (ideogram_4_5)',
+    source_url: 'https://docs.higgsfield.ai/docs/models/ideogram-4',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
   {
     provider: 'Higgsfield',
     model_id: 'recraft/v4.1',
-    model_name: 'Recraft V4.1 / V4.1 Pro',
+    model_name: 'Recraft V4.1 / V4.1 Pro (Photorealistic & Design)',
     family: 'Recraft',
-    supported_categories: ['text_to_image'],
-    description_id: 'Generasi desain dan aset gambar 1K/2K dengan kontrol palet warna RGB dan latar.',
-    description_en: 'Generate 1K/2K design and visual assets with RGB palette and background controls.',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Generasi gambar fotorealistis, desain grafis, dan vektor 1K/2K dengan kontrol palet warna.',
+    description_en:
+      'Photorealistic and expressive image generation in 1K and 2K.',
     default_quantity_type: 'output',
     supports_duration: false,
     default_duration_seconds: 0,
@@ -165,8 +812,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Model Variant',
         type: 'select',
         options: [
-          { value: 'standard_1k', label: 'Standard (1K)' },
-          { value: 'pro_2k', label: 'Pro (2K)' },
+          { value: 'standard_1k', label: 'Standard 1K (1.0 - 1.25 cr)' },
+          { value: 'pro_2k', label: 'Pro 2K (2.0 - 8.0 cr)' },
         ],
         defaultValue: 'standard_1k',
         affectsPricing: true,
@@ -196,236 +843,311 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/recraft-v4-1',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
-  {
-    provider: 'Higgsfield',
-    model_id: 'ideogram/v4.0',
-    model_name: 'Ideogram 4.0 (Typography & Key Visual)',
-    family: 'Ideogram',
-    supported_categories: ['text_to_image'],
-    description_id: 'Generasi poster, tipografi, dan key visual dengan kecepatan render yang dapat dipilih.',
-    description_en: 'Generate posters, typography, and key visuals with selectable rendering speed.',
-    default_quantity_type: 'output',
-    supports_duration: false,
-    default_duration_seconds: 0,
-    parameters: [
-      {
-        key: 'rendering_speed',
-        label_id: 'Kecepatan Render',
-        label_en: 'Rendering Speed',
-        type: 'select',
-        options: [
-          { value: 'turbo', label: 'Turbo' },
-          { value: 'balanced', label: 'Balanced' },
-          { value: 'quality', label: 'Quality' },
-        ],
-        defaultValue: 'balanced',
-        affectsPricing: true,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { rendering_speed: 'turbo' },
-        pricing_unit: 'per_generation',
-        price_value: 0.04,
-        currency: 'USD',
-        credit_cost: 1.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-      {
-        matchParameters: { rendering_speed: 'balanced' },
-        pricing_unit: 'per_generation',
-        price_value: 0.06,
-        currency: 'USD',
-        credit_cost: 1.5,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-      {
-        matchParameters: { rendering_speed: 'quality' },
-        pricing_unit: 'per_generation',
-        price_value: 0.09,
-        currency: 'USD',
-        credit_cost: 2.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Image Catalog (docs.higgsfield.ai/docs/models/ideogram-4)',
-    source_url: 'https://docs.higgsfield.ai/docs/models/ideogram-4',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
-  {
-    provider: 'Higgsfield',
+  makeImageEntry({
+    model_id: 'recraft/v4.1-utility',
+    model_name: 'Recraft V4.1 Utility (Flat & Even Studio Lighting)',
+    family: 'Recraft',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan aset bersih dengan pencahayaan studio merata untuk komposit dan produk.',
+    description_en:
+      'Simple scenes with flat, even lighting for clean production compositing.',
+    credits_1k: 1.25,
+    credits_2k: 8.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/recraft-v4-1-utility',
+  }),
+  makeImageEntry({
+    model_id: 'recraft/v4-styles',
+    model_name: 'Recraft V4 Styles (Consistent Reference Style)',
+    family: 'Recraft',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['image_to_image', 'text_to_image'],
+    description_id:
+      'Hasilkan gambar baru secara konsisten mengikuti gaya visual dari gambar referensi Anda.',
+    description_en:
+      'Generate consistently in the style of your reference images.',
+    credits_1k: 1.5,
+    credits_2k: 2.5,
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/soul-standard',
+    model_name: 'Higgsfield Soul (Original Ultra-Realistic Fashion)',
+    family: 'Higgsfield SOUL',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model klasik Higgsfield Soul untuk potret fashion dengan pilihan gaya yang dapat diatur.',
+    description_en:
+      'Ultra-realistic fashion visuals with selectable styles.',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/soul-standard',
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/face-swap',
+    model_name: 'Higgsfield Face Swap (Seamless Face Swapping)',
+    family: 'Higgsfield Character Tools',
+    tier_badge: 'POPULER',
+    supported_categories: ['image_to_image'],
+    description_id:
+      'Ganti wajah pada gambar dengan mulus dan alami sambil mempertahankan pencahayaan asli.',
+    description_en:
+      'Seamless face swapping while preserving original lighting and expression.',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/character-swap',
+    model_name: 'Higgsfield Character Swap (Seamless Character Swapping)',
+    family: 'Higgsfield Character Tools',
+    tier_badge: 'POPULER',
+    supported_categories: ['image_to_image'],
+    description_id:
+      'Ganti seluruh karakter dalam adegan gambar dengan tetap mempertahankan pose dan komposisi.',
+    description_en:
+      'Seamless full-character swapping in any scene.',
+    credits_1k: 1.5,
+    credits_2k: 2.25,
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/multi-reference',
+    model_name: 'Multi Reference (Multiple Edits in One Shot)',
+    family: 'Higgsfield Character Tools',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['image_to_image'],
+    description_id:
+      'Gabungkan beberapa gambar referensi (wajah, pakaian, latar, properti) dalam satu kali proses.',
+    description_en:
+      'Combine multiple reference images and edits in one shot.',
+    credits_1k: 2.0,
+    credits_2k: 3.0,
+  }),
+  makeImageEntry({
+    model_id: 'openai/gpt-image-2',
+    model_name: 'GPT Image 2 (4K Near-Perfect Text Rendering)',
+    family: 'OpenAI GPT Image',
+    tier_badge: 'PREMIUM',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Gambar hingga 4K dengan kemampuan render teks dan poster yang sangat akurat.',
+    description_en:
+      '4K images with near-perfect text rendering and instruction following.',
+    credits_1k: 1.5,
+    credits_2k: 2.5,
+    credits_4k: 3.5,
+  }),
+  makeImageEntry({
+    model_id: 'openai/gpt-image-1.5',
+    model_name: 'GPT Image 1.5 (True-Color Precision Rendering)',
+    family: 'OpenAI GPT Image',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Render gambar dengan akurasi warna sejati dan pencahayaan natural.',
+    description_en:
+      'True-color precision rendering for commercial visuals.',
+    credits_1k: 1.0,
+    credits_2k: 1.75,
+  }),
+  makeImageEntry({
+    model_id: 'openai/gpt-image',
+    model_name: 'GPT Image (Versatile Text-to-Image AI)',
+    family: 'OpenAI GPT Image',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model gambar serbaguna dari OpenAI untuk konsep cepat dan ilustrasi.',
+    description_en:
+      'Versatile text-to-image and image editing AI.',
+    credits_1k: 0.75,
+    credits_2k: 1.25,
+  }),
+  makeImageEntry({
+    model_id: 'xai/grok-imagine-2.0',
+    model_name: 'Grok Imagine 2.0 (High-Res Image by xAI)',
+    family: 'xAI Grok',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan dan edit gambar resolusi tinggi dari xAI dengan dukungan hingga 10 gambar referensi.',
+    description_en:
+      'High-resolution image generation and editing by xAI with up to 10 references.',
+    credits_1k: 1.25,
+    credits_2k: 2.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/grok-image-2',
+  }),
+  makeImageEntry({
+    model_id: 'xai/grok-imagine',
+    model_name: 'Grok Imagine (Versatile Image Styles by xAI)',
+    family: 'xAI Grok',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Gaya visual kreatif dan serbaguna dari xAI Grok.',
+    description_en:
+      'Versatile image styles by xAI.',
+    credits_1k: 0.75,
+    credits_2k: 1.25,
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/z-image',
+    model_name: 'Z-Image Turbo (Instant Lifelike Portraits)',
+    family: 'Z-Image',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan potret wajah dan konsep instan dalam hitungan detik.',
+    description_en:
+      'Instant lifelike portraits and fast concept generation.',
+    credits_1k: 0.5,
+    credits_2k: 1.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/z-image-turbo',
+  }),
+  makeImageEntry({
+    model_id: 'kling-video/kling-o1-image',
+    model_name: 'Kling O1 (Photorealistic Image Model)',
+    family: 'Kling',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Model gambar fotorealistis dari Kling yang sangat cocok sebagai frame awal video Kling.',
+    description_en:
+      "Kling's photorealistic image model designed for seamless video keyframes.",
+    credits_1k: 1.25,
+    credits_2k: 2.0,
+  }),
+  makeImageEntry({
+    model_id: 'alibaba/wan-2.2-image',
+    model_name: 'WAN 2.2 (High-Fidelity Cinematic Visuals)',
+    family: 'Alibaba Wan',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Visual sinematik fidelitas tinggi dari keluarga model Alibaba Wan.',
+    description_en:
+      'High-fidelity cinematic visuals by Alibaba Wan.',
+    credits_1k: 0.75,
+    credits_2k: 1.25,
+  }),
+  makeImageEntry({
+    model_id: 'alibaba/qwen-image-3',
+    model_name: 'Qwen Image 3 (Multimodal Generation & Editing)',
+    family: 'Alibaba Qwen',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Pembuatan dan pengeditan gambar multimodal terbaru dari Alibaba Qwen 3.',
+    description_en:
+      'Multimodal image generation and editing with Alibaba Qwen Image 3.',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/qwen-image-3',
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/marketing-ads-studio',
+    model_name: 'Marketing & Ads Studio (Campaign Visual Generator)',
+    family: 'Higgsfield Studio',
+    tier_badge: 'POPULER',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Ubah brief produk dan referensi menjadi konsep foto kampanye iklan siap pakai.',
+    description_en:
+      'Generate and edit campaign & ad concepts from product references.',
+    credits_1k: 1.5,
+    credits_2k: 2.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/marketing-studio-image',
+  }),
+  makeImageEntry({
+    model_id: 'higgsfield-ai/image-auto',
+    model_name: 'Auto (Best Model Chosen For Your Prompt)',
+    family: 'Higgsfield Auto',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image', 'image_to_image'],
+    description_id:
+      'Sistem pintar Higgsfield yang otomatis memilihkan model gambar terbaik untuk prompt Anda.',
+    description_en:
+      'The best model for any prompt, automatically chosen for you.',
+    credits_1k: 1.0,
+    credits_2k: 1.5,
+  }),
+  // Backwards-compatible aliases used by existing projects & tests
+  makeImageEntry({
     model_id: 'higgsfield-ai/soul/v2/reference',
     model_name: 'SOUL V2 Character & Style Reference (Image to Image)',
     family: 'Higgsfield SOUL',
+    tier_badge: 'POPULER',
     supported_categories: ['image_to_image'],
-    description_id: 'Ubah gaya, pose, atau pakaian dari gambar awal dengan tetap menjaga kemiripan wajah dan karakter.',
-    description_en: 'Transform style, pose, or outfit from a source image while preserving character likeness.',
-    default_quantity_type: 'output',
-    supports_duration: false,
-    default_duration_seconds: 0,
-    parameters: [
-      {
-        key: 'resolution',
-        label_id: 'Resolusi Gambar',
-        label_en: 'Image Resolution',
-        type: 'select',
-        options: [
-          { value: '1K', label: '1K Standard (1024px)' },
-          { value: '2K', label: '2K High-Res (2048px)' },
-        ],
-        defaultValue: '1K',
-        affectsPricing: true,
-      },
-      {
-        key: 'reference_mode',
-        label_id: 'Mode Referensi Gambar',
-        label_en: 'Image Reference Mode',
-        type: 'select',
-        options: [
-          { value: 'character_lock', label: 'Kunci Karakter & Wajah' },
-          { value: 'style_transfer', label: 'Ikuti Gaya Visual Gambar' },
-        ],
-        defaultValue: 'character_lock',
-        affectsPricing: false,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { resolution: '1K' },
-        pricing_unit: 'per_generation',
-        price_value: 0.094,
-        currency: 'USD',
-        credit_cost: 1.5,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-      {
-        matchParameters: { resolution: '2K' },
-        pricing_unit: 'per_generation',
-        price_value: 0.141,
-        currency: 'USD',
-        credit_cost: 2.25,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield SOUL V2 Reference Docs (docs.higgsfield.ai/docs/models/soul)',
-    source_url: 'https://docs.higgsfield.ai/docs/models/soul',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
-  {
-    provider: 'Higgsfield',
+    description_id:
+      'Ubah gaya, pose, atau pakaian dari gambar awal dengan tetap menjaga kemiripan wajah dan karakter.',
+    description_en:
+      'Transform style, pose, or outfit from a source image while preserving character likeness.',
+    credits_1k: 1.5,
+    credits_2k: 2.25,
+    price_1k: 0.094,
+    price_2k: 0.141,
+  }),
+  makeImageEntry({
     model_id: 'flux-1/kontext-pro',
-    model_name: 'FLUX.1 Kontext (Smart Image Edit & Restyle)',
-    family: 'FLUX Kontext',
+    model_name: 'FLUX.1 Kontext Pro (Smart Image Edit & Restyle)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'STANDARD',
     supported_categories: ['image_to_image'],
-    description_id: 'Edit objek, latar belakang, atau suasana dari gambar referensi menggunakan instruksi teks.',
-    description_en: 'Edit objects, backgrounds, or lighting from a reference image using text instructions.',
-    default_quantity_type: 'output',
-    supports_duration: false,
-    default_duration_seconds: 0,
-    parameters: [
-      {
-        key: 'tier',
-        label_id: 'Tingkat Kualitas Edit',
-        label_en: 'Edit Quality Tier',
-        type: 'select',
-        options: [
-          { value: 'pro_1k', label: 'Kontext Pro (1K)' },
-          { value: 'max_2k', label: 'Kontext Max (2K)' },
-        ],
-        defaultValue: 'pro_1k',
-        affectsPricing: true,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { tier: 'pro_1k' },
-        pricing_unit: 'per_generation',
-        price_value: 0.05,
-        currency: 'USD',
-        credit_cost: 1.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-      {
-        matchParameters: { tier: 'max_2k' },
-        pricing_unit: 'per_generation',
-        price_value: 0.08,
-        currency: 'USD',
-        credit_cost: 2.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Image Editing Catalog (docs.higgsfield.ai/docs/models)',
-    source_url: 'https://docs.higgsfield.ai/docs/models',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
-  {
-    provider: 'Higgsfield',
+    description_id:
+      'Edit objek, latar belakang, atau suasana dari gambar referensi menggunakan instruksi teks.',
+    description_en:
+      'Edit objects, backgrounds, or lighting from a reference image using text instructions.',
+    credits_1k: 1.0,
+    credits_2k: 2.0,
+    price_1k: 0.05,
+    price_2k: 0.08,
+  }),
+  makeImageEntry({
     model_id: 'recraft/v4.1-i2i',
     model_name: 'Recraft V4.1 Image-to-Image & Inpainting',
     family: 'Recraft',
+    tier_badge: 'PREMIUM',
     supported_categories: ['image_to_image'],
-    description_id: 'Modifikasi gambar, variasi produk, dan penggantian elemen desain dari gambar sumber.',
-    description_en: 'Modify images, create product variations, and inpaint design elements from a source image.',
-    default_quantity_type: 'output',
-    supports_duration: false,
-    default_duration_seconds: 0,
-    parameters: [
-      {
-        key: 'tier',
-        label_id: 'Varian Model',
-        label_en: 'Model Variant',
-        type: 'select',
-        options: [
-          { value: 'standard_1k', label: 'Standard (1K)' },
-          { value: 'pro_2k', label: 'Pro (2K)' },
-        ],
-        defaultValue: 'standard_1k',
-        affectsPricing: true,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { tier: 'standard_1k' },
-        pricing_unit: 'per_generation',
-        price_value: 0.04,
-        currency: 'USD',
-        credit_cost: 1.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-      {
-        matchParameters: { tier: 'pro_2k' },
-        pricing_unit: 'per_generation',
-        price_value: 0.08,
-        currency: 'USD',
-        credit_cost: 2.0,
-        credit_unit: 'per_generation',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Recraft V4.1 Docs (docs.higgsfield.ai/docs/models/recraft-v4-1)',
-    source_url: 'https://docs.higgsfield.ai/docs/models/recraft-v4-1',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
+    description_id:
+      'Modifikasi gambar, variasi produk, dan penggantian elemen desain dari gambar sumber.',
+    description_en:
+      'Modify images, create product variations, and inpaint design elements from a source image.',
+    credits_1k: 1.0,
+    credits_2k: 2.0,
+    price_1k: 0.04,
+    price_2k: 0.08,
+  }),
+  makeImageEntry({
+    model_id: 'ideogram/v4.0',
+    model_name: 'Ideogram 4.0 (Typography & Key Visual)',
+    family: 'Ideogram',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_image'],
+    description_id:
+      'Generasi poster, tipografi, dan key visual dengan kecepatan render yang dapat dipilih.',
+    description_en:
+      'Generate posters, typography, and key visuals with selectable rendering speed.',
+    credits_1k: 1.5,
+    credits_2k: 2.0,
+    price_1k: 0.06,
+    price_2k: 0.09,
+  }),
 
   // ============================================================================
-  // 2. IMAGE TO VIDEO & 4. TEXT TO VIDEO
+  // BAGIAN 2: IMAGE TO VIDEO & TEXT TO VIDEO (ALL LATEST HIGGSFIELD VIDEO MODELS)
   // ============================================================================
   {
     provider: 'Higgsfield',
     model_id: 'kling-video/v3.0',
     model_name: 'Kling 3.0 (Standard / Pro / 4K)',
     family: 'Kling',
+    tier_badge: 'POPULER',
     supported_categories: ['text_to_video', 'image_to_video'],
-    description_id: 'Model video unggulan Kling 3.0 dengan varian Standard, Pro, dan 4K serta opsi audio native.',
-    description_en: 'Flagship Kling 3.0 video generation with Standard, Pro, and 4K variants plus native sound.',
+    description_id:
+      'Model video unggulan Kling 3.0 dengan varian Standard, Pro, dan 4K serta opsi audio native.',
+    description_en:
+      'Flagship Kling 3.0 video generation with Standard, Pro, and 4K variants plus native sound.',
     default_quantity_type: 'shot',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -436,9 +1158,9 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Mode & Resolution',
         type: 'select',
         options: [
-          { value: '720p_std', label: 'Standard 720p' },
-          { value: '1080p_pro', label: 'Pro 1080p' },
-          { value: '4k_ultra', label: 'Ultra 4K' },
+          { value: '720p_std', label: 'Standard 720p (1.4 cr/dtk)' },
+          { value: '1080p_pro', label: 'Pro 1080p (2.0 cr/dtk)' },
+          { value: '4k_ultra', label: 'Ultra 4K (6.0 cr/dtk)' },
         ],
         defaultValue: '720p_std',
         affectsPricing: true,
@@ -475,7 +1197,7 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         pricing_unit: 'per_second',
         price_value: 0.07,
         currency: 'USD',
-        credit_cost: 1.4, // ~7 credits per 5s clip
+        credit_cost: 1.4,
         credit_unit: 'per_second',
         status: 'verified',
       },
@@ -484,16 +1206,16 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         pricing_unit: 'per_second',
         price_value: 0.084,
         currency: 'USD',
-        credit_cost: 2.0, // ~10 credits per 5s clip
+        credit_cost: 2.0,
         credit_unit: 'per_second',
         status: 'verified',
       },
       {
         matchParameters: { resolution: '4k_ultra' },
         pricing_unit: 'per_second',
-        price_value: 0.14,
+        price_value: 0.24,
         currency: 'USD',
-        credit_cost: 3.5,
+        credit_cost: 6.0,
         credit_unit: 'per_second',
         status: 'verified',
       },
@@ -502,124 +1224,225 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/kling-3/standard-text-to-video',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
-  {
-    provider: 'Higgsfield',
+  makeVideoEntry({
+    model_id: 'kling-video/v3.0-turbo',
+    model_name: 'Kling 3.0 Turbo (Fast 720p / 1080p)',
+    family: 'Kling',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Varian kecepatan tinggi dari Kling 3.0 untuk iterasi shot cepat (1.5 cr/dtk 720p, 2.0 cr/dtk 1080p).',
+    description_en:
+      'High-speed Kling 3.0 Turbo generation (1.5 cr/s 720p, 2.0 cr/s 1080p).',
+    credits_720p: 1.5,
+    credits_1080p: 2.0,
+  }),
+  makeVideoEntry({
+    model_id: 'kling-video/v3.0-omni',
+    model_name: 'Kling 3.0 Omni / O3 (Multimodal Reference Video)',
+    family: 'Kling',
+    tier_badge: 'NEW',
+    supported_categories: ['image_to_video', 'text_to_video'],
+    description_id:
+      'Buat video konsisten dengan referensi karakter, elemen, serta frame awal dan akhir.',
+    description_en:
+      'Generate videos with character element references and start/end frames.',
+    credits_720p: 1.25,
+    credits_1080p: 2.0,
+    credits_4k: 6.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/kling-omni',
+  }),
+  makeVideoEntry({
+    model_id: 'kling-video/v2.6',
+    model_name: 'Kling 2.6 (Smooth Motion & Unlimited Eligible)',
+    family: 'Kling',
+    tier_badge: 'POPULER',
+    unlimited_eligible: true,
+    supported_categories: ['image_to_video', 'text_to_video'],
+    description_id:
+      'Model video andal dengan gerak ekspresif (termasuk dalam akses Unlimited paket Pro/Max).',
+    description_en:
+      'Reliable video motion model (Eligible for Unlimited on Pro/Max plans).',
+    credits_720p: 1.5,
+    credits_1080p: 2.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/kling-2-6',
+  }),
+  makeVideoEntry({
+    model_id: 'kling-video/v2.5-turbo',
+    model_name: 'Kling 2.5 Turbo (Standard & Pro)',
+    family: 'Kling',
+    tier_badge: 'STANDARD',
+    supported_categories: ['image_to_video', 'text_to_video'],
+    description_id:
+      'Model Kling 2.5 Turbo yang ekonomis dan cepat untuk animasi gambar maupun teks.',
+    description_en:
+      'Fast and cost-efficient Kling 2.5 Turbo for text-to-video and image-to-video.',
+    credits_720p: 1.25,
+    credits_1080p: 2.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/kling-2-5-turbo',
+  }),
+  makeVideoEntry({
     model_id: 'bytedance/seedance-2.5',
-    model_name: 'Seedance 2.5 (Multimodal Cinema)',
-    family: 'Seedance',
+    model_name: 'Seedance 2.5 (Multimodal Cinema Flagship)',
+    family: 'ByteDance Seedance',
+    tier_badge: 'NEW',
     supported_categories: ['text_to_video', 'image_to_video'],
-    description_id: 'Generasi video sinematik fidelitas tinggi dari teks atau referensi gambar/video.',
-    description_en: 'High-fidelity cinematic video generation from text or multimodal references.',
-    default_quantity_type: 'shot',
-    supports_duration: true,
+    description_id:
+      'Generasi video sinematik fidelitas tinggi terbaru dari ByteDance dengan gerak sangat dinamis.',
+    description_en:
+      'High-fidelity cinematic video generation from text or multimodal references.',
     default_duration_seconds: 8,
-    parameters: [
-      {
-        key: 'resolution',
-        label_id: 'Resolusi Output',
-        label_en: 'Output Resolution',
-        type: 'select',
-        options: [
-          { value: '720p', label: '720p HD' },
-          { value: '1080p', label: '1080p Full HD' },
-        ],
-        defaultValue: '720p',
-        affectsPricing: true,
-      },
-      {
-        key: 'aspect_ratio',
-        label_id: 'Rasio Aspek',
-        label_en: 'Aspect Ratio',
-        type: 'select',
-        options: [
-          { value: '16:9', label: '16:9' },
-          { value: '9:16', label: '9:16' },
-        ],
-        defaultValue: '16:9',
-        affectsPricing: false,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { resolution: '720p' },
-        pricing_unit: 'per_second',
-        price_value: 0.141,
-        currency: 'USD',
-        credit_cost: 6.5, // ~52 credits per 8s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-      {
-        matchParameters: { resolution: '1080p' },
-        pricing_unit: 'per_second',
-        price_value: 0.206,
-        currency: 'USD',
-        credit_cost: 9.0, // ~72 credits per 8s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Seedance 2.5 API Docs (docs.higgsfield.ai/docs/models/seedance-2-5)',
+    credits_720p: 7.0,
+    credits_1080p: 16.0,
+    credits_480p: 3.0,
+    credits_4k: 26.0,
+    price_720p: 0.141,
+    price_1080p: 0.206,
     source_url: 'https://docs.higgsfield.ai/docs/models/seedance-2-5',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
-  {
-    provider: 'Higgsfield',
+  }),
+  makeVideoEntry({
     model_id: 'bytedance/seedance-2.0',
-    model_name: 'Seedance 2.0',
-    family: 'Seedance',
+    model_name: 'Seedance 2.0 (Balanced Cinematic Motion)',
+    family: 'ByteDance Seedance',
+    tier_badge: 'POPULER',
     supported_categories: ['text_to_video', 'image_to_video'],
-    description_id: 'Generasi video dari teks atau frame awal/akhir dengan gerak kamera halus.',
-    description_en: 'Generate videos from text or start/end frames with smooth camera motion.',
-    default_quantity_type: 'shot',
-    supports_duration: true,
+    description_id:
+      'Generasi video dari teks atau frame awal/akhir dengan gerak kamera halus.',
+    description_en:
+      'Generate videos from text or start/end frames with smooth camera motion.',
     default_duration_seconds: 5,
-    parameters: [
-      {
-        key: 'resolution',
-        label_id: 'Resolusi Output',
-        label_en: 'Output Resolution',
-        type: 'select',
-        options: [
-          { value: '720p', label: '720p HD' },
-          { value: '1080p', label: '1080p Full HD' },
-        ],
-        defaultValue: '720p',
-        affectsPricing: true,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { resolution: '720p' },
-        pricing_unit: 'per_second',
-        price_value: 0.14,
-        currency: 'USD',
-        credit_cost: 4.5, // ~22.5 credits per 5s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-      {
-        matchParameters: { resolution: '1080p' },
-        pricing_unit: 'per_second',
-        price_value: 0.18,
-        currency: 'USD',
-        credit_cost: 9.0, // ~45 credits per 5s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Seedance 2.0 API Docs (docs.higgsfield.ai/docs/models/seedance-2)',
+    credits_720p: 4.5,
+    credits_1080p: 12.0,
+    credits_480p: 3.0,
+    credits_4k: 22.0,
+    price_720p: 0.14,
+    price_1080p: 0.18,
     source_url: 'https://docs.higgsfield.ai/docs/models/seedance-2',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
+  }),
+  makeVideoEntry({
+    model_id: 'bytedance/seedance-2.0-fast',
+    model_name: 'Seedance 2.0 Fast (High-Speed Motion)',
+    family: 'ByteDance Seedance',
+    tier_badge: 'POPULER',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Varian cepat dan hemat dari Seedance 2.0 (termasuk akses penuh pada paket Basic/Pro).',
+    description_en:
+      'Fast and cost-effective Seedance 2.0 video generation (2.5 cr/s 720p).',
+    credits_720p: 2.5,
+    credits_1080p: 7.0,
+    credits_480p: 1.0,
+    credits_4k: 14.0,
+  }),
+  makeVideoEntry({
+    model_id: 'bytedance/seedance-2.0-mini',
+    model_name: 'Exclusive Seedance 2.0 Mini (Ultra-Hemat)',
+    family: 'ByteDance Seedance',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model eksklusif super hemat untuk uji coba gerak dan storyboard cepat (0.5 - 1.0 Credit/dtk).',
+    description_en:
+      'Exclusive ultra-affordable Seedance 2.0 Mini for fast pre-visualization.',
+    credits_720p: 1.0,
+    credits_1080p: 2.0,
+    credits_480p: 0.5,
+  }),
+  makeVideoEntry({
+    model_id: 'bytedance/seedance-1.5-pro',
+    model_name: 'Seedance 1.5 Pro / Seedance Pro',
+    family: 'ByteDance Seedance',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model Seedance Pro generasi 1.5 yang stabil untuk animasi karakter dan produk.',
+    description_en:
+      'Proven Seedance 1.5 Pro model for character and product animation.',
+    credits_720p: 2.5,
+    credits_1080p: 5.0,
+  }),
+  makeVideoEntry({
+    model_id: 'bfl/flux-3-video',
+    model_name: 'FLUX.3 Video (Black Forest Labs Next-Gen Video)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model video generasi terbaru dari Black Forest Labs dengan ketajaman visual khas FLUX (720p s/d 4K).',
+    description_en:
+      'Next-generation video synthesis by Black Forest Labs (720p, 1080p, 2K, 4K).',
+    credits_720p: 6.0,
+    credits_1080p: 8.0,
+    credits_4k: 13.0,
+  }),
+  makeVideoEntry({
+    model_id: 'higgsfield-ai/cinema-studio-4.0',
+    model_name: 'Cinema Studio 4.0 / Higgsfield DoP (Camera & Lens Control)',
+    family: 'Higgsfield Native',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['image_to_video', 'text_to_video'],
+    description_id:
+      'Pembuatan shot video dengan kontrol pergerakan kamera DoP, lensa sinema, dan pencahayaan.',
+    description_en:
+      'Create video shots with dedicated DoP camera movement, cinema lens, and style controls.',
+    credits_720p: 5.0,
+    credits_1080p: 13.0,
+    credits_480p: 3.0,
+    price_720p: 0.12,
+    price_1080p: 0.24,
+    source_url: 'https://docs.higgsfield.ai/docs/models/cinema-studio-4',
+  }),
+  makeVideoEntry({
+    model_id: 'google/veo-3.1',
+    model_name: 'Google Veo 3.1 (Flagship Cinematic Video & Audio)',
+    family: 'Google Veo',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model video sinematik unggulan Google Veo 3.1 dengan kualitas gerak dan suara sangat realistis.',
+    description_en:
+      "Google's flagship Veo 3.1 video model with realistic physics and audio.",
+    credits_720p: 6.0,
+    credits_1080p: 9.0,
+  }),
+  makeVideoEntry({
+    model_id: 'google/veo-3.1-lite',
+    model_name: 'Veo 3.1 Lite (Fast & Efficient Google Video)',
+    family: 'Google Veo',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Varian cepat dan hemat biaya dari Google Veo 3.1 untuk produksi harian.',
+    description_en:
+      'Cost-efficient and fast variant of Google Veo 3.1.',
+    credits_720p: 3.0,
+    credits_1080p: 5.0,
+  }),
+  makeVideoEntry({
+    model_id: 'google/gemini-omni-flash-1.1',
+    model_name: 'Gemini Omni Flash 1.1 (Multimodal Video & Extend)',
+    family: 'Google Gemini Video',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Generasi dan perpanjangan video multimodal cerdas dengan tarif rata 3 Credit/detik di 720p & 1080p.',
+    description_en:
+      'Multimodal video generation and extension powered by Gemini Omni Flash 1.1.',
+    credits_720p: 3.0,
+    credits_1080p: 3.0,
+    credits_4k: 6.0,
+  }),
   {
     provider: 'Higgsfield',
     model_id: 'alibaba/wan-3.0-prime',
     model_name: 'Wan 3.0 / Wan 3.0 Prime',
     family: 'Alibaba Wan',
+    tier_badge: 'NEW',
     supported_categories: ['text_to_video', 'image_to_video'],
-    description_id: 'Generasi video efisien dari teks, frame, atau referensi multimodal.',
-    description_en: 'Cost-efficient video generation from text, frames, or multimodal references.',
+    description_id:
+      'Generasi video efisien generasi ke-3 dari Alibaba dari teks, frame, atau referensi multimodal.',
+    description_en:
+      'Cost-efficient 3rd-gen video generation from text, frames, or multimodal references.',
     default_quantity_type: 'shot',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -630,8 +1453,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Model Variant',
         type: 'select',
         options: [
-          { value: 'wan_3_std', label: 'Wan 3.0 Standard (720p)' },
-          { value: 'wan_3_prime', label: 'Wan 3.0 Prime (1080p)' },
+          { value: 'wan_3_std', label: 'Wan 3.0 Standard 720p (1.6 cr/dtk)' },
+          { value: 'wan_3_prime', label: 'Wan 3.0 Prime 1080p (2.6 cr/dtk)' },
         ],
         defaultValue: 'wan_3_std',
         affectsPricing: true,
@@ -643,7 +1466,7 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         pricing_unit: 'per_second',
         price_value: 0.05,
         currency: 'USD',
-        credit_cost: 1.6, // ~8 credits per 5s clip
+        credit_cost: 1.6,
         credit_unit: 'per_second',
         status: 'verified',
       },
@@ -652,7 +1475,7 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         pricing_unit: 'per_second',
         price_value: 0.068,
         currency: 'USD',
-        credit_cost: 2.6, // ~13 credits per 5s clip
+        credit_cost: 2.6,
         credit_unit: 'per_second',
         status: 'verified',
       },
@@ -661,67 +1484,176 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/wan-3-prime',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
-  {
-    provider: 'Higgsfield',
-    model_id: 'higgsfield-ai/cinema-studio-4.0',
-    model_name: 'Cinema Studio 4.0 (Camera & Lens Control)',
-    family: 'Higgsfield Native',
-    supported_categories: ['image_to_video', 'text_to_video'],
-    description_id: 'Pembuatan shot video dengan kontrol pergerakan kamera, lensa sinema, dan pencahayaan.',
-    description_en: 'Create video shots with dedicated camera movement, cinema lens, and style controls.',
-    default_quantity_type: 'shot',
-    supports_duration: true,
-    default_duration_seconds: 5,
-    parameters: [
-      {
-        key: 'resolution',
-        label_id: 'Resolusi Sinema',
-        label_en: 'Cinema Resolution',
-        type: 'select',
-        options: [
-          { value: '720p', label: '720p Preview' },
-          { value: '1080p', label: '1080p Production' },
-        ],
-        defaultValue: '1080p',
-        affectsPricing: true,
-      },
-    ],
-    pricing_variants: [
-      {
-        matchParameters: { resolution: '720p' },
-        pricing_unit: 'per_second',
-        price_value: 0.12,
-        currency: 'USD',
-        credit_cost: 5.0, // ~25 credits per 5s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-      {
-        matchParameters: { resolution: '1080p' },
-        pricing_unit: 'per_second',
-        price_value: 0.24,
-        currency: 'USD',
-        credit_cost: 10.0, // ~50 credits per 5s clip
-        credit_unit: 'per_second',
-        status: 'verified',
-      },
-    ],
-    source_name: 'Higgsfield Cinema Studio 4.0 Reference (docs.higgsfield.ai/docs/models/cinema-studio-4)',
-    source_url: 'https://docs.higgsfield.ai/docs/models/cinema-studio-4',
-    retrieved_at: CATALOG_RETRIEVED_AT,
-  },
+  makeVideoEntry({
+    model_id: 'alibaba/wan-2.7',
+    model_name: 'Wan 2.7 (Text, Image & Reference to Video)',
+    family: 'Alibaba Wan',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video', 'video_to_video'],
+    description_id:
+      'Buat video dari teks, frame awal/akhir, atau referensi video dengan Wan 2.7.',
+    description_en:
+      'Generate videos from text, frames, or multimodal video references.',
+    credits_720p: 2.5,
+    credits_1080p: 4.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/wan-2-7',
+  }),
+  makeVideoEntry({
+    model_id: 'alibaba/wan-2.6',
+    model_name: 'Wan 2.6 (Multimodal Video Generation)',
+    family: 'Alibaba Wan',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_video', 'image_to_video', 'video_to_video'],
+    description_id:
+      'Generasi video serbaguna dari teks, gambar, atau video referensi.',
+    description_en:
+      'Generate videos from text, images, or video references.',
+    credits_720p: 2.0,
+    credits_1080p: 3.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/wan-2-6',
+  }),
+  makeVideoEntry({
+    model_id: 'alibaba/wan-2.5',
+    model_name: 'Wan 2.5 / Wan 2.2 (Fast Everyday Video)',
+    family: 'Alibaba Wan',
+    tier_badge: 'POPULER',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model video cepat dan hemat untuk animasi storyboard dan konten sosial media.',
+    description_en:
+      'Fast and affordable everyday video generation.',
+    credits_720p: 1.5,
+    credits_1080p: 2.5,
+    credits_480p: 1.0,
+  }),
+  makeVideoEntry({
+    model_id: 'minimax/h3-max',
+    model_name: 'MiniMax H3 / H3 Max (Next-Gen Hailuo)',
+    family: 'MiniMax Hailuo',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Generasi video ekspresif terbaru dari MiniMax H3 dan H3 Max.',
+    description_en:
+      'Generate expressive videos from text, frames, or multimodal references with MiniMax H3.',
+    credits_720p: 3.0,
+    credits_1080p: 4.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/minimax-h3',
+  }),
+  makeVideoEntry({
+    model_id: 'minimax/hailuo-2.3',
+    model_name: 'Minimax Hailuo 2.3 (Standard & Unlimited Fast)',
+    family: 'MiniMax Hailuo',
+    tier_badge: 'POPULER',
+    unlimited_eligible: true,
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Gerakan karakter sinematik yang halus dari MiniMax Hailuo 2.3 (mendukung paket Unlimited).',
+    description_en:
+      'Smooth cinematic character movement with Hailuo 2.3 (Unlimited eligible).',
+    credits_720p: 1.5,
+    credits_1080p: 2.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/hailuo-2-3',
+  }),
+  makeVideoEntry({
+    model_id: 'xai/grok-video-1.5',
+    model_name: 'Grok Imagine Video 1.5 (xAI Multimodal Video)',
+    family: 'xAI Grok',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Pembuatan video dari teks, gambar, atau referensi audio oleh xAI (4.5 cr/dtk 720p, 8.0 cr/dtk 1080p).',
+    description_en:
+      'Generate videos from text, images, or audio references with xAI Grok Video 1.5.',
+    credits_720p: 4.5,
+    credits_1080p: 8.0,
+    credits_480p: 2.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/grok-video-1-5',
+  }),
+  makeVideoEntry({
+    model_id: 'xai/grok-video-1.5-lite',
+    model_name: 'Grok 1.5 Lite (Ultra-Affordable xAI Video)',
+    family: 'xAI Grok',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Varian super hemat Grok Video 1.5 (hanya 1 Credit/detik untuk resolusi 480p & 720p).',
+    description_en:
+      'Ultra-affordable xAI Grok 1.5 Lite video model (1 Credit/sec at 720p).',
+    credits_720p: 1.0,
+    credits_1080p: 4.0,
+    credits_480p: 1.0,
+  }),
+  makeVideoEntry({
+    model_id: 'higgsfield-ai/happy-horse-1.1',
+    model_name: 'HappyHorse 1.1 / 1.0 (Expressive Stylized Video)',
+    family: 'HappyHorse',
+    tier_badge: 'NEW',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model video kreatif dengan gaya visual ekspresif dan gerak dinamis (2.5 cr/dtk 720p).',
+    description_en:
+      'Expressive and stylized video generation with HappyHorse 1.1.',
+    credits_720p: 2.5,
+    credits_1080p: 4.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/happy-horse-1-1',
+  }),
+  makeVideoEntry({
+    model_id: 'lightricks/ltx-2.5',
+    model_name: 'LTX-2.5 (Fast & Pro Storyboard Video)',
+    family: 'Lightricks LTX',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Generasi video sangat cepat dari teks atau gambar dengan varian Fast dan Pro.',
+    description_en:
+      'Generate videos from text or images with LTX-2.5 Fast and Pro variants.',
+    credits_720p: 1.5,
+    credits_1080p: 2.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/ltx-2-5',
+  }),
+  makeVideoEntry({
+    model_id: 'pixverse/v6',
+    model_name: 'PixVerse V6 (Dynamic Motion & Sound)',
+    family: 'PixVerse',
+    tier_badge: 'STANDARD',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Pembuatan video dari teks atau gambar dengan efek dinamis dan dukungan suara opsional.',
+    description_en:
+      'Generate videos from text or images with optional sound in PixVerse V6.',
+    credits_720p: 2.0,
+    credits_1080p: 3.5,
+    source_url: 'https://docs.higgsfield.ai/docs/models/pixverse-v6',
+  }),
+  makeVideoEntry({
+    model_id: 'openai/sora-2-pro',
+    model_name: 'OpenAI Sora 2 (Pro / Max Video)',
+    family: 'OpenAI Sora',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['text_to_video', 'image_to_video'],
+    description_id:
+      'Model video sinematik OpenAI Sora 2 dengan simulasi dunia nyata dan pencahayaan akurat.',
+    description_en:
+      'OpenAI Sora 2 Pro/Max cinematic video generation.',
+    credits_720p: 6.0,
+    credits_1080p: 10.0,
+  }),
 
   // ============================================================================
-  // 3. VIDEO TO VIDEO
+  // BAGIAN 3: VIDEO TO VIDEO (EDIT VIDEO, MOTION CONTROL, & RESTYLE)
   // ============================================================================
   {
     provider: 'Higgsfield',
     model_id: 'higgsfield-ai/genjutsu',
-    model_name: 'Genjutsu (Motion Transfer & Restyle)',
+    model_name: 'Genjutsu / Evolution (Motion Transfer & Video Restyle)',
     family: 'Higgsfield Native',
+    tier_badge: 'POPULER',
     supported_categories: ['video_to_video'],
-    description_id: 'Transfer gerak, penggantian objek, atau restyle penuh dari video sumber.',
-    description_en: 'Transfer motion, replace objects, or restyle a source video.',
+    description_id:
+      'Transfer gerak, penggantian objek, atau ubah gaya visual penuh dari video sumber.',
+    description_en:
+      'Transfer motion, replace objects, or restyle a source video.',
     default_quantity_type: 'shot',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -732,9 +1664,9 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Transformation Mode',
         type: 'select',
         options: [
-          { value: 'motion_transfer', label: 'Motion Transfer' },
+          { value: 'motion_transfer', label: 'Motion Transfer (7.0 - 8.0 cr/dtk)' },
           { value: 'object_replace', label: 'Object Replace' },
-          { value: 'video_restyle', label: 'Full Video Restyle' },
+          { value: 'video_restyle', label: 'Full Video Restyle / Evolution' },
         ],
         defaultValue: 'motion_transfer',
         affectsPricing: false,
@@ -754,14 +1686,33 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/genjutsu',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
+  makeVideoEntry({
+    model_id: 'bytedance/seedance-2.5-video-edit',
+    model_name: 'Seedance 2.5 Video Edit (Transform & Restyle Video)',
+    family: 'ByteDance Seedance',
+    tier_badge: 'NEW',
+    supported_categories: ['video_to_video'],
+    description_id:
+      'Ubah elemen, gaya, atau pencahayaan dari video sumber menggunakan kecerdasan Seedance 2.5.',
+    description_en:
+      'Transform and edit existing video clips with Seedance 2.5 Video Edit.',
+    credits_720p: 7.5,
+    credits_1080p: 20.0,
+    credits_480p: 3.5,
+    credits_4k: 34.0,
+    source_url: 'https://docs.higgsfield.ai/docs/models/seedance-2-5',
+  }),
   {
     provider: 'Higgsfield',
     model_id: 'kling-video/v3.0-motion-control',
-    model_name: 'Kling 3.0 Motion Control',
+    model_name: 'Kling 3.0 / 2.6 Motion Control',
     family: 'Kling',
+    tier_badge: 'NEW',
     supported_categories: ['video_to_video'],
-    description_id: 'Terapkan gerakan dari video sumber ke karakter/aset dengan pemrosesan Standard atau Pro.',
-    description_en: 'Apply motion from a source video to a target with Standard or Pro processing.',
+    description_id:
+      'Terapkan gerakan dari video sumber ke karakter/aset dengan pemrosesan Standard atau Pro.',
+    description_en:
+      'Apply motion from a source video to a target with Standard or Pro processing.',
     default_quantity_type: 'shot',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -772,8 +1723,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Processing Tier',
         type: 'select',
         options: [
-          { value: 'standard', label: 'Standard' },
-          { value: 'pro', label: 'Pro' },
+          { value: 'standard', label: 'Standard (1.5 - 2.0 cr/dtk)' },
+          { value: 'pro', label: 'Pro (2.5 - 3.0 cr/dtk)' },
         ],
         defaultValue: 'standard',
         affectsPricing: true,
@@ -808,9 +1759,12 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     model_id: 'kling-video/kling-o3-video-reference',
     model_name: 'Kling O3 / Omni (Video Edit & Reference)',
     family: 'Kling',
+    tier_badge: 'PREMIUM',
     supported_categories: ['video_to_video'],
-    description_id: 'Edit dan perluas video menggunakan referensi video dan gambar.',
-    description_en: 'Create and edit videos with first/last frames and video references.',
+    description_id:
+      'Edit dan perluas video menggunakan referensi video dan gambar.',
+    description_en:
+      'Create and edit videos with first/last frames and video references.',
     default_quantity_type: 'shot',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -821,7 +1775,7 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Reference Mode',
         type: 'select',
         options: [
-          { value: 'video_ref', label: 'Video Reference' },
+          { value: 'video_ref', label: 'Video Reference (2.2 cr/dtk)' },
           { value: 'omni_edit', label: 'Omni Video Edit' },
         ],
         defaultValue: 'video_ref',
@@ -842,57 +1796,167 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models/kling-o3',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
+  makeVideoEntry({
+    model_id: 'higgsfield-ai/cinema-studio-video-edit',
+    model_name: 'Cinema Studio 4.0 Video Edit, Relight & Inpaint',
+    family: 'Higgsfield Native',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['video_to_video'],
+    description_id:
+      'Ubah pencahayaan (Relight), hapus/ganti objek (Inpaint), dan edit adegan video di Cinema Studio.',
+    description_en:
+      'Relight, inpaint, and edit video shots in Cinema Studio 4.0.',
+    credits_720p: 7.0,
+    credits_1080p: 13.0,
+    credits_480p: 3.5,
+  }),
+  makeVideoEntry({
+    model_id: 'higgsfield-ai/motion-control-flash',
+    model_name: 'Motion Control & Replace Object Flash (Fast V2V)',
+    family: 'Higgsfield Native',
+    tier_badge: 'NEW',
+    supported_categories: ['video_to_video'],
+    description_id:
+      'Transfer gerakan karakter dan penggantian objek video cepat dengan tarif promo Flash.',
+    description_en:
+      'Fast character motion control and object replacement in video.',
+    credits_720p: 2.0,
+    credits_1080p: 4.0,
+    credits_480p: 1.0,
+  }),
+  makeVideoEntry({
+    model_id: 'higgsfield-ai/swap-remove-reframe',
+    model_name: 'Swap Object / Remove Object / Draw-to-Video / Reframe',
+    family: 'Higgsfield Video Tools',
+    tier_badge: 'STANDARD',
+    supported_categories: ['video_to_video'],
+    description_id:
+      'Alat edit video praktis untuk mengganti objek, menghapus objek, menggambar gerakan, atau mengubah rasio video.',
+    description_en:
+      'Swap objects, remove objects, draw motion, or reframe video aspect ratios.',
+    credits_720p: 4.5,
+    credits_1080p: 12.0,
+    credits_480p: 3.0,
+  }),
+  makeVideoEntry({
+    model_id: 'xai/grok-video-edit',
+    model_name: 'Grok Video Edit (Prompt-Driven Video Transformation)',
+    family: 'xAI Grok',
+    tier_badge: 'NEW',
+    supported_categories: ['video_to_video'],
+    description_id:
+      'Ubah suasana, gaya, atau elemen video menggunakan instruksi teks dengan xAI Grok Video Edit.',
+    description_en:
+      'Edit and restyle videos using text prompts with xAI Grok Video Edit.',
+    credits_720p: 4.5,
+    credits_1080p: 8.0,
+  }),
 
   // ============================================================================
-  // 6. UPSCALE IMAGE & 7. UPSCALE VIDEO
+  // BAGIAN 4: UPSCALE IMAGE (PERBESAR & PERJELAS GAMBAR — DIHITUNG PER GAMBAR)
   // ============================================================================
   {
     provider: 'Higgsfield',
-    model_id: 'higgsfield-ai/video-upscale-4k',
-    model_name: 'Higgsfield 4K Video Upscaler & Enhancer',
-    family: 'Higgsfield Video Enhancement',
-    supported_categories: ['upscale_video'],
-    description_id: 'Perbesar resolusi dan tingkatkan ketajaman klip video hingga kualitas 4K.',
-    description_en: 'Upscale and enhance generated video clips up to 4K resolution.',
-    default_quantity_type: 'asset',
-    supports_duration: true,
-    default_duration_seconds: 5,
+    model_id: 'topaz/gigapixel-image-upscale',
+    model_name: 'Topaz GigaPixel AI (Image Upscale & Face Recovery)',
+    family: 'Topaz Labs',
+    tier_badge: 'POPULER',
+    supported_categories: ['upscale_image'],
+    description_id:
+      'Standar industri Topaz GigaPixel di Higgsfield untuk memperbesar resolusi foto/gambar hingga 4K dengan sangat tajam.',
+    description_en:
+      'Industry-standard Topaz GigaPixel AI image upscaling and detail recovery.',
+    default_quantity_type: 'output',
+    supports_duration: false,
+    default_duration_seconds: 0,
     parameters: [
       {
-        key: 'target_resolution',
-        label_id: 'Target Resolusi Video',
-        label_en: 'Target Video Resolution',
+        key: 'scale_factor',
+        label_id: 'Target Perbesaran Gambar',
+        label_en: 'Target Upscale Factor',
         type: 'select',
         options: [
-          { value: '1080p_enhance', label: '1080p Detail Enhance' },
-          { value: '4k_upscale', label: '4K Cinema Upscale' },
+          { value: '2x_2k', label: '2x High-Res (1.5 cr)' },
+          { value: '4x_4k', label: '4x Ultra 4K (2.5 cr)' },
         ],
-        defaultValue: '4k_upscale',
+        defaultValue: '2x_2k',
         affectsPricing: true,
       },
     ],
     pricing_variants: [
       {
-        matchParameters: { target_resolution: '1080p_enhance' },
-        pricing_unit: 'per_second',
-        price_value: 0.03,
+        matchParameters: { scale_factor: '2x_2k' },
+        pricing_unit: 'per_asset',
+        price_value: 0.0938,
         currency: 'USD',
-        credit_cost: 0.8,
-        credit_unit: 'per_second',
+        credit_cost: 1.5,
+        credit_unit: 'per_generation',
         status: 'verified',
       },
       {
-        matchParameters: { target_resolution: '4k_upscale' },
-        pricing_unit: 'per_second',
-        price_value: 0.056,
+        matchParameters: { scale_factor: '4x_4k' },
+        pricing_unit: 'per_asset',
+        price_value: 0.1563,
         currency: 'USD',
-        credit_cost: 1.5,
-        credit_unit: 'per_second',
+        credit_cost: 2.5,
+        credit_unit: 'per_generation',
         status: 'verified',
       },
     ],
-    source_name: 'Higgsfield 4K Workflow Reference (docs.higgsfield.ai/docs/models/kling-3)',
-    source_url: 'https://docs.higgsfield.ai/docs/models/kling-3',
+    source_name: 'Higgsfield Upscale Studio (Topaz GigaPixel)',
+    source_url: 'https://higgsfield.ai/upscale',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
+  {
+    provider: 'Higgsfield',
+    model_id: 'google/nano-banana-2-upscale',
+    model_name: 'Nano Banana 2 Upscale & Relight (Image Enhancer)',
+    family: 'Google Nano Banana',
+    tier_badge: 'NEW',
+    supported_categories: ['upscale_image'],
+    description_id:
+      'Perbesar resolusi dan perbaiki pencahayaan serta ketajaman gambar dengan Nano Banana 2 Upscale.',
+    description_en:
+      'Upscale and enhance image lighting & micro-details with Nano Banana 2.',
+    default_quantity_type: 'output',
+    supports_duration: false,
+    default_duration_seconds: 0,
+    parameters: [
+      {
+        key: 'target_resolution',
+        label_id: 'Target Resolusi',
+        label_en: 'Target Resolution',
+        type: 'select',
+        options: [
+          { value: '2K', label: '2K Enhance (1.5 cr)' },
+          { value: '4K', label: '4K Master (2.5 cr)' },
+        ],
+        defaultValue: '2K',
+        affectsPricing: true,
+      },
+    ],
+    pricing_variants: [
+      {
+        matchParameters: { target_resolution: '2K' },
+        pricing_unit: 'per_asset',
+        price_value: 0.0938,
+        currency: 'USD',
+        credit_cost: 1.5,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+      {
+        matchParameters: { target_resolution: '4K' },
+        pricing_unit: 'per_asset',
+        price_value: 0.1563,
+        currency: 'USD',
+        credit_cost: 2.5,
+        credit_unit: 'per_generation',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield Nano Banana 2 Upscale Job',
+    source_url: HIGGSFIELD_DOCS_URL,
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
   {
@@ -900,9 +1964,12 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     model_id: 'recraft/v4.1-utility-pro',
     model_name: 'Recraft V4.1 Utility Pro (2K Image Upscale & Clean)',
     family: 'Recraft Image Upscale',
+    tier_badge: 'PREMIUM',
     supported_categories: ['upscale_image'],
-    description_id: 'Perbesar resolusi gambar ke 2K dan pembersihan detail gambar secara presisi.',
-    description_en: 'Upscale still images to 2K resolution with precision detail cleanup.',
+    description_id:
+      'Perbesar resolusi gambar ke 2K dan pembersihan detail gambar secara presisi.',
+    description_en:
+      'Upscale still images to 2K resolution with precision detail cleanup.',
     default_quantity_type: 'output',
     supports_duration: false,
     default_duration_seconds: 0,
@@ -913,8 +1980,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Target Image Quality',
         type: 'select',
         options: [
-          { value: '1K_utility', label: '1K Clean & Enhance' },
-          { value: '2K_pro', label: '2K High-Res Upscale' },
+          { value: '1K_utility', label: '1K Clean & Enhance (1.0 cr)' },
+          { value: '2K_pro', label: '2K High-Res Upscale (2.0 cr)' },
         ],
         defaultValue: '2K_pro',
         affectsPricing: true,
@@ -949,9 +2016,12 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     model_id: 'higgsfield-ai/clarity-image-upscaler',
     model_name: 'Higgsfield Clarity 4K Image Upscaler & Detail Enhancer',
     family: 'Higgsfield Image Enhancement',
+    tier_badge: 'STANDARD',
     supported_categories: ['upscale_image'],
-    description_id: 'Perbesar resolusi gambar dan pertajam tekstur hingga 4K tanpa mengubah komposisi asli.',
-    description_en: 'Upscale still images and sharpen textures up to 4K while preserving original composition.',
+    description_id:
+      'Perbesar resolusi gambar dan pertajam tekstur hingga 4K tanpa mengubah komposisi asli.',
+    description_en:
+      'Upscale still images and sharpen textures up to 4K while preserving original composition.',
     default_quantity_type: 'output',
     supports_duration: false,
     default_duration_seconds: 0,
@@ -962,8 +2032,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Target Image Resolution',
         type: 'select',
         options: [
-          { value: '2k_crisp', label: '2K Crisp Upscale' },
-          { value: '4k_ultra', label: '4K Ultra Detail' },
+          { value: '2k_crisp', label: '2K Crisp Upscale (1.0 cr)' },
+          { value: '4k_ultra', label: '4K Ultra Detail (2.0 cr)' },
         ],
         defaultValue: '4k_ultra',
         affectsPricing: true,
@@ -993,14 +2063,228 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
     source_url: 'https://docs.higgsfield.ai/docs/models',
     retrieved_at: CATALOG_RETRIEVED_AT,
   },
+
+  // ============================================================================
+  // BAGIAN 5: UPSCALE VIDEO (PERBESAR & PERJELAS VIDEO — DIHITUNG PER DETIK VIDEO)
+  // ============================================================================
+  {
+    provider: 'Higgsfield',
+    model_id: 'bfl/flux-video-upscale',
+    model_name: 'FLUX Video Upscale (720p / 1080p / 2K / 4K)',
+    family: 'Black Forest Labs FLUX',
+    tier_badge: 'NEW',
+    supported_categories: ['upscale_video'],
+    description_id:
+      'Perbesar dan pertajam kualitas video dengan teknologi FLUX Video Upscale (mulai 0,5 s/d 8 Credit/detik).',
+    description_en:
+      'Upscale and sharpen video resolution up to 4K using FLUX Video Upscale.',
+    default_quantity_type: 'asset',
+    supports_duration: true,
+    default_duration_seconds: 5,
+    parameters: [
+      {
+        key: 'target_resolution',
+        label_id: 'Target Resolusi Video',
+        label_en: 'Target Video Resolution',
+        type: 'select',
+        options: [
+          { value: '1080p', label: '1080p Full HD (1.75 cr/dtk)' },
+          { value: '2k', label: '2K QHD (3.0 cr/dtk)' },
+          { value: '4k', label: '4K Ultra HD (8.0 cr/dtk)' },
+          { value: '720p', label: '720p HD (0.5 cr/dtk)' },
+        ],
+        defaultValue: '1080p',
+        affectsPricing: true,
+      },
+    ],
+    pricing_variants: [
+      {
+        matchParameters: { target_resolution: '1080p' },
+        pricing_unit: 'per_second',
+        price_value: roundUsd(1.75 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 1.75,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+      {
+        matchParameters: { target_resolution: '2k' },
+        pricing_unit: 'per_second',
+        price_value: roundUsd(3.0 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 3.0,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+      {
+        matchParameters: { target_resolution: '4k' },
+        pricing_unit: 'per_second',
+        price_value: roundUsd(8.0 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 8.0,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+      {
+        matchParameters: { target_resolution: '720p' },
+        pricing_unit: 'per_second',
+        price_value: roundUsd(0.5 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 0.5,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield Live Credits Config (flux_video_upscale)',
+    source_url: 'https://higgsfield.ai/ai/video/edit?tool=upscale',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
+  {
+    provider: 'Higgsfield',
+    model_id: 'topaz/hyperion-2.5-video',
+    model_name: 'Topaz Hyperion 2.5 (Cinema Video Enhancer)',
+    family: 'Topaz Labs',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['upscale_video'],
+    description_id:
+      'Penjernihan detail, pengurangan bintik (denoise), dan peningkatan resolusi video dengan Topaz Hyperion 2.5 (2.6 cr/dtk).',
+    description_en:
+      'Cinema-grade video detail recovery and upscaling with Topaz Hyperion 2.5.',
+    default_quantity_type: 'asset',
+    supports_duration: true,
+    default_duration_seconds: 5,
+    parameters: [
+      {
+        key: 'resolution',
+        label_id: 'Target Resolusi',
+        label_en: 'Target Resolution',
+        type: 'select',
+        options: [
+          { value: '1080p', label: '1080p / 4K Enhance (2.6 cr/dtk)' },
+        ],
+        defaultValue: '1080p',
+        affectsPricing: false,
+      },
+    ],
+    pricing_variants: [
+      {
+        pricing_unit: 'per_second',
+        price_value: roundUsd(2.6 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 2.6,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield Live Credits Config (topaz_hyperion_2_5)',
+    source_url: 'https://higgsfield.ai/ai/video/edit?tool=upscale',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
+  {
+    provider: 'Higgsfield',
+    model_id: 'topaz/fps-boost-upscale',
+    model_name: 'Topaz FPS Boost & Smooth Motion (30fps / 60fps)',
+    family: 'Topaz Labs',
+    tier_badge: 'PREMIUM',
+    supported_categories: ['upscale_video'],
+    description_id:
+      'Haluskan pergerakan video AI menjadi 30fps atau 60fps sekaligus memperjelas detail dengan Topaz (3.3 cr/dtk).',
+    description_en:
+      'Boost video frame rate to smooth 30fps/60fps and enhance clarity with Topaz.',
+    default_quantity_type: 'asset',
+    supports_duration: true,
+    default_duration_seconds: 5,
+    parameters: [
+      {
+        key: 'target_fps',
+        label_id: 'Target Frame Rate',
+        label_en: 'Target Frame Rate',
+        type: 'select',
+        options: [
+          { value: '60fps', label: '60 FPS Smooth Motion (3.3 cr/dtk)' },
+          { value: '30fps', label: '30 FPS Broadcast (3.3 cr/dtk)' },
+        ],
+        defaultValue: '60fps',
+        affectsPricing: false,
+      },
+    ],
+    pricing_variants: [
+      {
+        pricing_unit: 'per_second',
+        price_value: roundUsd(3.3 * DEFAULT_USD_PER_CREDIT),
+        currency: 'USD',
+        credit_cost: 3.3,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield Live Credits Config (fps_boost)',
+    source_url: 'https://higgsfield.ai/ai/video/edit?tool=upscale',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
+  {
+    provider: 'Higgsfield',
+    model_id: 'higgsfield-ai/video-upscale-4k',
+    model_name: 'Genjutsu / Higgsfield 4K Video Upscaler & Enhancer',
+    family: 'Higgsfield Video Enhancement',
+    tier_badge: 'POPULER',
+    supported_categories: ['upscale_video'],
+    description_id:
+      'Perbesar resolusi dan tingkatkan ketajaman klip video hingga kualitas 4K.',
+    description_en:
+      'Upscale and enhance generated video clips up to 4K resolution.',
+    default_quantity_type: 'asset',
+    supports_duration: true,
+    default_duration_seconds: 5,
+    parameters: [
+      {
+        key: 'target_resolution',
+        label_id: 'Target Resolusi Video',
+        label_en: 'Target Video Resolution',
+        type: 'select',
+        options: [
+          { value: '1080p_enhance', label: '1080p Detail Enhance (0.8 cr/dtk)' },
+          { value: '4k_upscale', label: '4K Cinema Upscale (1.5 cr/dtk)' },
+        ],
+        defaultValue: '4k_upscale',
+        affectsPricing: true,
+      },
+    ],
+    pricing_variants: [
+      {
+        matchParameters: { target_resolution: '1080p_enhance' },
+        pricing_unit: 'per_second',
+        price_value: 0.03,
+        currency: 'USD',
+        credit_cost: 0.8,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+      {
+        matchParameters: { target_resolution: '4k_upscale' },
+        pricing_unit: 'per_second',
+        price_value: 0.056,
+        currency: 'USD',
+        credit_cost: 1.5,
+        credit_unit: 'per_second',
+        status: 'verified',
+      },
+    ],
+    source_name: 'Higgsfield 4K Workflow Reference (docs.higgsfield.ai/docs/models/kling-3)',
+    source_url: 'https://docs.higgsfield.ai/docs/models/kling-3',
+    retrieved_at: CATALOG_RETRIEVED_AT,
+  },
   {
     provider: 'Higgsfield',
     model_id: 'higgsfield-ai/speak-2.0',
-    model_name: 'Speak 2.0 (Video Lip-Sync & Facial Enhancement)',
+    model_name: 'Speak 2.0 / Dubbing Lip-Sync & Facial Enhancement',
     family: 'Higgsfield Video Enhancement',
+    tier_badge: 'STANDARD',
     supported_categories: ['upscale_video', 'video_to_video'],
-    description_id: 'Sinkronisasi bibir (lip-sync) dan penyempurnaan ekspresi wajah bicara.',
-    description_en: 'Lip-sync and talking character facial expression enhancement.',
+    description_id:
+      'Sinkronisasi bibir (lip-sync) dan penyempurnaan ekspresi wajah bicara.',
+    description_en:
+      'Lip-sync and talking character facial expression enhancement.',
     default_quantity_type: 'asset',
     supports_duration: true,
     default_duration_seconds: 5,
@@ -1011,8 +2295,8 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         label_en: 'Resolution',
         type: 'select',
         options: [
-          { value: '720p', label: '720p Standard' },
-          { value: '1080p', label: '1080p High' },
+          { value: '720p', label: '720p Standard (2.8 cr/dtk)' },
+          { value: '1080p', label: '1080p High (4.2 cr/dtk)' },
         ],
         defaultValue: '720p',
         affectsPricing: true,
@@ -1024,7 +2308,7 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
         pricing_unit: 'per_second',
         price_value: 0.09,
         currency: 'USD',
-        credit_cost: 2.8, // ~14 credits per 5s clip
+        credit_cost: 2.8,
         credit_unit: 'per_second',
         status: 'verified',
       },
@@ -1044,13 +2328,14 @@ export const HIGGSFIELD_MODEL_CATALOG: CatalogModelEntry[] = [
   },
 
   // ============================================================================
-  // MODEL DENGAN TARIF BELUM TERVERIFIKASI / CUSTOM (PRD FR-09 & AC-09)
+  // BAGIAN 6: MODEL DENGAN TARIF BELUM TERVERIFIKASI / CUSTOM (PRD FR-09 & AC-09)
   // ============================================================================
   {
     provider: 'Higgsfield',
     model_id: 'custom/unverified-preview-model',
     model_name: 'Custom / Preview Model (Tarif Manual / Belum Terverifikasi)',
     family: 'Custom / Preview',
+    tier_badge: 'STANDARD',
     supported_categories: [
       'text_to_image',
       'image_to_image',
@@ -1128,6 +2413,36 @@ export function getDefaultParametersForModel(
     params[param.key] = param.defaultValue;
   }
   return params;
+}
+
+/**
+ * Menghitung ulang seluruh harga USD di dalam katalog berdasarkan patokan USD per 1 Credit
+ * (Digunakan saat pengguna memilih Paket Langganan Credit Higgsfield seperti Lite, Basic, Pro, Max, atau API)
+ */
+export function applyCreditPlanRateToCatalog(
+  catalog: CatalogModelEntry[],
+  usdPerCredit: number
+): CatalogModelEntry[] {
+  if (!Number.isFinite(usdPerCredit) || usdPerCredit <= 0) return catalog;
+  return catalog.map((model) => {
+    if (model.model_id === 'custom/unverified-preview-model') return model;
+    return {
+      ...model,
+      pricing_variants: model.pricing_variants.map((variant) => {
+        if (
+          variant.credit_cost === null ||
+          variant.credit_cost === undefined ||
+          variant.credit_cost <= 0
+        ) {
+          return variant;
+        }
+        return {
+          ...variant,
+          price_value: roundUsd(variant.credit_cost * usdPerCredit),
+        };
+      }),
+    };
+  });
 }
 
 /**

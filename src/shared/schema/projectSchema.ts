@@ -64,6 +64,7 @@ export const ProductionItemSchema = z.object({
   duration_seconds: z.number().nonnegative(),
   attempts_per_item: z.number().int().nonnegative(),
   use_project_target_multiplier: z.boolean().optional(),
+  is_unlimited: z.boolean().optional(),
   model_selection: ModelSelectionSchema,
   pricing: PricingSchema,
   notes: z.string().optional(),

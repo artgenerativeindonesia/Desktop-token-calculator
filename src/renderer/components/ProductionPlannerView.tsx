@@ -50,7 +50,19 @@ export const ProductionPlannerView: React.FC = () => {
     changeItemParameter,
     setManualItemPricing,
     resetItemPricingToCatalog,
+    toggleItemUnlimited,
+    usdPerCredit,
   } = useProjectStore();
+
+  const tierBadgeClass = (badge?: string) => {
+    if (badge === 'NEW')
+      return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+    if (badge === 'PREMIUM')
+      return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    if (badge === 'POPULER')
+      return 'bg-[#0099ff]/20 text-[#7acaff] border-[#0099ff]/40';
+    return '';
+  };
 
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<
     ProcessCategory | 'all'
@@ -292,10 +304,30 @@ export const ProductionPlannerView: React.FC = () => {
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] text-[var(--vv-text-muted)]">
                           {SHORT_CATEGORY_LABELS[item.category][language]}
                         </span>
-                        <StatusBadge
-                          status={item.pricing.status}
-                          language={language}
-                        />
+                        {item.is_unlimited ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                            UNLIMITED &bull; Rp 0
+                          </span>
+                        ) : (
+                          <StatusBadge
+                            status={item.pricing.status}
+                            language={language}
+                          />
+                        )}
+                        {(() => {
+                          const badge = catalog.find(
+                            (m) => m.model_id === item.model_selection.model_id
+                          )?.tier_badge;
+                          return badge && badge !== 'STANDARD' ? (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${tierBadgeClass(
+                                badge
+                              )}`}
+                            >
+                              {badge}
+                            </span>
+                          ) : null;
+                        })()}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--vv-text-muted)] mt-1">
@@ -383,7 +415,7 @@ export const ProductionPlannerView: React.FC = () => {
                           language
                         )}
                         {calcRow?.total_credit !== null
-                          ? ` • ${calcRow?.total_credit} cr`
+                          ? ` • ${calcRow?.total_credit} Credit`
                           : ''}
                       </div>
                     </div>
@@ -592,11 +624,30 @@ export const ProductionPlannerView: React.FC = () => {
                       }
                       className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-xs font-semibold`}
                     >
-                      {availableModels.map((m) => (
-                        <option key={m.model_id} value={m.model_id}>
-                          {m.model_name} ({m.family})
-                        </option>
-                      ))}
+                      {availableModels.map((m) => {
+                        const v = m.pricing_variants[0];
+                        const badge =
+                          m.tier_badge && m.tier_badge !== 'STANDARD'
+                            ? `[${m.tier_badge}] `
+                            : '';
+                        const idr =
+                          v?.price_value && project.exchange_rate.rate
+                            ? formatCurrencyIdr(
+                                v.price_value * project.exchange_rate.rate,
+                                language
+                              )
+                            : '';
+                        const priceText =
+                          v?.credit_cost !== null && v?.credit_cost !== undefined
+                            ? ` — ${v.credit_cost} Credit${idr ? ` • ${idr}` : ''}`
+                            : '';
+                        return (
+                          <option key={m.model_id} value={m.model_id}>
+                            {badge}
+                            {m.model_name} ({m.family}){priceText}
+                          </option>
+                        );
+                      })}
                     </select>
                     {selectedModel && (
                       <p className="text-[11px] text-[var(--vv-text-muted)] mt-1.5 leading-relaxed">
@@ -771,6 +822,43 @@ export const ProductionPlannerView: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* 3b. Paket Unlimited Higgsfield (Bebas Credit / Rp 0) */}
+                <label
+                  className={`vv-card-quiet p-4 flex items-start gap-3 cursor-pointer transition ${
+                    item.is_unlimited ? 'border border-purple-500/50' : ''
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!item.is_unlimited}
+                    onChange={(e) =>
+                      toggleItemUnlimited(item.item_id, e.target.checked)
+                    }
+                    className="mt-0.5 rounded border-[var(--vv-border)]"
+                  />
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex flex-wrap items-center gap-2">
+                      <span>
+                        {isId
+                          ? 'Termasuk Paket Unlimited Higgsfield (Bebas Credit / Rp 0)'
+                          : 'Included in Higgsfield Unlimited Plan (Free / Rp 0)'}
+                      </span>
+                      {selectedModel?.unlimited_eligible && (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                          Unlimited Ready
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed">
+                      {isId
+                        ? 'Centang jika model ini gratis di paket langganan Anda, sehingga tahap ini tidak menambah biaya.'
+                        : 'Tick if this model is free on your subscription plan, so this stage adds no cost.'}{' '}
+                      {isId ? 'Patokan saat ini: 1 Credit = ' : 'Current rate: 1 Credit = '}
+                      {formatCurrencyUsd(usdPerCredit, language)}
+                    </p>
+                  </div>
+                </label>
 
                 {/* 4. Progressive Disclosure: Manual Price Override Accordion */}
                 <div className="vv-card-quiet p-4">

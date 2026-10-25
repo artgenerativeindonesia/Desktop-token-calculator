@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import {
   AppLanguage,
+  CatalogModelEntry,
   Pricing,
   ProjectFile,
 } from '../shared/types/project';
@@ -33,6 +34,9 @@ contextBridge.exposeInMainWorld('api', {
     credit_cost: number | null;
     pricing_unit?: Pricing['pricing_unit'];
   }) => ipcRenderer.invoke('catalog:save-override', override),
+
+  addCustomModel: (newModel: CatalogModelEntry) =>
+    ipcRenderer.invoke('catalog:add-custom-model', newModel),
 
   resetCatalogOverrides: () => ipcRenderer.invoke('catalog:reset-overrides'),
 

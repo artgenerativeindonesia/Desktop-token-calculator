@@ -215,13 +215,16 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         const unitMultiplier = pricing.pricing_unit === 'per_second'
             ? Math.max(0, item.duration_seconds)
             : 1;
-        const hasValidPrice = pricing.price_value !== null &&
-            Number.isFinite(pricing.price_value) &&
-            pricing.price_value > 0 &&
-            pricing.status !== 'unavailable' &&
-            pricing.status !== 'invalid' &&
-            unitMultiplier > 0 &&
-            gPlanned > 0;
+        const isUnlimitedActive = item.is_unlimited === true;
+        const hasValidPrice = isUnlimitedActive
+            ? unitMultiplier > 0 && gPlanned > 0
+            : pricing.price_value !== null &&
+                Number.isFinite(pricing.price_value) &&
+                pricing.price_value > 0 &&
+                pricing.status !== 'unavailable' &&
+                pricing.status !== 'invalid' &&
+                unitMultiplier > 0 &&
+                gPlanned > 0;
         let baseCostUsd = null;
         let reserveCostUsd = null;
         let totalCostUsd = null;
@@ -245,6 +248,16 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
                 message_en: reasonEn,
                 item_id: item.item_id,
             });
+        }
+        else if (isUnlimitedActive) {
+            baseCostUsd = 0;
+            reserveCostUsd = 0;
+            totalCostUsd = 0;
+            if (fxDecimal) {
+                baseCostIdr = 0;
+                reserveCostIdr = 0;
+                totalCostIdr = 0;
+            }
         }
         else {
             const priceDec = new decimal_js_1.default(pricing.price_value);
@@ -290,7 +303,11 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         }
         // Perhitungan Credit (PRD Bab 8.5): Ctotal = Σ (Gbudget,i * C_i)
         let itemTotalCredit = null;
-        if (pricing.credit_cost !== null &&
+        if (isUnlimitedActive && gBudget > 0) {
+            itemTotalCredit = 0;
+            hasCreditItems = true;
+        }
+        else if (pricing.credit_cost !== null &&
             Number.isFinite(pricing.credit_cost) &&
             pricing.credit_cost >= 0 &&
             gBudget > 0) {

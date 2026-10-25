@@ -133,6 +133,9 @@ function registerIpcHandlers() {
         (0, pricingConnector_1.clearCustomRateOverrides)(catalogOverridesPath);
         return (0, pricingConnector_1.loadMergedCatalog)(catalogOverridesPath);
     });
+    electron_1.ipcMain.handle('catalog:add-custom-model', async (_event, newModel) => {
+        return (0, pricingConnector_1.saveCustomUserModel)(catalogOverridesPath, newModel);
+    });
     // 6. Ekspor Laporan PDF
     electron_1.ipcMain.handle('pdf:export', async (_event, project, language) => {
         const defaultFileName = (0, pdfReportBuilder_1.buildSafePdfFilename)(project.project_name, project.export_settings?.export_date);

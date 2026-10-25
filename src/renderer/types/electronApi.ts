@@ -59,6 +59,10 @@ export interface ElectronBridgeApi {
     pricing_unit?: Pricing['pricing_unit'];
   }) => Promise<CatalogModelEntry[]>;
 
+  addCustomModel?: (
+    newModel: CatalogModelEntry
+  ) => Promise<CatalogModelEntry[]>;
+
   resetCatalogOverrides: () => Promise<CatalogModelEntry[]>;
 
   exportPdf: (
