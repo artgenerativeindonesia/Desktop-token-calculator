@@ -12,6 +12,41 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.3.0] - Pembaruan Lengkap Katalog Paket Langganan Higgsfield 2026 (Riset Resmi Live Website)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.3.0`
+
+### Ditambahkan (Added)
+1. **Daftar Lengkap 17 Paket Langganan Resmi Higgsfield 2026**:
+   - Berdasarkan riset live langsung ke situs resmi `higgsfield.ai/pricing` dan *Creator Hub*, katalog paket langganan diperbarui menyeluruh:
+     - **Paket Basic**: $9/bln (120 credit/bln • $0.0750/cr) + 10 free gen Genjutsu Lite & Ads Studio.
+     - **Paket Pro 600**: Bulanan $29/bln ($0.0483/cr) & Tahunan $23/bln ($0.0383/cr, diskon 21%).
+     - **Paket Pro 900**: Bulanan $43/bln ($0.0478/cr) & Tahunan $34/bln ($0.0378/cr, diskon 21%).
+     - **Paket Max 1.800**: Bulanan $79/bln ($0.0439/cr) & Tahunan $59/bln ($0.0328/cr, diskon 25%).
+     - **Paket Max 3.600**: Bulanan $139/bln ($0.0386/cr) & Tahunan $115/bln ($0.0319/cr, diskon 27%).
+     - **Paket Max 5.400**: Bulanan $199/bln ($0.0369/cr) & Tahunan $165/bln ($0.0306/cr, diskon 30%).
+     - **Paket Team Studio**: Bulanan $69/seat/bln ($0.0690/cr) & Tahunan $65/seat/bln ($0.0650/cr, diskon 18%).
+     - **Paket Scale Agency**: Bulanan $169/seat/bln ($0.0676/cr) & Tahunan $150/seat/bln ($0.0600/cr, diskon 30%).
+     - **Paket Top-Up Credit Pack**: On-Demand pay-as-you-go seharga rata-rata $0.0500/cr (masa berlaku 90 hari).
+     - **Standar API Resmi**: Patokan teknis resmi $0.0625/cr.
+2. **Navigasi Tab Filter Kategori Paket**:
+   - Menambahkan 5 tombol filter kategori di Lapis 2 agar pengguna mudah memilah paket:
+     - *Semua Paket (17)*
+     - *Individu Bulanan*
+     - *Individu Tahunan (Hemat s/d 30%)*
+     - *Tim & Bisnis (Pooled)*
+     - *Top-Up & Standar API*
+3. **Banner Penjelasan Paket Aktif**:
+   - Di bawah kartu pilihan paket, otomatis tampil kotak keterangan interaktif yang menjelaskan kuota bulanan, diskon tahunan, serta konversi harga ke Rupiah secara transparan.
+
+### Diubah (Changed)
+1. **Pembersihan Paket Kadaluarsa**:
+   - Menghapus "Paket Lite" ($10 • 250 cr) yang sudah tidak lagi dijual di sistem resmi Higgsfield.
+2. **Tata Letak Kartu yang Mewah & Responsif**:
+   - Mengganti baris tombol kaku 8 kolom menjadi kartu studio modern dengan lencana diskon (*21% OFF*, *25% OFF*, *30% OFF*, *BEST VALUE*).
+
+---
+
 ## Versi [1.2.7] - Penyelarasan Langkah 4 (Ringkasan Biaya) Sesuai Model Perkalian Cadangan
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.2.7`

@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.2.7';
+export const APP_VERSION = '1.3.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -21,6 +21,9 @@ export interface HiggsfieldSubscriptionPlan {
   usd_per_credit: number;
   description_id: string;
   description_en: string;
+  plan_category?: 'individual' | 'business' | 'api' | 'topup';
+  billing_cycle?: 'monthly' | 'annual' | 'on_demand';
+  discount_badge?: string;
 }
 
 /** PRD Bab 9.4: Status verifikasi data */

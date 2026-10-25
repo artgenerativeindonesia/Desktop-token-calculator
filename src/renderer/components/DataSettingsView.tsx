@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import {
   formatCurrencyIdr,
@@ -73,6 +73,39 @@ export const DataSettingsView: React.FC = () => {
     useState<CatalogModelEntry | null>(null);
   const [overrideUsdInput, setOverrideUsdInput] = useState<string>('');
   const [overrideCreditInput, setOverrideCreditInput] = useState<string>('');
+
+  // Filter Kategori Paket Langganan (Lapis 2)
+  const [planFilterTab, setPlanFilterTab] = useState<
+    'all' | 'individual_monthly' | 'individual_annual' | 'business' | 'topup'
+  >('all');
+
+  const displayedPlans = useMemo(() => {
+    return HIGGSFIELD_SUBSCRIPTION_PLANS.filter((plan) => {
+      if (planFilterTab === 'all') return true;
+      if (planFilterTab === 'individual_monthly')
+        return (
+          plan.plan_category === 'individual' && plan.billing_cycle === 'monthly'
+        );
+      if (planFilterTab === 'individual_annual')
+        return (
+          plan.plan_category === 'individual' && plan.billing_cycle === 'annual'
+        );
+      if (planFilterTab === 'business') return plan.plan_category === 'business';
+      if (planFilterTab === 'topup')
+        return (
+          plan.plan_category === 'topup' || plan.plan_category === 'api'
+        );
+      return true;
+    });
+  }, [planFilterTab]);
+
+  const selectedPlanObj = useMemo(() => {
+    return (
+      HIGGSFIELD_SUBSCRIPTION_PLANS.find(
+        (p) => p.plan_id === selectedCreditPlanId
+      ) || null
+    );
+  }, [selectedCreditPlanId]);
 
   // Modal Tambah Model Baru (Lapis 3)
   const [isAddModelModalOpen, setIsAddModelModalOpen] = useState(false);
@@ -341,9 +374,9 @@ export const DataSettingsView: React.FC = () => {
       </div>
 
       {/* =====================================================================
-       * LAPIS 2: PATOKAN PAKET LANGGANAN CREDIT HIGGSFIELD
+       * LAPIS 2: PATOKAN PAKET LANGGANAN CREDIT HIGGSFIELD (RESMI TERBARU 2026)
        * ===================================================================== */}
-      <div className={`${cardClass} rounded-[16px] p-5 space-y-3`}>
+      <div className={`${cardClass} rounded-[16px] p-5 space-y-4`}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[#0099ff] flex items-center gap-2">
@@ -356,43 +389,148 @@ export const DataSettingsView: React.FC = () => {
             </h2>
             <p className="text-xs text-[var(--vv-text-muted)] mt-0.5">
               {isId
-                ? 'Pilih paket langganan Higgsfield yang Anda gunakan agar harga Credit setiap model otomatis dikonversi ke Dolar & Rupiah secara akurat.'
-                : 'Select your active Higgsfield subscription plan so every model credit cost converts accurately to USD & IDR.'}
-              </p>
+                ? 'Pilih paket yang Anda gunakan di Higgsfield. Nilai 1 Credit akan otomatis menyesuaikan harga paket dan mengonversi seluruh katalog model ke USD & Rupiah.'
+                : 'Select your active Higgsfield plan. 1 Credit rate will automatically adapt and convert all model prices to USD & IDR.'}
+            </p>
           </div>
-          <div className="text-right text-xs font-mono text-[var(--vv-text-strong)] bg-[var(--vv-tint-weak)] px-3 py-1.5 rounded-lg border border-[var(--vv-border)]">
+          <div className="text-right text-xs font-mono text-[var(--vv-text-strong)] bg-[var(--vv-tint-weak)] px-3 py-1.5 rounded-lg border border-[var(--vv-border)] shrink-0">
             1 Credit = <strong>${usdPerCredit.toFixed(4)}</strong>{' '}
-            {fx.rate ? `(~${formatCurrencyIdr(usdPerCredit * fx.rate, language)})` : ''}
+            {fx.rate
+              ? `(~${formatCurrencyIdr(usdPerCredit * fx.rate, language)})`
+              : ''}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
-          {HIGGSFIELD_SUBSCRIPTION_PLANS.map((plan) => {
+        {/* Filter Kategori Paket */}
+        <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-[var(--vv-field)] border border-[var(--vv-border)] text-xs">
+          {(
+            [
+              {
+                id: 'all',
+                label: isId
+                  ? `Semua Paket (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`
+                  : `All Plans (${HIGGSFIELD_SUBSCRIPTION_PLANS.length})`,
+              },
+              {
+                id: 'individual_monthly',
+                label: isId ? 'Individu Bulanan' : 'Individual Monthly',
+              },
+              {
+                id: 'individual_annual',
+                label: isId
+                  ? 'Individu Tahunan (Hemat s/d 30%)'
+                  : 'Individual Annual (Up to 30% Off)',
+              },
+              {
+                id: 'business',
+                label: isId
+                  ? 'Tim & Bisnis (Pooled)'
+                  : 'Team & Business (Pooled)',
+              },
+              {
+                id: 'topup',
+                label: isId ? 'Top-Up & API Resmi' : 'Top-Up & Official API',
+              },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setPlanFilterTab(tab.id)}
+              className={`px-3 py-1 rounded-lg font-medium transition-all text-xs ${
+                planFilterTab === tab.id
+                  ? 'bg-[#0068ad] text-white shadow-sm'
+                  : 'text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] hover:bg-[var(--vv-tint-weak)]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Grid Kartu Pilihan Paket */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-2.5">
+          {displayedPlans.map((plan) => {
             const isSelected = selectedCreditPlanId === plan.plan_id;
+            const shortName = isId
+              ? plan.name_id.split(' (')[0]
+              : plan.name_en.split(' (')[0];
+
             return (
               <button
                 key={plan.plan_id}
                 type="button"
                 onClick={() => applyCreditSubscriptionPlan(plan.plan_id)}
-                className={`p-2.5 rounded-[12px] text-left border transition-all ${
+                className={`p-3 rounded-[14px] text-left border transition-all flex flex-col justify-between ${
                   isSelected
-                    ? 'bg-[#0068ad]/25 border-[#0099ff] shadow-sm'
+                    ? 'bg-[#0068ad]/20 border-[#0099ff] shadow-md ring-1 ring-[#0099ff]/50'
                     : 'bg-[var(--vv-tint-weak)] border-[var(--vv-border)] hover:border-[#0099ff]/50'
                 }`}
               >
-                <div className="text-[11px] font-bold text-[var(--vv-text-primary)] truncate">
-                  {isId ? plan.name_id.split(' (')[0] : plan.name_en.split(' (')[0]}
+                <div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] font-bold text-[var(--vv-text-primary)] truncate">
+                      {shortName}
+                    </span>
+                    {plan.discount_badge && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shrink-0">
+                        {plan.discount_badge}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-[#0099ff] font-mono font-bold mt-1">
+                    ${plan.usd_per_credit.toFixed(4)}
+                    <span className="text-[9px] font-normal text-[var(--vv-text-muted)]">
+                      /cr
+                    </span>
+                  </div>
                 </div>
-                <div className="text-[10px] text-[#0099ff] font-mono mt-0.5">
-                  ${plan.usd_per_credit.toFixed(4)}/cr
-                </div>
-                <div className="text-[9px] text-[var(--vv-text-subtle)] mt-0.5 truncate">
-                  {plan.monthly_credits} cr
+
+                <div className="flex items-center justify-between text-[10px] text-[var(--vv-text-muted)] mt-2 pt-1.5 border-t border-[var(--vv-border)]">
+                  <span>
+                    {plan.monthly_credits > 0
+                      ? `${plan.monthly_credits.toLocaleString()} cr`
+                      : plan.plan_id === 'api_standard'
+                      ? 'Pay-per-use'
+                      : 'On-demand'}
+                  </span>
+                  <span className="font-semibold text-[var(--vv-text-strong)]">
+                    {plan.monthly_price_usd > 0
+                      ? `$${plan.monthly_price_usd}/bln`
+                      : plan.plan_id === 'api_standard'
+                      ? 'API'
+                      : 'Top-Up'}
+                  </span>
                 </div>
               </button>
             );
           })}
         </div>
+
+        {/* Selected Plan Details Banner */}
+        {selectedPlanObj && (
+          <div className="p-3 rounded-[12px] bg-[var(--vv-field)] border border-[var(--vv-border)] text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-[#0099ff] shrink-0" />
+              <div className="text-[var(--vv-text-muted)] leading-relaxed">
+                <strong className="text-[var(--vv-text-strong)]">
+                  {isId ? selectedPlanObj.name_id : selectedPlanObj.name_en}
+                </strong>
+                : {isId ? selectedPlanObj.description_id : selectedPlanObj.description_en}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="font-mono font-bold text-[#0099ff] text-xs">
+                ${selectedPlanObj.usd_per_credit.toFixed(4)} / Credit
+              </span>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {fx.rate
+                  ? `~${formatCurrencyIdr(selectedPlanObj.usd_per_credit * fx.rate, language)} / cr`
+                  : ''}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* =====================================================================

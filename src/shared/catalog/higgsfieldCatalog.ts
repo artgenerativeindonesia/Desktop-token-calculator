@@ -25,21 +25,11 @@ export const HIGGSFIELD_SUBSCRIPTION_PLANS: HiggsfieldSubscriptionPlan[] = [
     monthly_credits: 0,
     usd_per_credit: 0.0625,
     description_id:
-      'Patokan resmi dokumentasi API Higgsfield (contoh: 1,5 Credit = $0.094 USD).',
+      'Patokan resmi dokumentasi API Higgsfield ($0.0625 per credit).',
     description_en:
-      'Official Higgsfield API billing rate (e.g., 1.5 Credits = $0.094 USD).',
-  },
-  {
-    plan_id: 'lite_monthly',
-    name_id: 'Paket Lite ($10/bln • 250 Credit)',
-    name_en: 'Lite Plan ($10/mo • 250 Credits)',
-    monthly_price_usd: 10,
-    monthly_credits: 250,
-    usd_per_credit: 0.04,
-    description_id:
-      'Paket hemat kreator pemula: 250 Credit per bulan seharga $10 ($0.040 / Credit).',
-    description_en:
-      'Starter creator plan: 250 Credits/month for $10 ($0.040 / Credit).',
+      'Official Higgsfield API billing rate ($0.0625 per credit).',
+    plan_category: 'api',
+    billing_cycle: 'on_demand',
   },
   {
     plan_id: 'basic_monthly',
@@ -49,69 +39,233 @@ export const HIGGSFIELD_SUBSCRIPTION_PLANS: HiggsfieldSubscriptionPlan[] = [
     monthly_credits: 120,
     usd_per_credit: 0.075,
     description_id:
-      'Paket dasar: 120 Credit per bulan seharga $9 ($0.075 / Credit).',
+      'Paket pemula kreator Higgsfield: 120 Credit per bulan seharga $9 ($0.0750 / Credit) + 10 free gen Genjutsu Lite, Ads Studio, & AI Influencer.',
     description_en:
-      'Basic tier: 120 Credits/month for $9 ($0.075 / Credit).',
+      'Starter creator plan: 120 Credits/month for $9 ($0.0750 / Credit) + 10 free gens Genjutsu Lite, Ads Studio, & AI Influencer.',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
   },
   {
     plan_id: 'pro_monthly',
-    name_id: 'Paket Pro Bulanan ($29/bln • 600 Credit + Unlimited Pilihan)',
-    name_en: 'Pro Monthly ($29/mo • 600 Credits + Selected Unlimited)',
+    name_id: 'Paket Pro 600 Bulanan ($29/bln • 600 Credit)',
+    name_en: 'Pro 600 Monthly ($29/mo • 600 Credits)',
     monthly_price_usd: 29,
     monthly_credits: 600,
     usd_per_credit: 0.0483,
     description_id:
-      'Paket populer kreator rutin: 600 Credit/bln seharga $29 ($0.0483 / Credit) + akses Unlimited model tertentu.',
+      'Paket kreator harian: 600 Credit/bln seharga $29 ($0.0483 / Credit) + 7 hari Unlimited Nano Banana 2 & Kling 3.0.',
     description_en:
-      'Popular creator plan: 600 Credits/mo for $29 ($0.0483 / Credit) + selected Unlimited models.',
+      'Everyday creator plan: 600 Credits/mo for $29 ($0.0483 / Credit) + 7-day Unlimited Nano Banana 2 & Kling 3.0.',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
   },
   {
     plan_id: 'pro_annual',
-    name_id: 'Paket Pro Tahunan ($23/bln • 600 Credit)',
-    name_en: 'Pro Annual ($23/mo • 600 Credits)',
+    name_id: 'Paket Pro 600 Tahunan ($23/bln • 600 Credit)',
+    name_en: 'Pro 600 Annual ($23/mo • 600 Credits)',
     monthly_price_usd: 23,
     monthly_credits: 600,
     usd_per_credit: 0.0383,
     description_id:
-      'Paket Pro pembayaran tahunan (diskon 21%): setara $23/bln untuk 600 Credit ($0.0383 / Credit).',
+      'Paket Pro 600 pembayaran tahunan ($276/thn): setara $23/bln ($0.0383 / Credit, hemat $72 / 21%).',
     description_en:
-      'Annual Pro plan (21% off): $23/mo for 600 Credits ($0.0383 / Credit).',
+      'Annual Pro 600 plan ($276/yr): effective $23/mo ($0.0383 / Credit, save $72 / 21% off).',
+    plan_category: 'individual',
+    billing_cycle: 'annual',
+    discount_badge: '21% OFF',
+  },
+  {
+    plan_id: 'pro_900_monthly',
+    name_id: 'Paket Pro 900 Bulanan ($43/bln • 900 Credit)',
+    name_en: 'Pro 900 Monthly ($43/mo • 900 Credits)',
+    monthly_price_usd: 43,
+    monthly_credits: 900,
+    usd_per_credit: 0.0478,
+    description_id:
+      'Paket kreator aktif: 900 Credit/bln seharga $43 ($0.0478 / Credit) + 7 hari Unlimited Nano Banana 2 & Kling 3.0.',
+    description_en:
+      'Active creator plan: 900 Credits/mo for $43 ($0.0478 / Credit) + 7-day Unlimited Nano Banana 2 & Kling 3.0.',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
+  },
+  {
+    plan_id: 'pro_900_annual',
+    name_id: 'Paket Pro 900 Tahunan ($34/bln • 900 Credit)',
+    name_en: 'Pro 900 Annual ($34/mo • 900 Credits)',
+    monthly_price_usd: 34,
+    monthly_credits: 900,
+    usd_per_credit: 0.0378,
+    description_id:
+      'Paket Pro 900 pembayaran tahunan ($408/thn): setara $34/bln ($0.0378 / Credit, hemat $108 / 21%).',
+    description_en:
+      'Annual Pro 900 plan ($408/yr): effective $34/mo ($0.0378 / Credit, save $108 / 21% off).',
+    plan_category: 'individual',
+    billing_cycle: 'annual',
+    discount_badge: '21% OFF',
   },
   {
     plan_id: 'max_monthly',
-    name_id: 'Paket Max ($79/bln • 1.800 Credit + Unlimited Pilihan)',
-    name_en: 'Max Plan ($79/mo • 1,800 Credits + Selected Unlimited)',
+    name_id: 'Paket Max 1.800 Bulanan ($79/bln • 1.800 Credit)',
+    name_en: 'Max 1,800 Monthly ($79/mo • 1,800 Credits)',
     monthly_price_usd: 79,
     monthly_credits: 1800,
     usd_per_credit: 0.0439,
     description_id:
-      'Paket produksi intensif: 1.800 Credit/bln seharga $79 ($0.0439 / Credit) + akses penuh model Unlimited.',
+      'Paket produksi intensif: 1.800 Credit/bln seharga $79 ($0.0439 / Credit) + 7 hari Unlimited Nano Banana Pro 2K & Kling 3.0.',
     description_en:
-      'High-volume production tier: 1,800 Credits/mo for $79 ($0.0439 / Credit) + Unlimited access.',
+      'Heavy production plan: 1,800 Credits/mo for $79 ($0.0439 / Credit) + 7-day Unlimited Nano Banana Pro 2K & Kling 3.0.',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
+    discount_badge: 'BEST VALUE',
+  },
+  {
+    plan_id: 'max_annual',
+    name_id: 'Paket Max 1.800 Tahunan ($59/bln • 1.800 Credit)',
+    name_en: 'Max 1,800 Annual ($59/mo • 1,800 Credits)',
+    monthly_price_usd: 59,
+    monthly_credits: 1800,
+    usd_per_credit: 0.0328,
+    description_id:
+      'Paket Max 1.800 pembayaran tahunan ($708/thn): setara $59/bln ($0.0328 / Credit, hemat $240 / 25%).',
+    description_en:
+      'Annual Max 1,800 plan ($708/yr): effective $59/mo ($0.0328 / Credit, save $240 / 25% off).',
+    plan_category: 'individual',
+    billing_cycle: 'annual',
+    discount_badge: '25% OFF',
+  },
+  {
+    plan_id: 'max_3600_monthly',
+    name_id: 'Paket Max 3.600 Bulanan ($139/bln • 3.600 Credit)',
+    name_en: 'Max 3,600 Monthly ($139/mo • 3,600 Credits)',
+    monthly_price_usd: 139,
+    monthly_credits: 3600,
+    usd_per_credit: 0.0386,
+    description_id:
+      'Paket volume besar: 3.600 Credit/bln promo $139 ($0.0386 / Credit, perpanjangan reguler $158).',
+    description_en:
+      'Large volume plan: 3,600 Credits/mo promo $139 ($0.0386 / Credit, regular renewal $158).',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
+    discount_badge: '12% OFF',
+  },
+  {
+    plan_id: 'max_3600_annual',
+    name_id: 'Paket Max 3.600 Tahunan ($115/bln • 3.600 Credit)',
+    name_en: 'Max 3,600 Annual ($115/mo • 3.600 Credits)',
+    monthly_price_usd: 115,
+    monthly_credits: 3600,
+    usd_per_credit: 0.0319,
+    description_id:
+      'Paket Max 3.600 pembayaran tahunan ($1.380/thn): setara $115/bln ($0.0319 / Credit, hemat $516 / 27%).',
+    description_en:
+      'Annual Max 3,600 plan ($1,380/yr): effective $115/mo ($0.0319 / Credit, save $516 / 27% off).',
+    plan_category: 'individual',
+    billing_cycle: 'annual',
+    discount_badge: '27% OFF',
+  },
+  {
+    plan_id: 'max_5400_monthly',
+    name_id: 'Paket Max 5.400 Bulanan ($199/bln • 5.400 Credit)',
+    name_en: 'Max 5,400 Monthly ($199/mo • 5.400 Credits)',
+    monthly_price_usd: 199,
+    monthly_credits: 5400,
+    usd_per_credit: 0.0369,
+    description_id:
+      'Paket kapasitas tertinggi kreator: 5.400 Credit/bln promo $199 ($0.0369 / Credit, reguler $237).',
+    description_en:
+      'Maximum creator capacity: 5,400 Credits/mo promo $199 ($0.0369 / Credit, regular $237).',
+    plan_category: 'individual',
+    billing_cycle: 'monthly',
+    discount_badge: '16% OFF',
+  },
+  {
+    plan_id: 'max_5400_annual',
+    name_id: 'Paket Max 5.400 Tahunan ($165/bln • 5.400 Credit)',
+    name_en: 'Max 5,400 Annual ($165/mo • 5.400 Credits)',
+    monthly_price_usd: 165,
+    monthly_credits: 5400,
+    usd_per_credit: 0.0306,
+    description_id:
+      'Paket Max 5.400 pembayaran tahunan ($1.980/thn): setara $165/bln ($0.0306 / Credit, hemat $864 / 30%).',
+    description_en:
+      'Annual Max 5,400 plan ($1,980/yr): effective $165/mo ($0.0306 / Credit, save $864 / 30% off).',
+    plan_category: 'individual',
+    billing_cycle: 'annual',
+    discount_badge: '30% OFF',
   },
   {
     plan_id: 'team_monthly',
-    name_id: 'Paket Team Studio ($69/bln • 1.000 Credit)',
-    name_en: 'Team Studio ($69/mo • 1,000 Credits)',
+    name_id: 'Paket Team Bulanan ($69/seat/bln • 1.000 Credit/seat)',
+    name_en: 'Team Monthly ($69/seat/mo • 1,000 Credits/seat)',
     monthly_price_usd: 69,
     monthly_credits: 1000,
     usd_per_credit: 0.069,
     description_id:
-      'Paket kolaborasi tim studio: 1.000 Credit/bln seharga $69 ($0.0690 / Credit).',
+      'Paket kolaborasi tim (2-9 anggota): 1.000 Credit/seat/bln promo $69/seat ($0.0690 / Credit, reguler $79) + 7 hari Unlimited Seedance 2.0.',
     description_en:
-      'Studio team plan: 1,000 Credits/mo for $69 ($0.0690 / Credit).',
+      'Small team collaboration (2-9 seats): 1,000 Credits/seat/mo promo $69/seat ($0.0690 / Credit, regular $79) + 7-day Unlimited Seedance 2.0.',
+    plan_category: 'business',
+    billing_cycle: 'monthly',
+    discount_badge: '13% OFF',
+  },
+  {
+    plan_id: 'team_annual',
+    name_id: 'Paket Team Tahunan ($65/seat/bln • 1.000 Credit/seat)',
+    name_en: 'Team Annual ($65/seat/mo • 1,000 Credits/seat)',
+    monthly_price_usd: 65,
+    monthly_credits: 1000,
+    usd_per_credit: 0.065,
+    description_id:
+      'Paket Team pembayaran tahunan ($780/seat/thn): setara $65/seat/bln ($0.0650 / Credit, hemat 18%) + 14 hari Unlimited Seedance 2.0.',
+    description_en:
+      'Annual Team plan ($780/seat/yr): effective $65/seat/mo ($0.0650 / Credit, 18% off) + 14-day Unlimited Seedance 2.0.',
+    plan_category: 'business',
+    billing_cycle: 'annual',
+    discount_badge: '18% OFF',
   },
   {
     plan_id: 'scale_monthly',
-    name_id: 'Paket Scale Agency ($169/bln • 2.500 Credit)',
-    name_en: 'Scale Agency ($169/mo • 2,500 Credits)',
+    name_id: 'Paket Scale Bulanan ($169/seat/bln • 2.500 Credit/seat)',
+    name_en: 'Scale Monthly ($169/seat/mo • 2,500 Credits/seat)',
     monthly_price_usd: 169,
     monthly_credits: 2500,
     usd_per_credit: 0.0676,
     description_id:
-      'Paket agensi skala besar: 2.500 Credit/bln seharga $169 ($0.0676 / Credit).',
+      'Paket agensi berkembang (5-15 anggota): 2.500 Credit/seat/bln promo $169/seat ($0.0676 / Credit, reguler $215) + 7 hari Unlimited Seedance 2.5.',
     description_en:
-      'Agency scale tier: 2,500 Credits/mo for $169 ($0.0676 / Credit).',
+      'Growing agency tier (5-15 seats): 2,500 Credits/seat/mo promo $169/seat ($0.0676 / Credit, regular $215) + 7-day Unlimited Seedance 2.5.',
+    plan_category: 'business',
+    billing_cycle: 'monthly',
+    discount_badge: '22% OFF',
+  },
+  {
+    plan_id: 'scale_annual',
+    name_id: 'Paket Scale Tahunan ($150/seat/bln • 2.500 Credit/seat)',
+    name_en: 'Scale Annual ($150/seat/mo • 2,500 Credits/seat)',
+    monthly_price_usd: 150,
+    monthly_credits: 2500,
+    usd_per_credit: 0.06,
+    description_id:
+      'Paket Scale pembayaran tahunan ($1.800/seat/thn): setara $150/seat/bln ($0.0600 / Credit, hemat 30%) + 30 hari Unlimited Seedance 2.5.',
+    description_en:
+      'Annual Scale plan ($1,800/seat/yr): effective $150/seat/mo ($0.0600 / Credit, 30% off) + 30-day Unlimited Seedance 2.5.',
+    plan_category: 'business',
+    billing_cycle: 'annual',
+    discount_badge: '30% OFF',
+  },
+  {
+    plan_id: 'credit_pack_topup',
+    name_id: 'Paket Top-Up Credit Pack ($0.0500 / Credit)',
+    name_en: 'Credit Pack Top-Up ($0.0500 / Credit)',
+    monthly_price_usd: 0,
+    monthly_credits: 0,
+    usd_per_credit: 0.05,
+    description_id:
+      'Pembelian saldo Credit ekstra satu kali bayar (Fixed 100 s/d 4.000 cr, Adjustable hingga 25.000 cr, berlaku 90 hari, rata-rata ~$0.050 / Credit).',
+    description_en:
+      'One-time pay-as-you-go Credit Pack top-up (Fixed 100 to 4,000 cr, Adjustable up to 25,000 cr, valid 90 days, avg ~$0.050 / Credit).',
+    plan_category: 'topup',
+    billing_cycle: 'on_demand',
   },
 ];
 
