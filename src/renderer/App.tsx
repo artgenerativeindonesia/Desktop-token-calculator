@@ -25,6 +25,8 @@ import {
   LayoutDashboard,
   Layers,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   Save,
   Sliders,
   Sparkles,
@@ -52,6 +54,38 @@ export const App: React.FC = () => {
 
   const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
   const [isQuickBudgetModalOpen, setIsQuickBudgetModalOpen] = useState(false);
+
+  // Status Minimize / Buka-Tutup Sidebar (Mode Minimalis Ikon)
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('vv_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('vv_sidebar_collapsed', String(next));
+      } catch {
+        // ignore storage errors
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     initApp();
@@ -119,15 +153,20 @@ export const App: React.FC = () => {
 
   return (
     <div className={`${themeScopeClass} min-h-screen flex flex-col lg:flex-row`}>
-      {/* Visuvate Studio Architectural Sidebar Rail */}
+      {/* Visuvate Studio Architectural Sidebar Rail (Bisa Di-minimize / Buka-Tutup) */}
       <aside
-        className={`${sidebarClass} w-full lg:w-[276px] shrink-0 flex flex-col justify-between p-4 lg:min-h-screen sticky top-0 z-30 select-none`}
+        className={`${sidebarClass} w-full ${
+          isSidebarCollapsed ? 'lg:w-[72px] p-2.5' : 'lg:w-[276px] p-4'
+        } shrink-0 flex flex-col justify-between lg:min-h-screen sticky top-0 z-30 select-none transition-all duration-300 ease-in-out`}
       >
         <div>
           {/* Studio Brand Emblem & Header */}
-          <div className="flex items-center justify-between px-2.5 py-2 mb-3 border-b border-[var(--vv-border)] pb-3.5">
-            <div className="flex items-center gap-2.5">
-              <div className="grid size-8 place-items-center rounded-[7px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)]">
+          {isSidebarCollapsed ? (
+            <div className="flex flex-col items-center gap-2 mb-3 border-b border-[var(--vv-border)] pb-3">
+              <div
+                title="Higgsfield Studio Budget Workspace"
+                className="grid size-9 place-items-center rounded-[8px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)]"
+              >
                 <svg
                   className="size-4 text-[var(--vv-text-primary)]"
                   viewBox="0 0 54 54"
@@ -137,36 +176,113 @@ export const App: React.FC = () => {
                   <path d="M54 0L53.2496 1.49965L30.1207 47.7576L27.0136 53.9738L27 54L26.9864 53.9738L23.714 47.4279L19.9214 39.8417C20.8507 34.4376 24.8222 26.8326 25.2471 26.0278C22.6978 29.0847 20.1485 32.1405 17.5981 35.1973L0 0L16.7808 3.32058C16.7808 3.32058 23.5999 16.0263 27.0105 21.8773L36.676 3.33942L54 0Z" />
                 </svg>
               </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--vv-text-muted)]">
-                  HIGGSFIELD STUDIO
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title={isId ? 'Buka sidebar penuh (Ctrl+B)' : 'Expand sidebar (Ctrl+B)'}
+                className="p-1.5 rounded-[8px] text-[#0099ff] bg-[#0099ff]/10 hover:bg-[#0099ff]/20 hover:text-[#7acaff] transition border border-[#0099ff]/30 shadow-sm"
+              >
+                <PanelLeftOpen className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between px-2 py-1.5 mb-3 border-b border-[var(--vv-border)] pb-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="grid size-8 place-items-center rounded-[7px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)] shrink-0">
+                  <svg
+                    className="size-4 text-[var(--vv-text-primary)]"
+                    viewBox="0 0 54 54"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M54 0L53.2496 1.49965L30.1207 47.7576L27.0136 53.9738L27 54L26.9864 53.9738L23.714 47.4279L19.9214 39.8417C20.8507 34.4376 24.8222 26.8326 25.2471 26.0278C22.6978 29.0847 20.1485 32.1405 17.5981 35.1973L0 0L16.7808 3.32058C16.7808 3.32058 23.5999 16.0263 27.0105 21.8773L36.676 3.33942L54 0Z" />
+                  </svg>
                 </div>
-                <div className="text-xs font-medium text-[var(--vv-text-primary)]">
-                  Budget <span className="vv-accent">Workspace</span>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--vv-text-muted)] truncate">
+                    HIGGSFIELD STUDIO
+                  </div>
+                  <div className="text-xs font-medium text-[var(--vv-text-primary)] truncate">
+                    Budget <span className="vv-accent">Workspace</span>
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="vv-blue-dot mr-1" title="Studio Active" />
+                <button
+                  type="button"
+                  onClick={toggleSidebar}
+                  title={
+                    isId
+                      ? 'Tutup sidebar (Mode minimalis ikon - Ctrl+B)'
+                      : 'Collapse sidebar (Ctrl+B)'
+                  }
+                  className="p-1.5 rounded-[7px] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] hover:bg-[var(--vv-tint-weak)] border border-transparent hover:border-[var(--vv-border)] transition"
+                >
+                  <PanelLeftClose className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <span className="vv-blue-dot" title="Studio Active" />
-          </div>
+          )}
 
-          <div className="px-2.5 mb-4">
-            <div className="text-[14px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)]">
-              {t.appTitle}
+          {!isSidebarCollapsed && (
+            <div className="px-2.5 mb-4 animate-in fade-in duration-200">
+              <div className="text-[14px] font-semibold tracking-tight leading-snug text-[var(--vv-text-primary)]">
+                {t.appTitle}
+              </div>
+              <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5 leading-relaxed">
+                {t.appSubtitle}
+              </div>
             </div>
-            <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5 leading-relaxed">
-              {t.appSubtitle}
-            </div>
-          </div>
+          )}
 
           {/* Primary Guided Workflow Section (Steps 01 - 05) */}
-          <div className="px-2.5 mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
-            <span>{isId ? 'Alur Langkah Utama' : 'Guided Workflow'}</span>
-            <span className="tabular-nums">01 — 05</span>
-          </div>
+          {!isSidebarCollapsed ? (
+            <div className="px-2.5 mb-2 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
+              <span>{isId ? 'Alur Langkah Utama' : 'Guided Workflow'}</span>
+              <span className="tabular-nums">01 — 05</span>
+            </div>
+          ) : (
+            <div className="my-1.5 border-t border-[var(--vv-border)]/50" />
+          )}
 
-          <nav className="space-y-1">
+          <nav className="space-y-1.5">
             {coreWorkflowItems.map((item) => {
               const isActive = activeTab === item.id;
+
+              if (isSidebarCollapsed) {
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    title={`${item.index}. ${item.label} — ${item.stepDesc}${
+                      item.badge !== undefined ? ` [${item.badge}]` : ''
+                    }`}
+                    className={`relative size-11 mx-auto flex items-center justify-center rounded-[10px] transition-all group ${
+                      isActive
+                        ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)] ring-1 ring-[#0099ff]/50'
+                        : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
+                    }`}
+                  >
+                    <span className="scale-110">{item.icon}</span>
+                    {item.badge !== undefined && (
+                      <span
+                        className={`absolute -top-1 -right-1 px-1.5 py-0.2 min-w-[17px] text-center rounded-full text-[9px] font-mono font-bold leading-tight shadow-sm ${
+                          isActive
+                            ? 'bg-white text-[#0068ad]'
+                            : 'bg-[#0099ff] text-white'
+                        }`}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                    {isActive && (
+                      <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-[#7acaff]" />
+                    )}
+                  </button>
+                );
+              }
+
               return (
                 <button
                   key={item.id}
@@ -221,95 +337,161 @@ export const App: React.FC = () => {
           </nav>
 
           {/* Supporting Reference Section (06: Exchange Rate & Model Catalog) */}
-          <div className="mt-4 pt-3 border-t border-[var(--vv-border)]">
-            <div className="px-2.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
-              <span>{isId ? 'Data & Referensi' : 'Data & Reference'}</span>
-              <span className="tabular-nums">06</span>
-            </div>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
-                activeTab === 'settings'
-                  ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
-                  : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span
-                  className={`text-[10px] tabular-nums font-mono ${
-                    activeTab === 'settings'
-                      ? 'text-white/85'
-                      : 'text-[var(--vv-text-subtle)]'
-                  }`}
-                >
-                  06
-                </span>
-                <Database className="w-4 h-4 shrink-0" />
-                <div className="min-w-0">
-                  <div className="text-[12.5px] truncate leading-tight">
-                    {t.navDataSettings}
-                  </div>
-                  <div
-                    className={`text-[10px] truncate mt-0.5 ${
+          <div
+            className={
+              !isSidebarCollapsed
+                ? 'mt-4 pt-3 border-t border-[var(--vv-border)]'
+                : 'mt-2 pt-2 border-t border-[var(--vv-border)]'
+            }
+          >
+            {!isSidebarCollapsed && (
+              <div className="px-2.5 mb-1.5 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--vv-text-subtle)]">
+                <span>{isId ? 'Data & Referensi' : 'Data & Reference'}</span>
+                <span className="tabular-nums">06</span>
+              </div>
+            )}
+            {isSidebarCollapsed ? (
+              <button
+                onClick={() => setActiveTab('settings')}
+                title={`06. ${t.navDataSettings} — ${
+                  isId ? 'Atur kurs & harga model' : 'FX rate & model prices'
+                }`}
+                className={`relative size-11 mx-auto flex items-center justify-center rounded-[10px] transition-all group ${
+                  activeTab === 'settings'
+                    ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)] ring-1 ring-[#0099ff]/50'
+                    : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
+                }`}
+              >
+                <Database className="w-4 h-4 scale-110 shrink-0" />
+                {activeTab === 'settings' && (
+                  <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-r-full bg-[#7acaff]" />
+                )}
+              </button>
+            ) : (
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-[10px] text-left transition-all ${
+                  activeTab === 'settings'
+                    ? 'bg-[#0068ad] text-white font-medium shadow-[0_6px_20px_-6px_rgba(0,153,255,0.55)]'
+                    : 'text-[var(--vv-text-muted)] hover:bg-[var(--vv-tint-weak)] hover:text-[var(--vv-text-primary)]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className={`text-[10px] tabular-nums font-mono ${
                       activeTab === 'settings'
-                        ? 'text-white/75'
+                        ? 'text-white/85'
                         : 'text-[var(--vv-text-subtle)]'
                     }`}
                   >
-                    {isId ? 'Atur kurs & harga model' : 'FX rate & model prices'}
+                    06
+                  </span>
+                  <Database className="w-4 h-4 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-[12.5px] truncate leading-tight">
+                      {t.navDataSettings}
+                    </div>
+                    <div
+                      className={`text-[10px] truncate mt-0.5 ${
+                        activeTab === 'settings'
+                          ? 'text-white/75'
+                          : 'text-[var(--vv-text-subtle)]'
+                      }`}
+                    >
+                      {isId ? 'Atur kurs & harga model' : 'FX rate & model prices'}
+                    </div>
                   </div>
                 </div>
-              </div>
-              {activeTab === 'settings' && (
-                <span className="size-1.5 rounded-full bg-[#7acaff]" />
-              )}
-            </button>
+                {activeTab === 'settings' && (
+                  <span className="size-1.5 rounded-full bg-[#7acaff]" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Sidebar Bottom Compact Budget Trigger & Save Action */}
-        <div className="mt-5 pt-3.5 border-t border-[var(--vv-border)] space-y-2.5">
-          <button
-            type="button"
-            onClick={() => setIsQuickBudgetModalOpen(true)}
-            title={
-              isId
-                ? 'Klik untuk melihat ringkasan cepat anggaran dalam jendela kaca buram'
-                : 'Click to inspect quick budget breakdown in a frosted glass window'
-            }
-            className="w-full text-left p-3 rounded-[12px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition group"
-          >
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--vv-text-muted)]">
-              <span>{t.totalBudget}</span>
-              <span className="inline-flex items-center gap-1 text-[#0099ff] group-hover:underline">
-                <Eye className="w-3 h-3" />
-                <span>{isId ? 'Intip Rincian' : 'Peek'}</span>
+        {isSidebarCollapsed ? (
+          <div className="mt-3 pt-3 border-t border-[var(--vv-border)] flex flex-col items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsQuickBudgetModalOpen(true)}
+              title={`${t.totalBudget}: ${formatCurrencyIdr(
+                calc.total_cost_idr,
+                language
+              )} (${formatCurrencyUsd(calc.total_cost_usd, language)}) • ${
+                isId ? 'Klik untuk intip rincian cepat' : 'Click to peek quick budget'
+              }`}
+              className="size-11 mx-auto flex flex-col items-center justify-center rounded-[10px] bg-[var(--vv-tint-weak)] hover:bg-[#0099ff]/15 hover:border-[#0099ff]/50 border border-[var(--vv-border)] text-[#0099ff] transition group"
+            >
+              <Eye className="w-4 h-4 group-hover:scale-110 transition" />
+              <span className="text-[8px] font-mono font-bold mt-0.5 text-[var(--vv-text-muted)]">
+                Rp
               </span>
-            </div>
-            <div className="text-base font-bold tabular-nums text-[#0099ff] text-right mt-1">
-              {formatCurrencyIdr(calc.total_cost_idr, language)}
-            </div>
-            <div className="flex items-center justify-between text-[11px] tabular-nums text-[var(--vv-text-muted)] mt-0.5">
-              <span>
-                {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
-              </span>
-              <span className="font-semibold text-[var(--vv-text-strong)]">
-                {formatCurrencyUsd(calc.total_cost_usd, language)}
-              </span>
-            </div>
-          </button>
+            </button>
 
-          <button
-            onClick={() => saveProjectFile(false)}
-            className="vv-btn-primary w-full py-2.5 px-4 text-xs"
-          >
-            <Save className="w-3.5 h-3.5" />
-            <span>{t.btnSaveProject}</span>
-            {hasUnsavedChanges && (
-              <span className="w-2 h-2 rounded-full bg-[#ffb840]" />
-            )}
-          </button>
-        </div>
+            <button
+              type="button"
+              onClick={() => saveProjectFile(false)}
+              title={`${t.btnSaveProject}${
+                hasUnsavedChanges
+                  ? isId
+                    ? ' (Ada perubahan belum disimpan)'
+                    : ' (Unsaved changes)'
+                  : ''
+              }`}
+              className="relative size-11 mx-auto flex items-center justify-center rounded-[10px] vv-btn-primary transition shadow-md"
+            >
+              <Save className="w-4 h-4" />
+              {hasUnsavedChanges && (
+                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[#ffb840] ring-2 ring-[var(--vv-card-surface)]" />
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-5 pt-3.5 border-t border-[var(--vv-border)] space-y-2.5">
+            <button
+              type="button"
+              onClick={() => setIsQuickBudgetModalOpen(true)}
+              title={
+                isId
+                  ? 'Klik untuk melihat ringkasan cepat anggaran dalam jendela kaca buram'
+                  : 'Click to inspect quick budget breakdown in a frosted glass window'
+              }
+              className="w-full text-left p-3 rounded-[12px] bg-[var(--vv-tint-weak)] hover:bg-[var(--vv-tint)] border border-[var(--vv-border)] transition group"
+            >
+              <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-[var(--vv-text-muted)]">
+                <span>{t.totalBudget}</span>
+                <span className="inline-flex items-center gap-1 text-[#0099ff] group-hover:underline">
+                  <Eye className="w-3 h-3" />
+                  <span>{isId ? 'Intip Rincian' : 'Peek'}</span>
+                </span>
+              </div>
+              <div className="text-base font-bold tabular-nums text-[#0099ff] text-right mt-1">
+                {formatCurrencyIdr(calc.total_cost_idr, language)}
+              </div>
+              <div className="flex items-center justify-between text-[11px] tabular-nums text-[var(--vv-text-muted)] mt-0.5">
+                <span>
+                  {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
+                </span>
+                <span className="font-semibold text-[var(--vv-text-strong)]">
+                  {formatCurrencyUsd(calc.total_cost_usd, language)}
+                </span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => saveProjectFile(false)}
+              className="vv-btn-primary w-full py-2.5 px-4 text-xs"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{t.btnSaveProject}</span>
+              {hasUnsavedChanges && (
+                <span className="w-2 h-2 rounded-full bg-[#ffb840]" />
+              )}
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* Main Content Area */}
@@ -319,6 +501,19 @@ export const App: React.FC = () => {
           className={`${headerClass} sticky top-0 z-20 px-6 py-3 flex flex-wrap items-center justify-between gap-3`}
         >
           <div className="flex items-center gap-2.5 min-w-0">
+            {isSidebarCollapsed && (
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                title={isId ? 'Buka Sidebar (Ctrl+B)' : 'Expand Sidebar (Ctrl+B)'}
+                className="p-1.5 rounded-[8px] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] hover:bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] transition hidden lg:inline-flex items-center gap-1.5 text-xs mr-1 shadow-sm"
+              >
+                <PanelLeftOpen className="w-4 h-4 text-[#0099ff]" />
+                <span className="text-[11px] font-medium text-[var(--vv-text-muted)]">
+                  {isId ? 'Menu' : 'Menu'}
+                </span>
+              </button>
+            )}
             <span className="vv-badge-pill">
               <span className="vv-blue-dot" />
               <span className="truncate max-w-[240px] font-semibold">

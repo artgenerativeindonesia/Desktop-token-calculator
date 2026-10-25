@@ -12,6 +12,27 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.4.0] - Fitur Sidebar Menu Dapat Di-minimize (Buka/Tutup dengan Mode Ikon Elegan & Minimalis)
+- **Tanggal Perubahan**: 26 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.4.0`
+
+### Ditambahkan (Added)
+1. **Fitur Buka-Tutup (Minimize/Expand) Sidebar Menu di Sisi Kiri**:
+   - Pengguna kini dapat menutup (minimize) sidebar menu kapan saja untuk mendapatkan ruang kerja layar yang jauh lebih luas dan fokus.
+   - Tombol toggle buka-tutup disediakan di pojok atas sidebar (`PanelLeftClose` / `PanelLeftOpen`), di bilah atas aplikasi (*Top Header Menu*), serta melalui tombol pintas keyboard praktis `Ctrl + B` (atau `Cmd + B` di Mac).
+2. **Mode Hanya Ikon Minimalis & Mewah saat Posisi Minimize**:
+   - Saat sidebar ditutup, lebarnya mengecil rapi menjadi bilah ikon 72px yang elegan.
+   - Seluruh menu alur (Langkah 01 sampai 05) dan Data Referensi (06) bertransformasi menjadi tombol ikon tengah yang bersih (*size-11 touch targets*) dengan efek kaca buram (*glassmorphism*).
+   - Ikon yang sedang aktif diberi lencana cahaya biru dan penanda garis tepi yang jelas.
+   - Angka lencana (seperti jumlah adegan atau kali percobaan) tetap tampil elegan sebagai *floating badge* kecil di pojok kanan atas ikon.
+   - Tombol *Intip Rincian Anggaran* dan *Simpan Proyek* di bagian bawah sidebar otomatis menyesuaikan menjadi tombol ikon ringkas dengan tooltip informasi lengkap saat kursor diarahkan ke tombol tersebut.
+3. **Penyimpanan Status Pilihan Pengguna (Persistent State)**:
+   - Status buka/tutup sidebar otomatis diingat di penyimpanan lokal (`localStorage`), sehingga posisi minimize tetap terjaga saat aplikasi dibuka kembali.
+4. **Animasi Transisi Halus (Smooth Glass Rail Transition)**:
+   - Perubahan ukuran sidebar berjalan mulus dengan animasi CSS `transition-all duration-300 ease-in-out` tanpa patah-patah.
+
+---
+
 ## Versi [1.3.1] - Perapian Tata Letak Kartu Paket Higgsfield Lapis 2 (Bebas Tabrakan & Teks Terpotong)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.3.1`
