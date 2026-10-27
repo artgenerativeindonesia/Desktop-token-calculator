@@ -75,9 +75,9 @@ export const ProductionPlannerView: React.FC = () => {
     if (badge === 'NEW')
       return 'vv-badge-emerald';
     if (badge === 'PREMIUM')
-      return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+      return 'vv-badge-amber';
     if (badge === 'POPULER')
-      return 'bg-[#0099ff]/20 text-[#7acaff] border-[#0099ff]/40';
+      return 'bg-[#0099ff]/15 text-[#0066cc] dark:text-[#7acaff] border-[#0099ff]/35';
     return '';
   };
 
@@ -322,7 +322,7 @@ export const ProductionPlannerView: React.FC = () => {
                           {SHORT_CATEGORY_LABELS[item.category][language]}
                         </span>
                         {item.is_unlimited ? (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/35">
                             UNLIMITED &bull; Rp 0
                           </span>
                         ) : (
@@ -768,14 +768,7 @@ export const ProductionPlannerView: React.FC = () => {
                   const unitCredit = item.pricing.credit_cost;
                   const unitIdr =
                     unitUsd !== null && fxRate ? unitUsd * fxRate : null;
-                  const planned = calcRow?.planned_generations ?? 0;
-                  const reserve = calcRow?.reserve_generations ?? 0;
                   const budgeted = calcRow?.budgeted_generations ?? 0;
-                  const effQty = calcRow?.effective_quantity ?? item.quantity;
-                  const usesTargetMultiplier =
-                    assumptions.estimation_mode === 'target_final' &&
-                    !!item.use_project_target_multiplier;
-                  const billedSeconds = budgeted * Math.max(0, item.duration_seconds);
                   const unitLabel = PRICING_UNIT_LABELS[item.pricing.pricing_unit][language];
                   const unitPriceText = [
                     unitCredit !== null ? `${unitCredit} Credit` : null,
@@ -981,7 +974,7 @@ export const ProductionPlannerView: React.FC = () => {
                           : 'Included in Higgsfield Unlimited Plan (Free / Rp 0)'}
                       </span>
                       {selectedModel?.unlimited_eligible && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                           Unlimited Ready
                         </span>
                       )}

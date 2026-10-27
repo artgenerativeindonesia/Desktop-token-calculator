@@ -37,7 +37,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     case 'manual':
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-sky-500/15 text-sky-400 border-sky-400/30 ${paddingClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-sky-500/15 text-sky-700 dark:text-sky-400 border-sky-500/35 ${paddingClass}`}
         >
           <Edit3 className="w-3.5 h-3.5 shrink-0" />
           {label}
@@ -46,7 +46,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     case 'stale':
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-amber-500/15 text-amber-400 border-amber-400/30 ${paddingClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full font-medium border vv-badge-amber ${paddingClass}`}
         >
           <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
           {label}
@@ -55,7 +55,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     case 'unavailable':
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-rose-500/15 text-rose-400 border-rose-400/30 ${paddingClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/35 ${paddingClass}`}
         >
           <AlertCircle className="w-3.5 h-3.5 shrink-0" />
           {label}
@@ -65,7 +65,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
     default:
       return (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-red-500/20 text-red-400 border-red-400/40 ${paddingClass}`}
+          className={`inline-flex items-center gap-1.5 rounded-full font-medium border bg-red-500/20 text-red-700 dark:text-red-400 border-red-500/40 ${paddingClass}`}
         >
           <XCircle className="w-3.5 h-3.5 shrink-0" />
           {label}

@@ -168,14 +168,14 @@ export const DataSettingsView: React.FC = () => {
     }
     if (badge === 'PREMIUM') {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/40">
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border vv-badge-amber">
           PREMIUM
         </span>
       );
     }
     if (badge === 'POPULER') {
       return (
-        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#0099ff]/20 text-[#7acaff] border border-[#0099ff]/40">
+        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[#0099ff]/15 text-[#0066cc] dark:text-[#7acaff] border border-[#0099ff]/35">
           POPULER
         </span>
       );
@@ -762,7 +762,7 @@ export const DataSettingsView: React.FC = () => {
                         </span>
                         {renderTierBadge(m.tier_badge)}
                         {m.unlimited_eligible && (
-                          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
                             Unlimited Ready
                           </span>
                         )}

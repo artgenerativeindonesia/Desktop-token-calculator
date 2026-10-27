@@ -755,9 +755,9 @@ export function createSampleCommercialProject(
     final_duration_minutes: 1.5,
     default_shots_per_video: 6,
     default_attempts_per_shot: 2,
-    reserve_input_mode: 'percent',
-    reserve_percent: 20,
-    reserve_generations_override: 6,
+    reserve_input_mode: 'count',
+    reserve_percent: 0,
+    reserve_generations_override: 0,
   };
 
   const item1 = createProductionItemFromCatalog(
@@ -805,7 +805,7 @@ export function createSampleCommercialProject(
     'higgsfield-ai/genjutsu',
     'Tahap 5: Motion Transfer & VFX Restyle (Genjutsu)',
     2,
-    1,
+    2,
     5
   );
   item4.item_id = 'sample_item_v2v';
@@ -815,7 +815,7 @@ export function createSampleCommercialProject(
     'recraft/v4.1-utility-pro',
     'Tahap 6: Upscale Image Key Visual ke 2K (Recraft Utility Pro)',
     4,
-    1,
+    2,
     0
   );
   item5.item_id = 'sample_item_upscale_img';
@@ -825,7 +825,7 @@ export function createSampleCommercialProject(
     'higgsfield-ai/video-upscale-4k',
     'Tahap 7: Mastering Final 4K Upscale Video',
     6,
-    1,
+    2,
     5
   );
   item6.item_id = 'sample_item_upscale_vid';

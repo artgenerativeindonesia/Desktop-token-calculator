@@ -624,12 +624,12 @@ export const App: React.FC = () => {
             <div
               className={`p-3.5 rounded-[12px] border flex items-center justify-between gap-3 text-xs font-medium shadow-lg ${
                 banner.type === 'error'
-                  ? 'bg-rose-500/15 border-rose-400/35 text-rose-300'
+                  ? 'bg-rose-500/15 border-rose-500/35 text-rose-700 dark:text-rose-300'
                   : banner.type === 'warning'
-                  ? 'bg-amber-500/15 border-amber-400/35 text-amber-300'
+                  ? 'vv-badge-amber'
                   : banner.type === 'success'
                   ? 'vv-badge-emerald'
-                  : 'bg-[#0099ff]/15 border-[#0099ff]/35 text-[#7acaff]'
+                  : 'bg-[#0099ff]/15 border-[#0099ff]/35 text-[#0066cc] dark:text-[#7acaff]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -734,8 +734,8 @@ export const App: React.FC = () => {
             </div>
             <p className="text-[var(--vv-text-muted)] leading-relaxed">
               {isId
-                ? 'Beri nama proyek Anda, tentukan jumlah video jadi, dan atur persentase cadangan (misal 20%) untuk berjaga-jaga jika hasil AI perlu dibuat ulang.'
-                : 'Name your project, set your target video output, and choose a reserve percentage (e.g. 20%) in case AI scenes need extra tries.'}
+                ? 'Beri nama proyek Anda, tentukan jumlah video jadi, dan atur berapa kali cadangan per adegan (misal 2x) untuk berjaga-jaga jika hasil AI perlu dibuat ulang.'
+                : 'Name your project, set your target video output, and choose a reserve multiplier per scene (e.g. 2x) in case AI scenes need extra tries.'}
             </p>
           </div>
 
@@ -845,7 +845,7 @@ export const App: React.FC = () => {
         <div className="space-y-4 text-xs">
           <div className="p-4 rounded-[14px] bg-[#0099ff]/10 border border-[#0099ff]/35 flex items-center justify-between">
             <div>
-              <div className="text-[11px] uppercase tracking-wider text-[#7acaff] font-semibold">
+              <div className="text-[11px] uppercase tracking-wider text-[#0066cc] dark:text-[#7acaff] font-semibold">
                 {t.totalBudget}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] mt-0.5">
@@ -864,31 +864,31 @@ export const App: React.FC = () => {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="vv-card-quiet p-3.5">
-              <div className="text-[11px] text-[var(--vv-text-muted)]">{t.baseCost}</div>
+              <div className="text-[11px] text-[var(--vv-text-muted)]">{isId ? 'Rumus Kali Buat AI' : 'AI Generation Formula'}</div>
               <div className="text-sm font-bold tabular-nums text-right mt-1">
-                {formatCurrencyIdr(calc.base_cost_idr, language)}
+                {calc.budgeted_generations}x {isId ? 'kali buat' : 'generations'}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
-                {formatCurrencyUsd(calc.base_cost_usd, language)} ({calc.planned_generations}x)
+                {calc.item_results.reduce((s, r) => s + r.effective_quantity, 0)} {isId ? 'adegan' : 'scenes'} &times; {project.assumptions.default_attempts_per_shot || 1} {isId ? 'cadangan' : 'reserve'}
               </div>
             </div>
 
             <div className="vv-card-quiet p-3.5">
-              <div className="text-[11px] text-[#ffb840]">
-                {t.reserveCost} ({calc.effective_reserve_percent}%)
+              <div className="text-[11px] vv-text-amber font-semibold">
+                {t.costPerVideo}
               </div>
-              <div className="text-sm font-bold tabular-nums text-[#ffb840] text-right mt-1">
-                {formatCurrencyIdr(calc.reserve_cost_idr, language)}
+              <div className="text-sm font-bold tabular-nums vv-text-amber text-right mt-1">
+                {formatCurrencyIdr(calc.cost_per_video_idr, language)}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
-                {formatCurrencyUsd(calc.reserve_cost_usd, language)} (+{calc.reserve_generations}x)
+                {formatCurrencyUsd(calc.cost_per_video_usd, language)} / video
               </div>
             </div>
           </div>
 
           <div className="vv-card-quiet p-3.5 flex items-center justify-between">
             <span className="text-[var(--vv-text-muted)]">{t.totalCredit}</span>
-            <span className="font-bold tabular-nums text-[#7acaff]">
+            <span className="font-bold tabular-nums text-[#0066cc] dark:text-[#7acaff]">
               {calc.total_credit !== null
                 ? `${calc.total_credit.toLocaleString()} Credits`
                 : t.unavailableLabel}

@@ -625,9 +625,9 @@ function createSampleCommercialProject(currentExchangeRate) {
         final_duration_minutes: 1.5,
         default_shots_per_video: 6,
         default_attempts_per_shot: 2,
-        reserve_input_mode: 'percent',
-        reserve_percent: 20,
-        reserve_generations_override: 6,
+        reserve_input_mode: 'count',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
     };
     const item1 = createProductionItemFromCatalog('text_to_image', 'higgsfield-ai/soul/v2/standard', 'Tahap 1: Key Visual & Karakter Utama (SOUL V2)', 4, 2, 0);
     item1.item_id = 'sample_item_t2i';
@@ -637,11 +637,11 @@ function createSampleCommercialProject(currentExchangeRate) {
     item2.item_id = 'sample_item_i2v';
     const item3 = createProductionItemFromCatalog('text_to_video', 'bytedance/seedance-2.5', 'Tahap 4: B-Roll Sinematik Drone & Lingkungan (Seedance 2.5)', 2, 2, 8);
     item3.item_id = 'sample_item_t2v';
-    const item4 = createProductionItemFromCatalog('video_to_video', 'higgsfield-ai/genjutsu', 'Tahap 5: Motion Transfer & VFX Restyle (Genjutsu)', 2, 1, 5);
+    const item4 = createProductionItemFromCatalog('video_to_video', 'higgsfield-ai/genjutsu', 'Tahap 5: Motion Transfer & VFX Restyle (Genjutsu)', 2, 2, 5);
     item4.item_id = 'sample_item_v2v';
-    const item5 = createProductionItemFromCatalog('upscale_image', 'recraft/v4.1-utility-pro', 'Tahap 6: Upscale Image Key Visual ke 2K (Recraft Utility Pro)', 4, 1, 0);
+    const item5 = createProductionItemFromCatalog('upscale_image', 'recraft/v4.1-utility-pro', 'Tahap 6: Upscale Image Key Visual ke 2K (Recraft Utility Pro)', 4, 2, 0);
     item5.item_id = 'sample_item_upscale_img';
-    const item6 = createProductionItemFromCatalog('upscale_video', 'higgsfield-ai/video-upscale-4k', 'Tahap 7: Mastering Final 4K Upscale Video', 6, 1, 5);
+    const item6 = createProductionItemFromCatalog('upscale_video', 'higgsfield-ai/video-upscale-4k', 'Tahap 7: Mastering Final 4K Upscale Video', 6, 2, 5);
     item6.item_id = 'sample_item_upscale_vid';
     const items = [item1, item1b, item2, item3, item4, item5, item6];
     const calculation = calculateProjectBudget(items, assumptions, fx);

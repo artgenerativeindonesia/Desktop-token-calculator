@@ -12,6 +12,23 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.6.2] - Audit Kode Menyeluruh & Perbaikan Bug Konsistensi Perhitungan serta Kontras Status
+- **Tanggal Perubahan**: 27 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.6.2`
+
+### Diperbaiki (Fixed)
+1. **Sinkronisasi Perhitungan Contoh Proyek Komersial (Bug Rumus $25 \times 2 = 50$)**:
+   - Memperbaiki ketidaksinkronan pada **Contoh Proyek Iklan Komersial** (`createSampleCommercialProject` & `recalculateProject`) di mana 3 tahapan akhir sebelumnya masih bernilai `1x` cadangan sehingga memunculkan tampilan membingungkan `25 adegan × 2 cadangan = 38 kali buat`.
+   - Kini seluruh tahapan produksi tersinkronisasi penuh dengan faktor pengali cadangan di Langkah 2, sehingga menghasilkan perhitungan yang 100% akurat dan konsisten (`25 adegan × 2 cadangan = 50 kali buat`) sejak aplikasi pertama kali dibuka maupun saat tombol contoh proyek diklik.
+2. **Perlindungan Data Simulasi Uji PRD Bab 8.10 saat Simpan & Ekspor PDF**:
+   - Memperbaiki fungsi `recalculateProject` di `projectStore.ts` agar tidak menimpa persentase cadangan khusus (`20%`) ketika pengguna memuat **Contoh Simulasi Sederhana (PRD Bab 8.10)** lalu menyimpan file atau mencetak PDF.
+3. **Penyelarasan Jendela Popup Ringkasan Cepat & Panduan Pengguna**:
+   - Memperbarui jendela *Intip Ringkasan Cepat* (`isQuickBudgetModalOpen`) dan *Panduan Cepat* di bilah atas agar menampilkan rumus perkalian terbaru (`Kebutuhan × Cadangan = Total Kali Buat`) serta rata-rata biaya per video, menggantikan kotak lama yang menampilkan cadangan `Rp 0 (+0x)`.
+4. **Penyempurnaan Kontras Warna Lencana Status & Peringatan di Mode Terang (*White Mode*)**:
+   - Memperbaiki kontras teks pada komponen `StatusBadge` (*Manual*, *Kedaluwarsa*, *Tidak Tersedia*, *Tidak Valid*), lencana `PREMIUM`, `POPULER`, dan `UNLIMITED`, serta kotak peringatan di halaman **Cetak PDF**, **Beranda**, dan **Katalog & Kurs** agar terbaca tajam di atas latar putih maupun gelap.
+
+---
+
 ## Versi [1.6.1] - Pemulihan Performa Cepat & Ringan (Pencabutan Animasi Glowing Line Sesuai Permintaan)
 - **Tanggal Perubahan**: 26 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.6.1`

@@ -852,7 +852,7 @@ export const DashboardView: React.FC = () => {
                     <td className="py-3 font-medium">
                       {CATEGORY_LABELS[cat][language]}
                       {sum.has_incomplete_items && (
-                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/25">
+                        <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30">
                           {isId ? 'Belum Diisi' : 'Incomplete'}
                         </span>
                       )}
@@ -927,10 +927,10 @@ export const DashboardView: React.FC = () => {
                   key={`${w.code}_${i}`}
                   className={`p-3.5 rounded-[12px] border flex items-start gap-2.5 ${
                     w.severity === 'error'
-                      ? 'bg-rose-500/10 border-rose-400/30 text-rose-300'
+                      ? 'bg-rose-500/10 border-rose-500/35 text-rose-700 dark:text-rose-300'
                       : w.severity === 'warning'
-                      ? 'bg-amber-500/10 border-amber-400/30 text-amber-300'
-                      : 'bg-[#0099ff]/10 border-[#0099ff]/30 text-[#7acaff]'
+                      ? 'vv-badge-amber'
+                      : 'bg-[#0099ff]/10 border-[#0099ff]/35 text-[#0066cc] dark:text-[#7acaff]'
                   }`}
                 >
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />

@@ -179,9 +179,9 @@ export const ExportPdfView: React.FC = () => {
 
             {/* Readiness Banner / Incomplete Confirmation */}
             {!calc.is_complete ? (
-              <div className="p-3.5 rounded-[12px] bg-amber-500/10 border border-amber-400/35 text-amber-200 text-xs space-y-2">
+              <div className="p-3.5 rounded-[12px] border vv-badge-amber text-xs space-y-2">
                 <div className="flex items-center gap-2 font-bold">
-                  <AlertTriangle className="w-4 h-4 text-[#ffb840] shrink-0" />
+                  <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>
                     {isId
                       ? 'Perhatian: Masih ada harga model atau kurs yang belum terisi lengkap.'
