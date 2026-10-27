@@ -12,6 +12,26 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.7.0] - Dukungan Installer 1-Klik untuk Mac (macOS) & Buku Panduan Lengkap (Windows + Mac)
+- **Tanggal Perubahan**: 27 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.7.0`
+
+### Ditambahkan (Added)
+1. **Paket Installer & Peluncur 1-Klik untuk Pengguna Mac (`macOS`)**:
+   - Menambahkan **`Install-Langsung-Ke-Mac.command`**: Tombol 1-klik di Finder Mac yang otomatis menyiapkan aplikasi, membungkus `AI Video Budget Calculator.app`, memasangnya langsung ke folder `/Applications` (Launchpad) di Mac, membuka izin keamanan Apple *Gatekeeper* (`xattr -cr`), dan langsung menjalankan aplikasi.
+   - Menambahkan **`Buat-Publish-Installer-Mac.command`**: Tombol 1-klik di Finder Mac untuk menghasilkan paket installer **`.dmg`** dan **`.zip`** di dalam folder `release/` (mendukung Mac Apple Silicon M1/M2/M3/M4 `arm64` maupun Mac Intel `x64`).
+   - Menambahkan **`Klik-Untuk-Testing-Tanpa-Install-Mac.command`** & **`Jalankan-Cek-Otomatis-Mac.command`**: Peluncur tanpa instalasi (*Zero-Install*) dan penguji otomatis khusus Mac.
+   - Menambahkan `.gitattributes` (`*.command text eol=lf`) dan izin *executable* (`chmod +x`) di Git agar seluruh file `.command` langsung bisa diklik 2x di macOS tanpa kendala baris kode.
+2. **Buku Panduan Instalasi (Windows & Mac) dan Cara Penggunaan Versi Terbaru**:
+   - Menambahkan dokumen lengkap **`PANDUAN-INSTALASI-DAN-PENGGUNAAN.md`** serta memperbarui **`README.md`** dengan langkah demi langkah instalasi di Windows & Mac serta panduan pemakaian aplikasi sesuai model perhitungan terbaru (`v1.7.0`).
+
+### Diubah (Changed)
+1. **Penyempurnaan Konfigurasi `electron-builder.yml` & `package.json`**:
+   - Mempertahankan 100% konfigurasi installer Windows (`portable.exe` & `nsis.exe`) serta seluruh file `.bat` yang sudah ada.
+   - Menambahkan pengaturan `identity: null` dan `dmg.writeUpdateInfo: false` pada konfigurasi `mac` di `electron-builder.yml` agar pembuatan `.dmg` dan `.app` di komputer Mac berjalan mulus tanpa memerlukan sertifikat berbayar Apple Developer.
+
+---
+
 ## Versi [1.6.2] - Audit Kode Menyeluruh & Perbaikan Bug Konsistensi Perhitungan serta Kontras Status
 - **Tanggal Perubahan**: 27 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.6.2`

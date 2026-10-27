@@ -1,37 +1,59 @@
-# AI Video Budget Calculator (PRD v1.0)
+# AI Video Budget Calculator (`v1.7.0`) — Windows & macOS
 
-Aplikasi desktop perencanaan anggaran produksi video AI berbasis katalog model **Higgsfield** dengan desain **Apple-Inspired Glassmorphism UI** dan dukungan dwi-bahasa (**Bahasa Indonesia & English**).
+Aplikasi desktop perencanaan anggaran produksi video AI berbasis katalog model **Higgsfield** dengan desain **Studio Glassmorphism UI** (Mode Gelap & Mode Terang) serta dukungan dwi-bahasa (**Bahasa Indonesia & English**).
+
+> **Buku Panduan Lengkap**: Untuk penjelasan yang sangat rinci dari awal sampai akhir, silakan buka file **[PANDUAN-INSTALASI-DAN-PENGGUNAAN.md](PANDUAN-INSTALASI-DAN-PENGGUNAAN.md)**.
 
 ---
 
-## 1. Cara Testing Tanpa Instalasi (Untuk No-Code Developer)
+## 1. Cara Instalasi & Menjalankan di Windows (Tetap Seperti Semula)
 
-Selama tahap pengujian dan review, Anda **tidak perlu menginstal apa pun** ke komputer:
-
-1. **Langsung Buka Aplikasi (Zero-Install):**
+1. **Langsung Buka Tanpa Instalasi (*Zero-Install*):**
    - Cukup **Klik 2x (Double Click)** file **`Klik-Untuk-Testing-Tanpa-Install.bat`**.
-   - Jendela aplikasi desktop akan langsung terbuka di layar Anda tanpa menginstal program ke Windows / Control Panel.
-2. **Mencoba Skenario Uji PRD Bab 8.10 dengan 1 Klik:**
-   - Di halaman **Beranda Proyek (Dashboard)**, klik tombol hijau **"Muat Contoh Uji PRD (Bab 8.10)"**.
-   - Aplikasi otomatis mengisi:
-     - Generasi Dasar ($G_{\text{planned}}$) = `10`
-     - Cadangan Regenerasi ($R$) = `20%` $\rightarrow$ Generasi Cadangan ($G_{\text{reserve}}$) = `2`
-     - Total Generasi Dianggarkan ($G_{\text{budget}}$) = `12`
-     - Tarif Uji = `USD 2` per generasi $\rightarrow$ Biaya Dasar = **`$20.00`**, Biaya Cadangan = **`$4.00`**, Total = **`$24.00`**.
-3. **Mencoba Sinkronisasi 2 Arah Cadangan Regenerasi:**
-   - Buka menu **Pengaturan & Cadangan**.
-   - Ubah angka **Persentase Cadangan (%)**, maka kotak **Jumlah Generasi Cadangan** akan berubah otomatis.
-   - Sebaliknya, ketik langsung angka di kotak **Jumlah Generasi Cadangan**, maka angka **Persentase (%)** akan menyesuaikan secara otomatis.
-4. **Cek Otomatis Seluruh Rumus Matematika:**
-   - Klik 2x file **`Jalankan-Cek-Otomatis.bat`** untuk melihat laporan pengujian otomatis (`PASS`) terhadap seluruh kriteria PRD.
+   - Jendela aplikasi akan langsung terbuka tanpa menginstal program ke Windows / Control Panel.
+2. **Membuat File Installer Windows (`.exe` Setup & Portable):**
+   - Klik 2x file **`Buat-Publish-Installer.bat`**.
+   - Buka folder **`release/`** untuk mendapatkan:
+     - **`AI Video Budget Calculator-1.7.0-portable.exe`** (Klik 2x langsung jalan tanpa instalasi).
+     - **`AI Video Budget Calculator-1.7.0-nsis.exe`** (Installer standar yang memasang ikon ke Desktop & Start Menu Windows).
+3. **Pemeriksaan Rumus Otomatis:**
+   - Klik 2x file **`Jalankan-Cek-Otomatis.bat`** untuk menjalankan 25 pengujian otomatis.
 
 ---
 
-## 2. Cara Membuat Versi Publish & Instalasi untuk Orang Awam (Setelah Disetujui)
+## 2. Cara Instalasi & Menjalankan di Mac / macOS (Apple Silicon M1/M2/M3/M4 & Intel)
 
-Apabila versi aplikasi sudah Anda coba dan **disetujui (Approved untuk Publish)**:
-1. Klik 2x file **`Buat-Publish-Installer.bat`** (atau beri tahu AI Agent untuk membuatkan versi publish).
-2. Di dalam folder `release/` akan tersedia:
-   - **`AI Video Budget Calculator-1.0.0-portable.exe` (Tanpa Instalasi):** Cukup bagikan 1 file ini ke pengguna awam; klik 2x langsung jalan.
-   - **`AI Video Budget Calculator-1.0.0-nsis.exe` (Installer Standar):** Klik 2x untuk memasang aplikasi ke Desktop & Start Menu Windows.
-   - **Untuk macOS:** Jalankan `npm run dist:mac` pada perangkat Mac untuk menghasilkan file `.dmg`.
+Salin folder proyek ini ke komputer Mac Anda (pastikan **Node.js LTS** dari [nodejs.org](https://nodejs.org) sudah terpasang di Mac), lalu pilih salah satu dari **3 tombol khusus Mac (`.command`)** berikut:
+
+1. **Pilihan Tercepat — Pasang Langsung ke Folder `/Applications` Mac (1-Klik):**
+   - **Klik 2x** file **`Install-Langsung-Ke-Mac.command`** (atau **Klik Kanan $\rightarrow$ Open** saat pertama kali).
+   - Script ini otomatis membungkus aplikasi menjadi `AI Video Budget Calculator.app`, memasangnya langsung ke folder **`/Applications`** (Launchpad) di Mac Anda, membuka kunci izin *Gatekeeper* Apple (`xattr -cr`), dan langsung menyalakan aplikasinya!
+2. **Membuat File Installer `.DMG` & `.ZIP` untuk Mac:**
+   - **Klik 2x** file **`Buat-Publish-Installer-Mac.command`**.
+   - Setelah selesai, folder **`release/`** akan otomatis terbuka berisi file **`.dmg`** dan **`.zip`** siap pakai untuk dibagikan ke komputer Mac mana saja.
+3. **Langsung Buka Tanpa Instalasi di Mac (*Zero-Install*):**
+   - **Klik 2x** file **`Klik-Untuk-Testing-Tanpa-Install-Mac.command`** untuk langsung menjalankan aplikasi tanpa menginstalnya ke folder Applications.
+4. **Pemeriksaan Rumus Otomatis di Mac:**
+   - **Klik 2x** file **`Jalankan-Cek-Otomatis-Mac.command`**.
+
+*(Tips: Jika file `.command` tidak bisa diklik 2x setelah disalin dari flashdisk, buka Terminal di folder proyek lalu jalankan `chmod +x *.command` satu kali saja).*
+
+---
+
+## 3. Ringkasan Cara Penggunaan Aplikasi Versi Terbaru (`v1.7.0`)
+
+1. **Beranda (*Dashboard*)**:
+   - Lihat **Estimasi Total Anggaran** (Rupiah, USD, & Credits), rumus **`Total Kebutuhan × Cadangan = Total Kali Buat`**, serta rata-rata biaya per 1 video jadi dan per 1 menit durasi.
+   - Klik **"Muat Contoh Proyek Iklan"** untuk mencoba simulasi lengkap 7 tahapan produksi.
+2. **Langkah 1–2 (Pengaturan Proyek & Cadangan)**:
+   - Isi **Nama Proyek**, **Jumlah Video Jadi**, dan **Total Durasi (Menit)**.
+   - Pilih **Berapa Kali Cadangan per Adegan** (`1x`, `2x`, `3x`, `5x`, atau ketik sendiri). Angka cadangan ini otomatis mengalikan seluruh tahapan adegan Anda (`Total = Kebutuhan × Cadangan`).
+3. **Langkah 3 (Rencana Adegan)**:
+   - Pilih **Paket Langganan Higgsfield** (*Basic, Pro, Ultimate, Creator, atau Eceran*) di bagian atas.
+   - Klik **"Tambah Tahapan"** atau **"Atur Adegan"** untuk memilih model AI di jendela *popup*, mengisi jumlah adegan, durasi detik, atau mencentang fitur **Unlimited (Rp 0)**.
+4. **Langkah 4 (Ringkasan Biaya)**:
+   - Periksa total anggaran keseluruhan, rincian **`Kebutuhan × Cadangan = Total Kali Buat`**, biaya rata-rata per video & per menit, serta tabel rincian per tahapan.
+5. **Katalog & Kurs**:
+   - Perbarui kurs Dolar ke Rupiah secara otomatis dari internet atau masukkan kurs tetap secara manual, serta kelola daftar model AI.
+6. **Langkah 5 (Cetak PDF)**:
+   - Lengkapi identitas laporan, lihat pratinjau kertas ukuran A4 di sebelah kanan, lalu klik **"Simpan sebagai PDF"**.

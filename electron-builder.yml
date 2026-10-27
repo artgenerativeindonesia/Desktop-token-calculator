@@ -27,7 +27,10 @@ nsis:
   createStartMenuShortcut: true
 mac:
   category: public.app-category.finance
+  identity: null
   target:
     - dmg
     - zip
-  artifactName: "${productName}-${version}-mac.${ext}"
+  artifactName: "${productName}-${version}-mac-${arch}.${ext}"
+dmg:
+  writeUpdateInfo: false

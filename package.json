@@ -1,6 +1,6 @@
 {
   "name": "ai-video-budget-calculator",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "Aplikasi desktop budgeting produksi video AI berbasis katalog model Higgsfield (PRD v1.0)",
   "main": "dist-electron/main/main.js",
   "author": "AI Video Production Team",
@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "pack:dir": "npm run build && electron-builder --dir",
     "dist:win": "npm run build && electron-builder --win",
-    "dist:mac": "npm run build && electron-builder --mac"
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac:dir": "npm run build && electron-builder --mac --dir"
   },
   "dependencies": {
     "decimal.js": "^10.4.3",
