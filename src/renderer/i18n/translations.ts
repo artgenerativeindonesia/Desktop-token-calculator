@@ -63,7 +63,7 @@ export const PRICING_UNIT_LABELS: Record<PricingUnit, { id: string; en: string }
 };
 
 export const QUANTITY_TYPE_LABELS: Record<QuantityType, { id: string; en: string }> = {
-  shot: { id: 'Jumlah Adegan (Shot)', en: 'Number of Scenes (Shots)' },
+  shot: { id: 'Jumlah Shot / Gambar', en: 'Number of Shots / Images' },
   asset: { id: 'Jumlah File / Aset', en: 'Number of Assets' },
   output: { id: 'Jumlah Gambar', en: 'Number of Images' },
 };

@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.9.0] - Pembaruan Terminologi Sineas AI ("Shot / Gambar") & Fitur Klasifikasi Shot Utama vs Aset Pendukung
+- **Tanggal Perubahan**: 28 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.9.0`
+
+### Ditambahkan (Added)
+1. **Fitur Klasifikasi Peran Item: Shot Utama vs Aset Pendukung (`ProductionItem.is_primary_shot`)**:
+   - **Otomatis Pintar**: Kategori pembuatan video (`Text-to-Video` dan `Image-to-Video`) secara cerdas langsung ditandai sebagai **"🎬 Shot Utama"** (potongan visual inti storyboard video).
+   - Sedangkan proses perbesaran kualitas (`Upscale Image`, `Upscale Video`) dan pembuatan gambar konsep (`Text-to-Image`, `Image-to-Image`) ditandai sebagai **"🛠️ Aset Pendukung"** (tetap dihitung anggarannya, tetapi tidak menggelembungkan jumlah hitungan shot video).
+   - **Tombol Cepat 1-Klik di Kartu Item**: Pengguna dapat langsung mengklik tombol lencana (`🎬 Shot Utama` / `🛠️ Aset Pendukung`) di setiap baris Langkah 3 untuk mengganti status seketika.
+   - **Opsi Peran di Formulir Edit Modal**: Tersedia sakelar peran visual di dalam jendela pop-up pengaturan detail item.
+2. **Rekapitulasi Terpisah di Seluruh Layar & PDF**:
+   - Di Header Langkah 3, Langkah 4, dan Laporan PDF, kini disajikan angka terpisah yang transparan:
+     misal: `[ 8 Shot / Gambar Utama ] + [ 4 Aset Pendukung ] = [ Total 12 Item AI ]`.
+   - Menghitung total shot utama untuk proyek multi-video: `Shot Utama per Video × Target Video = Total Keseluruhan Shot`.
+
+### Diubah (Changed)
+1. **Pembaruan Terminologi Ramah Sineas AI**:
+   - Menghapus kata *"adegan"* yang membingungkan dari seluruh penjuru aplikasi (Langkah 1 s/d 5, menu panduan, modal, tombol aksi) dan menggantikannya dengan istilah standar industri video AI yang lebih fleksibel: **"Shot / Gambar"**.
+   - Penyelarasan teks tabel PDF, disclaimer box, dan ringkasan eksekutif agar selaras dengan bahasa para sineas dan kreator video AI.
+
+---
+
 ## Versi [1.8.2] - Perbaikan Bug Layar Hitam (Black Screen) pada Langkah 3 & Pemasangan Sabuk Pengaman Layar
 - **Tanggal Perubahan**: 28 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.8.2`

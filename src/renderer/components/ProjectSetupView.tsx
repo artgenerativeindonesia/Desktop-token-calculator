@@ -77,8 +77,8 @@ export const ProjectSetupView: React.FC = () => {
           </h1>
           <p className="text-xs text-[var(--vv-text-muted)] mt-1">
             {isId
-              ? 'Tentukan nama proyek dan angka cadangan percobaan. Seluruh rincian adegan diatur terpusat di Langkah 3.'
-              : 'Set your project name and contingency multiplier. All scene details are configured centrally in Step 3.'}
+              ? 'Tentukan nama proyek dan angka cadangan percobaan. Seluruh rincian shot / gambar diatur terpusat di Langkah 3.'
+              : 'Set your project name and contingency multiplier. All shot/image details are configured centrally in Step 3.'}
           </p>
         </div>
 
@@ -223,15 +223,15 @@ export const ProjectSetupView: React.FC = () => {
               </div>
               <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
                 {isId
-                  ? 'Anda tidak perlu mengisi jumlah adegan atau perkiraan durasi di sini. Seluruh rincian gambar, adegan, dan durasi detik video diatur sepenuhnya dan langsung di Langkah 3 (Daftar Pekerjaan AI).'
-                  : 'You do not need to enter scene counts here. All images, scenes, and clip durations are managed directly and centrally in Step 3.'}
+                  ? 'Anda tidak perlu mengisi jumlah shot atau perkiraan durasi di sini. Seluruh rincian shot / gambar dan durasi detik video diatur sepenuhnya dan langsung di Langkah 3 (Daftar Pekerjaan AI).'
+                  : 'You do not need to enter shot counts here. All shots, images, and clip durations are managed directly and centrally in Step 3.'}
               </p>
               <div className="flex items-center gap-2 text-[11px] text-[#0099ff] font-medium pt-1 border-t border-[var(--vv-border)]">
                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                 <span>
                   {isId
-                    ? 'Dana jaga-jaga di sebelah kanan akan otomatis terhubung ke semua adegan Anda.'
-                    : 'The safety reserve on the right automatically connects to all your scenes.'}
+                    ? 'Dana jaga-jaga di sebelah kanan akan otomatis terhubung ke semua shot / gambar Anda.'
+                    : 'The safety reserve on the right automatically connects to all your shots and images.'}
                 </span>
               </div>
             </div>
@@ -312,8 +312,8 @@ export const ProjectSetupView: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-[var(--vv-text-strong)]">
                       {isId
-                        ? 'Angka Cadangan Percobaan per Adegan / Gambar'
-                        : 'Reserve Multiplier per Scene / Image'}
+                        ? 'Angka Cadangan Percobaan per Shot / Gambar'
+                        : 'Reserve Multiplier per Shot / Image'}
                     </label>
                     <span className="text-xs font-mono font-bold text-[#0099ff]">
                       {cadanganCount}x {isId ? 'cadangan' : 'reserve'}
@@ -354,11 +354,11 @@ export const ProjectSetupView: React.FC = () => {
               <div className="p-4 rounded-[14px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border-strong)] space-y-2.5 text-xs">
                 <div className="flex justify-between items-center">
                   <span className="text-[var(--vv-text-muted)]">
-                    {isId ? 'Total Kebutuhan Adegan:' : 'Total Scene Items:'}
+                    {isId ? 'Total Kebutuhan Shot / Gambar:' : 'Total Shot / Image Requirements:'}
                   </span>
                   <span className="font-semibold tabular-nums">
                     {project.items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
-                    {isId ? 'adegan / gambar' : 'items'}
+                    {isId ? 'shot / gambar' : 'shots / images'}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-[#0099ff]">
@@ -414,8 +414,8 @@ export const ProjectSetupView: React.FC = () => {
         stepTitle={t.navSetup}
         nextStepHint={
           isId
-            ? 'Langkah selanjutnya: Tambahkan atau atur daftar adegan video dan gambar AI yang ingin diproduksi.'
-            : 'Next step: Add or configure the AI video scenes and images you want to produce.'
+            ? 'Langkah selanjutnya: Tambahkan atau atur daftar shot / gambar video AI yang ingin diproduksi.'
+            : 'Next step: Add or configure the AI video shots and images you want to produce.'
         }
         prevTab="dashboard"
         prevLabel={t.navDashboard}
@@ -479,14 +479,14 @@ export const ProjectSetupView: React.FC = () => {
               <CheckCircle2 className="w-4 h-4" />
               <span>
                 {isId
-                  ? 'Bagaimana Dana Ini Terhubung ke Adegan?'
-                  : 'How Does This Connect to Scenes?'}
+                  ? 'Bagaimana Dana Ini Terhubung ke Shot / Gambar?'
+                  : 'How Does This Connect to Shots / Images?'}
               </span>
             </div>
             <p className="text-[var(--vv-text-muted)] leading-relaxed">
               {isId
-                ? 'Di Langkah 3 (Daftar Pekerjaan AI), Anda hanya perlu menentukan berapa banyak gambar atau adegan yang Anda butuhkan. Sistem akan otomatis mengalikan kebutuhan Anda dengan angka cadangan ini (misal: 20 gambar × 10 cadangan = 200 kali buat).'
-                : 'In Step 3 (AI Production List), you simply enter how many finished images or scenes you need. The system automatically multiplies your requirement by this reserve count (e.g. 20 images × 10 reserve = 200 tries).'}
+                ? 'Di Langkah 3 (Daftar Pekerjaan AI), Anda hanya perlu menentukan berapa banyak shot atau gambar yang Anda butuhkan. Sistem akan otomatis mengalikan kebutuhan Anda dengan angka cadangan ini (misal: 20 shot × 10 cadangan = 200 kali buat).'
+                : 'In Step 3 (AI Production List), you simply enter how many finished shots or images you need. The system automatically multiplies your requirement by this reserve count (e.g. 20 shots × 10 reserve = 200 tries).'}
             </p>
           </div>
         </div>

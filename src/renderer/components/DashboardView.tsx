@@ -81,7 +81,7 @@ export const DashboardView: React.FC = () => {
     project.assumptions.reserve_generations_override ||
     1;
 
-  // Rata-rata per adegan pokok
+  // Rata-rata per shot pokok
   const avgCostPerItemIdr =
     totalSceneQuantity > 0 && calc.total_cost_idr !== null
       ? calc.total_cost_idr / totalSceneQuantity
@@ -188,8 +188,8 @@ export const DashboardView: React.FC = () => {
 
             <p className="text-xs text-[var(--vv-text-muted)] mt-2 leading-relaxed max-w-xl">
               {isId
-                ? `Merencanakan ${project.items.length} tahap pembuatan AI (${totalSceneQuantity} adegan pokok) • Dikalikan ${cadanganMultiplier} cadangan Langkah 2 = ${calc.budgeted_generations} kali pembuatan AI.`
-                : `Planning ${project.items.length} AI stages (${totalSceneQuantity} base scenes) • Multiplied by ${cadanganMultiplier} Step 2 reserve = ${calc.budgeted_generations} total AI generations.`}
+                ? `Merencanakan ${project.items.length} tahap pembuatan AI (${calc.one_video_primary_shot_count} shot utama) • Dikalikan ${cadanganMultiplier} cadangan Langkah 2 = ${calc.budgeted_generations} kali pembuatan AI.`
+                : `Planning ${project.items.length} AI stages (${calc.one_video_primary_shot_count} primary shots) • Multiplied by ${cadanganMultiplier} Step 2 reserve = ${calc.budgeted_generations} total AI generations.`}
             </p>
           </div>
 
@@ -203,7 +203,7 @@ export const DashboardView: React.FC = () => {
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>
-                  {isId ? 'Susun Daftar Adegan AI' : 'Edit AI Production List'}
+                  {isId ? 'Susun Daftar Shot AI' : 'Edit AI Shot List'}
                 </span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
@@ -269,7 +269,7 @@ export const DashboardView: React.FC = () => {
               {formatCurrencyUsd(calc.total_cost_usd, language)}
             </div>
             <div className="text-xs text-[var(--vv-text-muted)] mt-1.5 font-mono flex items-center justify-end gap-1.5">
-              <span>{totalSceneQuantity} {isId ? 'adegan' : 'scenes'}</span>
+              <span>{calc.one_video_primary_shot_count} {isId ? 'shot' : 'shots'}</span>
               <span>&times;</span>
               <span>{cadanganMultiplier} {isId ? 'cadangan' : 'reserve'}</span>
               <span>=</span>
@@ -343,16 +343,16 @@ export const DashboardView: React.FC = () => {
           <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
             <div className="vv-card-quiet p-3">
               <div className="text-[11px] text-[var(--vv-text-muted)]">
-                {isId ? 'Kebutuhan Adegan' : 'Base Scene Items'}
+                {isId ? 'Kebutuhan Shot / Gambar' : 'Base Shots / Images'}
               </div>
               <div className="text-base font-bold tabular-nums text-right mt-1">
                 {totalSceneQuantity}{' '}
                 <span className="text-xs font-normal text-[var(--vv-text-muted)]">
-                  {isId ? 'adegan' : 'items'}
+                  {isId ? 'item' : 'items'}
                 </span>
               </div>
               <div className="text-[10px] text-[var(--vv-text-subtle)] tabular-nums text-right">
-                {isId ? `${project.items.length} tahap di Langkah 3` : `${project.items.length} stages in Step 3`}
+                {isId ? `${calc.one_video_primary_shot_count} shot utama di Langkah 3` : `${calc.one_video_primary_shot_count} primary shots in Step 3`}
               </div>
             </div>
 
@@ -367,7 +367,7 @@ export const DashboardView: React.FC = () => {
                 </span>
               </div>
               <div className="text-[10px] text-[var(--vv-text-subtle)] tabular-nums text-right">
-                {isId ? 'Jatah coba per adegan' : 'Tries per scene'}
+                {isId ? 'Jatah coba per shot' : 'Tries per shot'}
               </div>
             </div>
           </div>
@@ -387,7 +387,7 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
 
-        {/* Supporting Card 2: Rata-rata Biaya Produksi AI (Per Adegan & Per 1x Buat) */}
+        {/* Supporting Card 2: Rata-rata Biaya Produksi AI (Per Shot & Per 1x Buat) */}
         <div
           className={`${cardClass} rounded-[16px] p-5 flex flex-col justify-between`}
         >
@@ -401,7 +401,7 @@ export const DashboardView: React.FC = () => {
           <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
             <div className="vv-card-quiet p-3">
               <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
-                {isId ? 'Rata-rata per 1 Adegan' : 'Per 1 Final Scene'}
+                {isId ? 'Rata-rata per 1 Shot' : 'Per 1 Final Shot'}
               </div>
               <div className="text-sm font-bold tabular-nums text-right mt-1 truncate">
                 {avgCostPerItemIdr !== null
@@ -600,8 +600,8 @@ export const DashboardView: React.FC = () => {
         stepTitle={t.navDashboard}
         nextStepHint={
           isId
-            ? 'Langkah selanjutnya: Tentukan nama proyek dan angka cadangan percobaan per adegan.'
-            : 'Next step: Configure your project name and define your scene retry reserve factor.'
+            ? 'Langkah selanjutnya: Tentukan nama proyek dan angka cadangan percobaan per shot / gambar.'
+            : 'Next step: Configure your project name and define your shot/image retry reserve factor.'
         }
         nextTab="setup"
         nextLabel={
@@ -657,8 +657,8 @@ export const DashboardView: React.FC = () => {
                 </div>
                 <p className="text-[var(--vv-text-muted)] mt-1 leading-relaxed">
                   {isId
-                    ? 'Mulai proyek kosong baru dari awal dengan 1 adegan pembuka.'
-                    : 'Start a fresh blank project with 1 opening scene.'}
+                    ? 'Mulai proyek kosong baru dari awal dengan 1 shot pembuka.'
+                    : 'Start a fresh blank project with 1 opening shot.'}
                 </p>
               </div>
             </button>

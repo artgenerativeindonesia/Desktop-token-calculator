@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.8.2';
+export const APP_VERSION = '1.9.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -147,6 +147,7 @@ export interface ProductionItem {
   duration_seconds: number; // Durasi per shot/klip jika relevan
   attempts_per_item: number; // A_i (jumlah percobaan yang direncanakan per shot/aset)
   use_project_target_multiplier?: boolean; // Pada mode target_final, kalikan dengan target_videos (V)
+  is_primary_shot?: boolean; // True jika merupakan Shot / Gambar Utama cerita, False jika Aset Pendukung / Proses Lanjutan
   is_unlimited?: boolean; // True jika menggunakan kuota Paket Unlimited Higgsfield (Rp 0 / 0 Credit tambahan)
   model_selection: ModelSelection;
   pricing: Pricing;
@@ -182,6 +183,7 @@ export interface ItemCalculationResult {
   item_id: string;
   label: string;
   category: ProcessCategory;
+  is_primary_shot: boolean;
   model_name: string;
   effective_quantity: number; // S_i efektif
   attempts_per_item: number; // A_i
@@ -264,6 +266,12 @@ export interface CalculationResult {
   one_video_reserve_cost_idr: number | null;
   one_video_total_cost_idr: number | null;
   one_video_total_credit: number | null;
+
+  // Klasifikasi Shot / Gambar Utama vs Aset Pendukung (v1.9.0)
+  one_video_primary_shot_count: number;
+  one_video_supporting_asset_count: number;
+  total_primary_shots: number;
+  total_supporting_assets: number;
 
   // Durasi Bersih 1 Video (Fitur 2 - v2.0.0)
   one_video_duration_seconds?: number;

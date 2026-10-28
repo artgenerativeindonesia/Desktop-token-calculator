@@ -112,11 +112,13 @@ interface ProjectStoreState {
         | 'duration_seconds'
         | 'attempts_per_item'
         | 'use_project_target_multiplier'
+        | 'is_primary_shot'
         | 'is_unlimited'
         | 'notes'
       >
     >
   ) => void;
+  toggleItemPrimaryShot: (itemId: string) => void;
   toggleItemUnlimited: (itemId: string, isUnlimited: boolean) => void;
   changeItemCategory: (itemId: string, category: ProcessCategory) => void;
   changeItemModel: (itemId: string, modelId: string) => void;
@@ -286,7 +288,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     const defaultItem = createProductionItemFromCatalog(
       'text_to_video',
       'kling-video/v3.0',
-      language === 'id' ? 'Shot 01 - Adegan Pembuka' : 'Shot 01 - Opening Scene',
+      language === 'id' ? 'Shot 01 - Shot Pembuka' : 'Shot 01 - Opening Shot',
       3,
       2,
       5
@@ -704,18 +706,42 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       };
     }),
 
+  toggleItemPrimaryShot: (itemId) =>
+    set((state) => {
+      const items = state.project.items.map((item) => {
+        if (item.item_id !== itemId) return item;
+        const currentVal =
+          typeof item.is_primary_shot === 'boolean'
+            ? item.is_primary_shot
+            : (item.category === 'text_to_video' || item.category === 'image_to_video');
+        return {
+          ...item,
+          is_primary_shot: !currentVal,
+        };
+      });
+      return {
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          items,
+        }),
+      };
+    }),
+
   changeItemCategory: (itemId, category) =>
     set((state) => {
       const models = getModelsByCategory(category, state.catalog);
       const model = models[0] || state.catalog[0];
       const defaultParams = getDefaultParametersForModel(model);
       const pricing = resolveModelPricing(model, defaultParams);
+      const isPrimary = category === 'text_to_video' || category === 'image_to_video';
 
       const items = state.project.items.map((item) => {
         if (item.item_id !== itemId) return item;
         return {
           ...item,
           category,
+          is_primary_shot: isPrimary,
           quantity_type: model.default_quantity_type,
           duration_seconds: model.supports_duration
             ? item.duration_seconds > 0

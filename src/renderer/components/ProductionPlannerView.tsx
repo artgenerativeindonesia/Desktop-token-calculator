@@ -54,23 +54,24 @@ export const ProductionPlannerView: React.FC = () => {
     setManualItemPricing,
     resetItemPricingToCatalog,
     toggleItemUnlimited,
+    toggleItemPrimaryShot,
     usdPerCredit,
     setActiveTab,
   } = useProjectStore();
 
-  /** Kata benda sesuai jenis isi (gambar / adegan / file) */
+  /** Kata benda sesuai jenis isi (shot / file / gambar) */
   const unitNoun = (qt: QuantityType) => {
     if (language === 'id') {
-      return qt === 'shot' ? 'adegan' : qt === 'asset' ? 'file' : 'gambar';
+      return qt === 'shot' ? 'shot' : qt === 'asset' ? 'file' : 'gambar';
     }
-    return qt === 'shot' ? 'scenes' : qt === 'asset' ? 'files' : 'images';
+    return qt === 'shot' ? 'shots' : qt === 'asset' ? 'files' : 'images';
   };
 
   /** Nama kolom berbentuk pertanyaan sederhana */
   const quantityQuestion = (qt: QuantityType) =>
     language === 'id'
-      ? `Mau Buat Berapa ${qt === 'shot' ? 'Adegan' : qt === 'asset' ? 'File' : 'Gambar'}?`
-      : `How Many ${qt === 'shot' ? 'Scenes' : qt === 'asset' ? 'Files' : 'Images'}?`;
+      ? `Mau Buat Berapa ${qt === 'shot' ? 'Shot' : qt === 'asset' ? 'File' : 'Gambar'}?`
+      : `How Many ${qt === 'shot' ? 'Shots' : qt === 'asset' ? 'Files' : 'Images'}?`;
 
   const tierBadgeClass = (badge?: string) => {
     if (badge === 'NEW')
@@ -143,24 +144,23 @@ export const ProductionPlannerView: React.FC = () => {
               <Layers className="w-3.5 h-3.5 text-[#0099ff]" />
               <span>
                 {isId
-                  ? 'Langkah 03 • Susun Daftar Adegan AI'
-                  : 'Step 03 • AI Scene & Asset Planner'}
+                  ? 'Langkah 03 • Susun Daftar Shot & Gambar AI'
+                  : 'Step 03 • AI Shot & Image Planner'}
               </span>
             </span>
             <span className="vv-badge-pill">
               <span className="vv-blue-dot" />
               <span>
-                {items.length} {isId ? 'Tahap Pekerjaan' : 'Stages'} &bull;{' '}
-                {calculation.budgeted_generations}{' '}
-                {isId ? 'Kali Buat' : 'Total Tries'}
+                {calculation.one_video_primary_shot_count} {isId ? 'Shot Utama' : 'Primary Shots'} &bull;{' '}
+                {calculation.one_video_supporting_asset_count} {isId ? 'Aset Pendukung' : 'Supporting Assets'}
               </span>
             </span>
             <span className="vv-badge-pill bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
               <span>
                 {calculation.target_videos > 1
                   ? (isId
-                      ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video`
-                      : `1 Video Plan • Total ${calculation.target_videos} Videos`)
+                      ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video (${calculation.total_primary_shots} Shot Total)`
+                      : `1 Video Plan • Total ${calculation.target_videos} Videos (${calculation.total_primary_shots} Total Shots)`)
                   : (isId
                       ? 'Proyeksi Video Tunggal (1 Video)'
                       : 'Single Video Plan (1 Video)')}
@@ -188,7 +188,7 @@ export const ProductionPlannerView: React.FC = () => {
 
           <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
             {isId
-              ? `Daftar di bawah memproyeksikan kebutuhan adegan untuk 1 (satu) video. Hasilnya otomatis dikalikan ${calculation.target_videos} video (sesuai input Langkah 2) untuk total anggaran akhir.`
+              ? `Daftar di bawah memproyeksikan kebutuhan shot / gambar untuk 1 (satu) video. Hasilnya otomatis dikalikan ${calculation.target_videos} video (sesuai input Langkah 2) untuk total anggaran akhir.`
               : `The list below projects requirements for 1 (one) video. Results are automatically multiplied by ${calculation.target_videos} videos (from Step 2) for the grand total.`}
           </p>
         </div>
@@ -302,8 +302,8 @@ export const ProductionPlannerView: React.FC = () => {
         >
           <p className="text-sm text-[var(--vv-text-muted)]">
             {isId
-              ? 'Belum ada tahap pekerjaan pada kategori ini. Klik tombol di bawah untuk menambahkan adegan atau aset AI baru.'
-              : 'No production stages in this category yet. Click below to add a new AI stage.'}
+              ? 'Belum ada tahap pekerjaan pada kategori ini. Klik tombol di bawah untuk menambahkan shot atau aset AI baru.'
+              : 'No production stages in this category yet. Click below to add a new AI shot or asset.'}
           </p>
           <button
             type="button"
@@ -339,8 +339,40 @@ export const ProductionPlannerView: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-sm sm:text-base font-semibold text-[var(--vv-text-primary)] truncate">
                           {item.label ||
-                            (isId ? 'Adegan Tanpa Nama' : 'Untitled Stage')}
+                            (isId ? 'Shot / Gambar Tanpa Nama' : 'Untitled Shot')}
                         </span>
+                        {(() => {
+                          const isPrimary =
+                            typeof item.is_primary_shot === 'boolean'
+                              ? item.is_primary_shot
+                              : (item.category === 'text_to_video' || item.category === 'image_to_video');
+                          return (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleItemPrimaryShot(item.item_id);
+                              }}
+                              title={
+                                isId
+                                  ? 'Klik untuk berganti status antara Shot Utama vs Aset Pendukung'
+                                  : 'Click to toggle between Primary Shot vs Supporting Asset'
+                              }
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border transition flex items-center gap-1 cursor-pointer ${
+                                isPrimary
+                                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
+                                  : 'bg-indigo-500/15 text-indigo-300 border-indigo-500/35 hover:bg-indigo-500/25'
+                              }`}
+                            >
+                              <span>{isPrimary ? '🎬' : '🛠️'}</span>
+                              <span>
+                                {isPrimary
+                                  ? (isId ? 'Shot Utama' : 'Primary Shot')
+                                  : (isId ? 'Aset Pendukung' : 'Supporting Asset')}
+                              </span>
+                            </button>
+                          );
+                        })()}
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] text-[var(--vv-text-muted)]">
                           {SHORT_CATEGORY_LABELS[item.category][language]}
                         </span>
@@ -598,7 +630,7 @@ export const ProductionPlannerView: React.FC = () => {
       />
 
       {/* =====================================================================
-       * FROSTED GLASS MODAL: Pengaturan Lengkap Adegan / Tahap AI
+       * FROSTED GLASS MODAL: Pengaturan Lengkap Shot / Tahap AI
        * Progressive Disclosure: Houses all 11 fields cleanly inside a modal
        * ===================================================================== */}
       {activeEditEntry &&
@@ -615,20 +647,20 @@ export const ProductionPlannerView: React.FC = () => {
               onClose={() => setEditingItemId(null)}
               theme={theme}
               maxWidth="2xl"
-              badgeLabel={`${isId ? 'Tahap Adegan' : 'Production Stage'} #${String(
+              badgeLabel={`${isId ? 'Tahap Shot / Gambar' : 'Production Stage'} #${String(
                 idx + 1
               ).padStart(2, '0')}`}
               title={
                 isId ? (
                   <>
-                    Atur Detail Adegan &{' '}
+                    Atur Detail Shot / Gambar &{' '}
                     <span className="vv-accent text-[#0099ff]">
                       Model AI Higgsfield
                     </span>
                   </>
                 ) : (
                   <>
-                    Configure Scene &{' '}
+                    Configure Shot &{' '}
                     <span className="vv-accent text-[#0099ff]">
                       Higgsfield AI Model
                     </span>
@@ -674,20 +706,20 @@ export const ProductionPlannerView: React.FC = () => {
                     className="vv-btn-primary px-6 py-2.5 text-xs font-semibold"
                   >
                     <span>
-                      {isId ? 'Selesai & Simpan Adegan' : 'Done & Save Stage'}
+                      {isId ? 'Selesai & Simpan Shot' : 'Done & Save Shot'}
                     </span>
                   </button>
                 </>
               }
             >
               <div className="space-y-5 text-xs">
-                {/* 1. Nama Adegan & Jenis Pembuatan AI */}
+                {/* 1. Nama Shot & Jenis Pembuatan AI */}
                 <div className="vv-card-quiet p-4 space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--vv-text-strong)] mb-1.5">
                       {isId
-                        ? '1. Nama Adegan / Tahap Pekerjaan'
-                        : '1. Scene / Production Stage Name'}
+                        ? '1. Nama Shot / Tahap Pekerjaan'
+                        : '1. Shot / Production Stage Name'}
                     </label>
                     <input
                       type="text"
@@ -699,6 +731,56 @@ export const ProductionPlannerView: React.FC = () => {
                       }
                       className={`${inputClass} w-full px-3.5 py-2.5 rounded-[10px] text-sm font-semibold`}
                     />
+                  </div>
+
+                  {/* Klasifikasi Peran Item: Shot Utama vs Aset Pendukung */}
+                  <div>
+                    <label className="block text-xs font-semibold text-[var(--vv-text-strong)] mb-1.5">
+                      {isId ? 'Peran Item dalam Video' : 'Item Role in Video'}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateProductionItemField(item.item_id, {
+                            is_primary_shot: true,
+                          })
+                        }
+                        className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                          (item.is_primary_shot ??
+                            (item.category === 'text_to_video' ||
+                              item.category === 'image_to_video'))
+                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50'
+                            : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                        }`}
+                      >
+                        <span>🎬</span>
+                        <span>{isId ? 'Shot Utama Cerita' : 'Primary Story Shot'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateProductionItemField(item.item_id, {
+                            is_primary_shot: false,
+                          })
+                        }
+                        className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                          !(item.is_primary_shot ??
+                            (item.category === 'text_to_video' ||
+                              item.category === 'image_to_video'))
+                            ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/50'
+                            : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                        }`}
+                      >
+                        <span>🛠️</span>
+                        <span>{isId ? 'Aset Pendukung' : 'Supporting Asset'}</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-[var(--vv-text-muted)] mt-1.5 leading-relaxed">
+                      {isId
+                        ? 'Shot Utama dihitung sebagai potongan visual pokok video (storyboard). Aset Pendukung (seperti Upscale/Konsep) tetap dihitung biayanya tetapi tidak menambah jumlah shot video.'
+                        : 'Primary Shots count toward your storyboard visual shot count. Supporting Assets (like Upscale/Concept art) are budgeted but do not inflate shot count.'}
+                    </p>
                   </div>
 
                   <div>
@@ -900,8 +982,8 @@ export const ProductionPlannerView: React.FC = () => {
                             <label className="flex items-center gap-1 text-[11px] text-[var(--vv-text-muted)] mb-1">
                               <span>
                                 {isId
-                                  ? 'Panjang Tiap Adegan (Detik)'
-                                  : 'Length of Each Scene (Seconds)'}
+                                  ? 'Panjang Tiap Shot (Detik)'
+                                  : 'Length of Each Shot (Seconds)'}
                               </span>
                               <InfoTip align="right">
                                 {isPerSecond

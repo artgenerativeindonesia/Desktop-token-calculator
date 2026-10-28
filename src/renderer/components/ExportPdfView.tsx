@@ -237,7 +237,7 @@ export const ExportPdfView: React.FC = () => {
               <div className="text-[11px] font-medium text-[var(--vv-text-muted)] text-right mt-1">
                 {isId ? (
                   <span>
-                    {totalSceneQuantity} adegan &times; {cadanganMultiplier} cadangan ={' '}
+                    {totalSceneQuantity} shot/gambar &times; {cadanganMultiplier} cadangan ={' '}
                     <strong className="text-[var(--vv-text-strong)]">
                       {calc.budgeted_generations} kali buat
                     </strong>
@@ -451,8 +451,8 @@ export const ExportPdfView: React.FC = () => {
                 {
                   key: 'stage_breakdown',
                   label: isId
-                    ? '3. Tabel Rincian Kebutuhan & Cadangan per Adegan'
-                    : '3. Scene Requirements & Reserve Breakdown Table',
+                    ? '3. Tabel Rincian Kebutuhan & Cadangan per Shot / Gambar'
+                    : '3. Shot Requirements & Reserve Breakdown Table',
                 },
                 {
                   key: 'credit_breakdown',

@@ -60,7 +60,7 @@ export const BudgetSummaryView: React.FC = () => {
       : 100;
   const reserveSharePercent = Math.max(0, 100 - baseSharePercent);
 
-  // Rata-rata per adegan pokok
+  // Rata-rata per shot pokok
   const avgCostPerItemIdr =
     totalSceneQuantity > 0 && calc.total_cost_idr !== null
       ? calc.total_cost_idr / totalSceneQuantity
@@ -132,8 +132,8 @@ export const BudgetSummaryView: React.FC = () => {
               </h1>
               <p className="text-xs text-[var(--vv-text-muted)] mt-1">
                 {isId
-                  ? 'Seluruh angka di halaman ini dihitung otomatis dari susunan adegan di Langkah 3 dan cadangan di Langkah 2.'
-                  : 'All figures on this page are calculated automatically from scenes in Step 3 and reserve in Step 2.'}
+                  ? 'Seluruh angka di halaman ini dihitung otomatis dari susunan shot / gambar di Langkah 3 dan cadangan di Langkah 2.'
+                  : 'All figures on this page are calculated automatically from shots/images in Step 3 and reserve in Step 2.'}
               </p>
             </div>
 
@@ -172,17 +172,19 @@ export const BudgetSummaryView: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                 <div className="vv-card-quiet p-3.5">
                   <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
-                    <span>{isId ? 'Kebutuhan Adegan Pokok' : 'Base Scene Items'}</span>
-                    <span className="font-mono text-[#0099ff]">{project.items.length} {isId ? 'tahap' : 'stages'}</span>
+                    <span>{isId ? 'Kebutuhan Shot / Gambar' : 'Base Shot Requirements'}</span>
+                    <span className="font-mono text-[#0099ff]">{calc.one_video_primary_shot_count} {isId ? 'Shot Utama' : 'Shots'}</span>
                   </div>
                   <div className="text-xl font-bold tabular-nums text-[var(--vv-text-primary)] text-right mt-1">
                     {totalSceneQuantity}{' '}
                     <span className="text-xs font-normal text-[var(--vv-text-muted)]">
-                      {isId ? 'adegan / gambar' : 'items'}
+                      {isId ? 'total item' : 'total items'}
                     </span>
                   </div>
                   <div className="text-[11px] text-[var(--vv-text-muted)] text-right mt-0.5">
-                    {isId ? 'Disusun pada Langkah 3' : 'Configured in Step 3'}
+                    {isId
+                      ? `${calc.one_video_primary_shot_count} Shot Utama + ${calc.one_video_supporting_asset_count} Aset Pendukung`
+                      : `${calc.one_video_primary_shot_count} Primary + ${calc.one_video_supporting_asset_count} Supporting`}
                   </div>
                 </div>
 
@@ -198,7 +200,7 @@ export const BudgetSummaryView: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-[11px] text-[var(--vv-text-muted)] text-right mt-0.5">
-                    {isId ? 'Jatah coba per adegan' : 'Retry attempts per scene'}
+                    {isId ? 'Jatah coba per shot/gambar' : 'Retry attempts per shot/image'}
                   </div>
                 </div>
               </div>
@@ -232,7 +234,7 @@ export const BudgetSummaryView: React.FC = () => {
                 {formatCurrencyUsd(calc.total_cost_usd, language)}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] mt-1.5">
-                {totalSceneQuantity} {isId ? 'adegan' : 'scenes'} &times; {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'} ={' '}
+                {totalSceneQuantity} {isId ? 'shot/gambar' : 'shots/images'} &times; {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'} ={' '}
                 <strong className="text-[var(--vv-text-strong)]">
                   {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
                 </strong>
@@ -310,16 +312,16 @@ export const BudgetSummaryView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {/* Rata-rata per adegan pokok */}
+            {/* Rata-rata per shot pokok */}
             <div className="vv-card-quiet p-3.5 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-[var(--vv-text-primary)]">
-                  {isId ? 'Rata-rata per 1 Adegan / Gambar' : 'Avg Cost per Scene / Image'}
+                  {isId ? 'Rata-rata per 1 Shot / Gambar' : 'Avg Cost per Shot / Image'}
                 </div>
                 <div className="text-[11px] text-[var(--vv-text-muted)]">
                   {isId
-                    ? `${totalSceneQuantity} adegan (masing-masing ${cadanganMultiplier} jatah coba)`
-                    : `${totalSceneQuantity} items (${cadanganMultiplier} attempts each)`}
+                    ? `${totalSceneQuantity} shot/gambar (${calc.one_video_primary_shot_count} shot utama)`
+                    : `${totalSceneQuantity} shots/images (${calc.one_video_primary_shot_count} primary shots)`}
                 </div>
               </div>
               <div className="text-right">
@@ -472,8 +474,8 @@ export const BudgetSummaryView: React.FC = () => {
             </h2>
             <p className="text-xs text-[var(--vv-text-subtle)] mt-0.5">
               {isId
-                ? 'Menampilkan kebutuhan gambar/adegan dan perkalian cadangan tiap tahap.'
-                : 'Showing scene requirements and reserve multiplier per stage.'}
+                ? 'Menampilkan kebutuhan shot/gambar dan perkalian cadangan tiap tahap.'
+                : 'Showing shot/image requirements and reserve multiplier per stage.'}
             </p>
           </div>
 
@@ -497,7 +499,7 @@ export const BudgetSummaryView: React.FC = () => {
               <tr className="border-b border-[var(--vv-border)] text-[var(--vv-text-muted)]">
                 <th className="py-2.5 text-left font-medium w-10">#</th>
                 <th className="py-2.5 text-left font-medium">
-                  {isId ? 'Nama Adegan / Tahap' : 'Scene / Stage Name'}
+                  {isId ? 'Nama Shot / Tahap' : 'Shot / Stage Name'}
                 </th>
                 <th className="py-2.5 text-left font-medium">
                   {isId ? 'Model AI' : 'AI Model'}
@@ -601,14 +603,14 @@ export const BudgetSummaryView: React.FC = () => {
             <>
               Tabel Rincian Biaya &{' '}
               <span className="vv-accent text-[#0099ff]">
-                Cadangan per Adegan
+                Cadangan per Shot / Gambar
               </span>
             </>
           ) : (
             <>
               Detailed Cost &{' '}
               <span className="vv-accent text-[#0099ff]">
-                Reserve Table per Stage
+                Reserve Table per Shot
               </span>
             </>
           )
@@ -625,7 +627,7 @@ export const BudgetSummaryView: React.FC = () => {
               <tr className="border-b border-[var(--vv-border)] text-[var(--vv-text-muted)]">
                 <th className="py-2.5 text-left font-medium">#</th>
                 <th className="py-2.5 text-left font-medium">
-                  {isId ? 'Nama Adegan / Tahap' : 'Scene / Stage Name'}
+                  {isId ? 'Nama Shot / Tahap' : 'Shot / Stage Name'}
                 </th>
                 <th className="py-2.5 text-left font-medium">
                   {isId ? 'Model & Jenis AI' : 'Model & AI Type'}

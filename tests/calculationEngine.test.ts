@@ -352,4 +352,53 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
     expect(calcV10.total_cost_usd).toBe(240);
     expect(calcV10.total_cost_idr).toBe(3840000);
   });
+
+  it('v1.9.0 Fitur Shot Utama vs Aset Pendukung: Menghitung kuantitas shot utama dan aset pendukung secara akurat', () => {
+    // 1 video memiliki:
+    // - 4 shot Image-to-Video (Shot Utama default = true)
+    // - 2 shot Text-to-Video (Shot Utama default = true)
+    // - 3 gambar Image-to-Image (Aset Pendukung default = false)
+    // - 1 upscale image (Aset Pendukung default = false)
+    // Total 1 video: 6 Shot Utama + 4 Aset Pendukung = 10 item
+    const i2v = createProductionItemFromCatalog('image_to_video', 'kling-video/v3.0', 'Shot 1', 4, 1);
+    const t2v = createProductionItemFromCatalog('text_to_video', 'bytedance/seedance-2.5', 'Shot 2', 2, 1);
+    const i2i = createProductionItemFromCatalog('image_to_image', 'higgsfield-ai/soul/v2/reference', 'Aset 1', 3, 1);
+    const up = createProductionItemFromCatalog('upscale_image', 'recraft/v4.1-utility-pro', 'Aset 2', 1, 1);
+
+    expect(i2v.is_primary_shot).toBe(true);
+    expect(t2v.is_primary_shot).toBe(true);
+    expect(i2i.is_primary_shot).toBe(false);
+    expect(up.is_primary_shot).toBe(false);
+
+    const assumptionsV3: BudgetAssumptions = {
+      estimation_mode: 'per_shot',
+      target_videos: 3,
+      final_duration_minutes: 1,
+      default_shots_per_video: 6,
+      default_attempts_per_shot: 1,
+      reserve_input_mode: 'percent',
+      reserve_percent: 0,
+      reserve_generations_override: 0,
+    };
+
+    const calc = calculateProjectBudget([i2v, t2v, i2i, up], assumptionsV3, validExchangeRate);
+
+    // 1 Video
+    expect(calc.one_video_primary_shot_count).toBe(6);
+    expect(calc.one_video_supporting_asset_count).toBe(4);
+
+    // Total 3 Video: 6 * 3 = 18 shot utama, 4 * 3 = 12 aset pendukung
+    expect(calc.total_primary_shots).toBe(18);
+    expect(calc.total_supporting_assets).toBe(12);
+
+    // Override manual: ubah i2i menjadi Shot Utama
+    const i2iManualPrimary = { ...i2i, is_primary_shot: true };
+    const calcManual = calculateProjectBudget([i2v, t2v, i2iManualPrimary, up], assumptionsV3, validExchangeRate);
+
+    // Sekarang 4 + 2 + 3 = 9 Shot Utama, 1 Aset Pendukung
+    expect(calcManual.one_video_primary_shot_count).toBe(9);
+    expect(calcManual.one_video_supporting_asset_count).toBe(1);
+    expect(calcManual.total_primary_shots).toBe(27);
+    expect(calcManual.total_supporting_assets).toBe(3);
+  });
 });

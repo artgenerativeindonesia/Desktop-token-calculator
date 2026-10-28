@@ -40,6 +40,15 @@ export interface BidirectionalReserveResult {
 }
 
 /**
+ * Menentukan status bawaan apakah suatu kategori tergolong "Shot / Gambar Utama"
+ * - Video (text_to_video, image_to_video): Shot Utama (true)
+ * - Lainnya (upscale, text_to_image, image_to_image, dsb.): Aset Pendukung (false)
+ */
+export function isDefaultPrimaryShot(category: ProcessCategory): boolean {
+  return category === 'text_to_video' || category === 'image_to_video';
+}
+
+/**
  * Sinkronisasi 2 Arah (Bidirectional) antara Persentase Cadangan (R)
  * dan Jumlah Generasi Cadangan (Greserve) sesuai PRD Bab 8.3 & klarifikasi user.
  */
@@ -265,11 +274,25 @@ export function calculateProjectBudget(
   let hasCreditItems = false;
   let incompleteItemCount = 0;
 
+  let oneVideoPrimaryShotCount = 0;
+  let oneVideoSupportingAssetCount = 0;
+
   const itemResults: ItemCalculationResult[] = [];
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    const isPrimaryShot =
+      typeof item.is_primary_shot === 'boolean'
+        ? item.is_primary_shot
+        : isDefaultPrimaryShot(item.category);
+
     const effectiveQty = itemEffectiveQuantities[i];
+    if (isPrimaryShot) {
+      oneVideoPrimaryShotCount += effectiveQty;
+    } else {
+      oneVideoSupportingAssetCount += effectiveQty;
+    }
+
     const attempts = Math.max(0, Math.floor(item.attempts_per_item));
     const gPlanned = itemPlannedGenerations[i];
     const gReserve = itemReserveGenerations[i];
@@ -445,6 +468,7 @@ export function calculateProjectBudget(
       item_id: item.item_id,
       label: item.label,
       category: item.category,
+      is_primary_shot: isPrimaryShot,
       model_name: item.model_selection.model_name,
       effective_quantity: effectiveQty,
       attempts_per_item: attempts,
@@ -649,6 +673,12 @@ export function calculateProjectBudget(
     one_video_total_cost_idr: oneVideoTotalIdr,
     one_video_total_credit: oneVideoTotalCredit,
 
+    // Klasifikasi Shot / Gambar Utama vs Aset Pendukung (v1.9.0)
+    one_video_primary_shot_count: oneVideoPrimaryShotCount,
+    one_video_supporting_asset_count: oneVideoSupportingAssetCount,
+    total_primary_shots: new Decimal(oneVideoPrimaryShotCount).times(vDec).toNumber(),
+    total_supporting_assets: new Decimal(oneVideoSupportingAssetCount).times(vDec).toNumber(),
+
     cost_per_video_usd: costPerVideoUsd,
     cost_per_video_idr: costPerVideoIdr,
     cost_per_minute_usd: costPerMinuteUsd,
@@ -695,6 +725,7 @@ export function createProductionItemFromCatalog(
         : model.default_duration_seconds,
     attempts_per_item: attempts,
     use_project_target_multiplier: false,
+    is_primary_shot: isDefaultPrimaryShot(category),
     model_selection: {
       provider: model.provider,
       model_id: model.model_id,

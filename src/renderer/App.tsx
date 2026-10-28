@@ -122,7 +122,7 @@ export const App: React.FC = () => {
       id: 'planner',
       index: '03',
       label: t.navPlanner,
-      stepDesc: isId ? 'Susun adegan & model AI' : 'Scenes & AI models',
+      stepDesc: isId ? 'Susun shot & model AI' : 'Shots & AI models',
       icon: <Layers className="w-4 h-4" />,
       badge: project.items.length,
     },
@@ -741,8 +741,8 @@ export const App: React.FC = () => {
             </div>
             <p className="text-[var(--vv-text-muted)] leading-relaxed">
               {isId
-                ? 'Beri nama proyek Anda, tentukan jumlah video jadi, dan atur berapa kali cadangan per adegan (misal 2x) untuk berjaga-jaga jika hasil AI perlu dibuat ulang.'
-                : 'Name your project, set your target video output, and choose a reserve multiplier per scene (e.g. 2x) in case AI scenes need extra tries.'}
+                ? 'Beri nama proyek Anda, tentukan jumlah video jadi, dan atur berapa kali cadangan per shot (misal 2x) untuk berjaga-jaga jika hasil AI perlu dibuat ulang.'
+                : 'Name your project, set your target video output, and choose a reserve multiplier per shot (e.g. 2x) in case AI shots need extra tries.'}
             </p>
           </div>
 
@@ -755,13 +755,13 @@ export const App: React.FC = () => {
             </div>
             <div className="font-semibold text-sm text-[var(--vv-text-primary)]">
               {isId
-                ? '2. Susun Daftar Adegan di Jendela Popup'
-                : '2. Build Your Scene List'}
+                ? '2. Susun Daftar Shot & Gambar di Jendela Popup'
+                : '2. Build Your Shot & Image List'}
             </div>
             <p className="text-[var(--vv-text-muted)] leading-relaxed">
               {isId
-                ? 'Tambahkan tahapan pembuatan (Gambar dari Teks, Video dari Teks, hingga Peningkatan 4K). Klik tombol "Atur Adegan" untuk memilih model AI dengan rapi.'
-                : 'Add production stages (Text to Image, Text to Video, 4K Upscaling). Click "Edit Stage" to configure models cleanly inside a popup.'}
+                ? 'Tambahkan tahapan pembuatan (Gambar dari Teks, Video dari Teks, hingga Peningkatan 4K). Klik tombol "Atur Shot" untuk memilih model AI dengan rapi.'
+                : 'Add production stages (Text to Image, Text to Video, 4K Upscaling). Click "Configure Shot" to choose models cleanly inside a popup.'}
             </p>
           </div>
 
@@ -876,7 +876,7 @@ export const App: React.FC = () => {
                 {calc.budgeted_generations}x {isId ? 'kali buat' : 'generations'}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums text-right">
-                {calc.item_results.reduce((s, r) => s + r.effective_quantity, 0)} {isId ? 'adegan' : 'scenes'} &times; {project.assumptions.default_attempts_per_shot || 1} {isId ? 'cadangan' : 'reserve'}
+                {calc.item_results.reduce((s, r) => s + r.effective_quantity, 0)} {isId ? 'shot/gambar' : 'shots/images'} &times; {project.assumptions.default_attempts_per_shot || 1} {isId ? 'cadangan' : 'reserve'}
               </div>
             </div>
 

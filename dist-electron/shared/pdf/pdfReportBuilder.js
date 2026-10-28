@@ -72,7 +72,7 @@ function getUnitNoun(qType, isId) {
         return isId ? 'gambar' : 'images';
     if (qType === 'output')
         return isId ? 'hasil jadi' : 'outputs';
-    return isId ? 'adegan' : 'scenes';
+    return isId ? 'shot' : 'shots';
 }
 /**
  * Menyusun dokumen HTML cetak lengkap 9 bagian wajib sesuai PRD Bab 12.2 & 12.4.
@@ -135,7 +135,7 @@ function generatePdfReportHtml(project, overrideLang) {
           <td style="text-align:center;">${idx + 1}</td>
           <td>
             <strong>${escapeHtml(res.label)}</strong><br/>
-            <span style="font-size:10px;color:#64748b;">${escapeHtml(CATEGORY_LABELS[res.category]?.[lang] || res.category)}</span>
+            <span style="font-size:10px;color:#64748b;">${escapeHtml(CATEGORY_LABELS[res.category]?.[lang] || res.category)} &bull; <strong>${res.is_primary_shot ? (isId ? '🎬 Shot Utama' : '🎬 Primary Shot') : (isId ? '🛠️ Aset Pendukung' : '🛠️ Supporting Asset')}</strong></span>
           </td>
           <td>
             <strong>${escapeHtml(res.model_name)}</strong><br/>
@@ -369,7 +369,7 @@ function generatePdfReportHtml(project, overrideLang) {
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Target Jumlah Video' : 'Target Video Count'}</div>
       <div class="metric-val">${calc.target_videos} ${isId ? 'Video' : 'Videos'}</div>
-      <div class="metric-sub">${cadanganMultiplier}x ${isId ? 'cadangan per adegan' : 'reserve multiplier'}</div>
+      <div class="metric-sub">${cadanganMultiplier}x ${isId ? 'cadangan per shot' : 'reserve multiplier'}</div>
     </div>
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Total Kali Buat AI' : 'Total AI Generations'}</div>
@@ -391,14 +391,14 @@ function generatePdfReportHtml(project, overrideLang) {
         <td class="num"><strong>${cadanganMultiplier} ${isId ? 'cadangan (' + cadanganMultiplier + 'x jatah buat)' : 'reserve (' + cadanganMultiplier + 'x tries)'}</strong></td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Kebutuhan Adegan' : 'Total Scene Requirements'}</th>
-        <td class="num">${totalSceneQuantity} ${isId ? 'adegan pokok' : 'base scenes'}</td>
+        <th>${isId ? 'Total Kebutuhan Shot / Gambar' : 'Total Shot Requirements'}</th>
+        <td class="num"><strong>${calc.one_video_primary_shot_count} ${isId ? 'Shot Utama' : 'Primary Shots'}</strong> (${totalSceneQuantity} item)</td>
         <th>${isId ? 'Total Kali Pembuatan AI' : 'Total Budgeted Generations'}</th>
         <td class="num"><strong>${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</strong></td>
       </tr>
       <tr>
         <th>${isId ? 'Model Perhitungan' : 'Calculation Model'}</th>
-        <td>${isId ? 'Kebutuhan adegan × ' + cadanganMultiplier + ' cadangan = Total kali buat' : 'Scene requirement × ' + cadanganMultiplier + ' reserve = Total tries'}</td>
+        <td>${isId ? 'Kebutuhan shot/gambar × ' + cadanganMultiplier + ' cadangan = Total kali buat' : 'Shot/image requirement × ' + cadanganMultiplier + ' reserve = Total tries'}</td>
         <th>${isId ? 'Patokan Kurs Dolar' : 'USD Exchange Rate'}</th>
         <td class="num">${project.exchange_rate.rate ? '1 USD = ' + formatIdr(project.exchange_rate.rate, lang) : '-'}</td>
       </tr>
@@ -423,7 +423,7 @@ function generatePdfReportHtml(project, overrideLang) {
     <thead>
       <tr>
         <th style="width:28px;text-align:center;">No</th>
-        <th>${isId ? 'Nama Adegan / Tahap & Jenis AI' : 'Stage / Scene & AI Type'}</th>
+        <th>${isId ? 'Nama Shot / Tahap & Jenis AI' : 'Shot / Stage & AI Type'}</th>
         <th>${isId ? 'Model AI & Pengaturan Kualitas' : 'Higgsfield Model & Settings'}</th>
         <th class="num">${isId ? 'Kebutuhan & Cadangan' : 'Requirement & Reserve'}</th>
         <th>${isId ? 'Satuan & Harga' : 'Unit & Price'}</th>
@@ -443,9 +443,9 @@ function generatePdfReportHtml(project, overrideLang) {
     </div>
     <div style="font-size:11px;color:#0f172a;line-height:1.5;">
       ${isId
-        ? `Seluruh rincian pekerjaan dan adegan pada tabel di atas adalah proyeksi teknis kebutuhan untuk <strong>1 (satu) video</strong> utuh.<br/>
+        ? `Seluruh rincian pekerjaan dan shot / gambar pada tabel di atas adalah proyeksi teknis kebutuhan untuk <strong>1 (satu) video</strong> utuh (${calc.one_video_primary_shot_count} Shot Utama + ${calc.one_video_supporting_asset_count} Aset Pendukung).<br/>
            <strong>Perhitungan Total Anggaran Akhir:</strong> Biaya 1 Video (<strong>${formatIdr(calc.one_video_total_cost_idr, lang)}</strong> / ${formatUsd(calc.one_video_total_cost_usd, lang)}) &times; <strong>${calc.target_videos} Video</strong> = <strong>${formatIdr(calc.total_cost_idr, lang)}</strong> (${formatUsd(calc.total_cost_usd, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`
-        : `All stage requirements and scenes in the table above project technical needs for <strong>1 (one) single video</strong>.<br/>
+        : `All stage requirements and shots/images in the table above project technical needs for <strong>1 (one) single video</strong> (${calc.one_video_primary_shot_count} Primary Shots + ${calc.one_video_supporting_asset_count} Supporting Assets).<br/>
            <strong>Final Grand Total Calculation:</strong> 1 Video Cost (<strong>${formatUsd(calc.one_video_total_cost_usd, lang)}</strong> / ${formatIdr(calc.one_video_total_cost_idr, lang)}) &times; <strong>${calc.target_videos} ${calc.target_videos > 1 ? 'Videos' : 'Video'}</strong> = <strong>${formatUsd(calc.total_cost_usd, lang)}</strong> (${formatIdr(calc.total_cost_idr, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`}
     </div>
   </div>
@@ -463,7 +463,7 @@ function generatePdfReportHtml(project, overrideLang) {
     <thead>
       <tr>
         <th style="width:28px;text-align:center;">No</th>
-        <th>${isId ? 'Nama Adegan / Tahap' : 'Shot / Stage'}</th>
+        <th>${isId ? 'Nama Shot / Tahap' : 'Shot / Stage'}</th>
         <th>${isId ? 'Model AI' : 'Model'}</th>
         <th class="num">${isId ? 'Total Kali Buat' : 'Total Generations'}</th>
         <th class="num">${isId ? 'Credit per Satuan' : 'Credit per Unit'}</th>
@@ -510,8 +510,8 @@ function generatePdfReportHtml(project, overrideLang) {
   <table>
     <tbody>
       <tr style="background:#f8fafc;">
-        <th>${isId ? 'Total Kebutuhan Adegan Pokok' : 'Total Base Scene Requirements'}</th>
-        <td class="num">${totalSceneQuantity} ${isId ? 'adegan / gambar' : 'items'}</td>
+        <th>${isId ? 'Total Kebutuhan Shot / Gambar' : 'Total Shot Requirements'}</th>
+        <td class="num">${calc.one_video_primary_shot_count} ${isId ? 'Shot Utama' : 'Primary'} (${totalSceneQuantity} item)</td>
         <td class="num">${isId ? 'Dikalikan' : 'Multiplied by'} ${cadanganMultiplier} ${isId ? 'cadangan' : 'reserve'}</td>
       </tr>
       <tr>

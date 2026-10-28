@@ -123,4 +123,21 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
     expect(htmlId).toContain('@media print');
     expect(htmlId).toContain('page-break-inside: avoid');
   });
+
+  it('v1.9.0 PDF Verifikasi: Istilah menggunakan Shot / Gambar dan merinci Shot Utama vs Aset Pendukung', () => {
+    const commercialProj = createSampleCommercialProject();
+    commercialProj.assumptions.target_videos = 2;
+
+    const { html: htmlId } = generatePdfReportHtml(commercialProj, 'id');
+    const { html: htmlEn } = generatePdfReportHtml(commercialProj, 'en');
+
+    // Bebas kata 'adegan'
+    expect(htmlId).not.toContain('adegan');
+    expect(htmlId).toContain('Shot Utama');
+    expect(htmlId).toContain('Aset Pendukung');
+    expect(htmlId).toContain('Total Kebutuhan Shot / Gambar');
+
+    expect(htmlEn).toContain('Primary Shot');
+    expect(htmlEn).toContain('Supporting Asset');
+  });
 });
