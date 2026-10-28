@@ -80,16 +80,39 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
   });
 
   describe('2. Model-Model AI Resmi Terupdate', () => {
-    it('memiliki 5 model suara resmi terupdate', () => {
-      expect(ELEVENLABS_MODELS_CATALOG).toHaveLength(5);
+    it('memiliki 11 model suara resmi terupdate', () => {
+      expect(ELEVENLABS_MODELS_CATALOG).toHaveLength(11);
       const modelIds = ELEVENLABS_MODELS_CATALOG.map((m) => m.model_id);
       expect(modelIds).toEqual([
+        'eleven_v4',
+        'eleven_v4_turbo',
         'eleven_multilingual_v2',
         'eleven_flash_v2_5',
+        'eleven_flash_v2',
         'eleven_turbo_v2_5',
+        'eleven_turbo_v2',
         'eleven_v3',
+        'eleven_multilingual_sts_v2',
+        'eleven_english_sts_v2',
         'eleven_monolingual_v1',
       ]);
+    });
+
+    it('eleven_v4: Flagship Next-Gen, 1.0 credit/char, 90+ bahasa, emotional depth', () => {
+      const model = getElevenLabsModelById('eleven_v4');
+      expect(model.credit_multiplier_per_character).toBe(1.0);
+      expect(model.language_count).toBeGreaterThanOrEqual(90);
+      expect(model.supported_languages).toContain('id');
+      expect(model.supported_languages).toContain('en');
+      expect(model.tier_badge).toBe('NEW');
+    });
+
+    it('eleven_v4_turbo: Low Latency Flagship, 0.5 credit/char (50% discount), ~100ms, 90+ bahasa', () => {
+      const model = getElevenLabsModelById('eleven_v4_turbo');
+      expect(model.credit_multiplier_per_character).toBe(0.5);
+      expect(model.latency_ms_approx).toBe(100);
+      expect(model.language_count).toBeGreaterThanOrEqual(90);
+      expect(model.supported_languages).toContain('id');
     });
 
     it('eleven_multilingual_v2: 1.0 credit/char, 29+ bahasa, expressive', () => {
@@ -119,6 +142,13 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
       const model = getElevenLabsModelById('eleven_v3');
       expect(model.credit_multiplier_per_character).toBe(1.0);
       expect(model.language_count).toBeGreaterThanOrEqual(70);
+    });
+
+    it('eleven_multilingual_sts_v2: Speech to Speech voice changer, 1.0 credit/char', () => {
+      const model = getElevenLabsModelById('eleven_multilingual_sts_v2');
+      expect(model.credit_multiplier_per_character).toBe(1.0);
+      expect(model.category).toBe('sts');
+      expect(model.supported_languages).toContain('id');
     });
 
     it('eleven_monolingual_v1: 1.0 credit/char, English only', () => {
@@ -246,11 +276,12 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
   });
 
   describe('5. Bridge Adaptor ke CatalogModelEntry', () => {
-    it('mengadaptasi semua 5 model ElevenLabs ke struktur CatalogModelEntry standar', () => {
-      expect(ELEVENLABS_AS_CATALOG_MODELS).toHaveLength(5);
+    it('mengadaptasi semua 11 model ElevenLabs ke struktur CatalogModelEntry standar dengan quantity_type asset (file audio)', () => {
+      expect(ELEVENLABS_AS_CATALOG_MODELS).toHaveLength(11);
       const first = ELEVENLABS_AS_CATALOG_MODELS[0];
       expect(first.provider).toBe('elevenlabs');
       expect(first.supported_categories).toEqual(['voice_over']);
+      expect(first.default_quantity_type).toBe('asset');
       expect(first.pricing_variants[0].pricing_unit).toBe('per_second');
       expect(first.pricing_variants[0].status).toBe('verified');
     });
@@ -261,7 +292,7 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
       const catalog = await fetchElevenLabsCatalogAuto();
       expect(catalog.success).toBe(true);
       expect(catalog.usedFallback).toBe(true);
-      expect(catalog.models).toHaveLength(5);
+      expect(catalog.models).toHaveLength(11);
       expect(catalog.plans).toHaveLength(6);
       expect(catalog.source).toContain('Verified Snapshot');
     });
@@ -323,7 +354,7 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
 
       expect(catalog.success).toBe(true);
       expect(catalog.usedFallback).toBe(true);
-      expect(catalog.models).toHaveLength(5);
+      expect(catalog.models).toHaveLength(11);
       expect(catalog.error_id).toContain('Koneksi API langsung gagal');
     });
   });

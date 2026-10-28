@@ -282,7 +282,7 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
       category: 'voice_over',
       label: 'Narasi Pembuka Sineas',
       quantity: 1,
-      quantity_type: 'shot',
+      quantity_type: 'asset',
       duration_seconds: 10,
       attempts_per_item: 1,
       script_text: 'Selamat datang di masa depan pembuatan video bersama AI!',
@@ -311,10 +311,12 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
     const { html: htmlId } = generatePdfReportHtml(project, 'id');
     const { html: htmlEn } = generatePdfReportHtml(project, 'en');
 
-    // 1. Label Voice Over dan Model ElevenLabs
+    // 1. Label Voice Over, File Audio, dan Model ElevenLabs
     expect(htmlId).toContain('Narasi Pembuka Sineas');
     expect(htmlId).toContain('Eleven Multilingual v2');
     expect(htmlId).toContain('Voice Over');
+    expect(htmlId).toContain('🎙️ File Audio');
+    expect(htmlEn).toContain('🎙️ Audio File');
     expect(htmlId).toContain('ElevenLabs');
 
     // 2. Pemisahan Kredit ElevenLabs

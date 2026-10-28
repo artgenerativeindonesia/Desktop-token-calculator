@@ -89,8 +89,9 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function getUnitNoun(qType: string, isId: boolean): string {
-  if (qType === 'asset') return isId ? 'gambar' : 'images';
+function getUnitNoun(qType: string, isId: boolean, category?: string): string {
+  if (category === 'voice_over') return isId ? 'file audio' : 'audio files';
+  if (qType === 'asset') return isId ? 'file / gambar' : 'files / images';
   if (qType === 'output') return isId ? 'hasil jadi' : 'outputs';
   return isId ? 'shot' : 'shots';
 }
@@ -245,13 +246,14 @@ export function generatePdfReportHtml(
           ? 'Per Generasi'
           : 'Per Generation';
 
-      const attemptsCount = res.attempts_per_item || cadanganMultiplier;
-      const countBreakdown =
-        res.reserve_generations > 0
-          ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
-          : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
-
       const isVO = res.category === 'voice_over';
+      const attemptsCount = res.attempts_per_item || cadanganMultiplier;
+      const countBreakdown = isVO
+        ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
+        : res.reserve_generations > 0
+        ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
+        : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
+
       const voChars =
         sourceItem?.script_text && sourceItem.script_text.length > 0
           ? sourceItem.script_text.length
@@ -266,7 +268,11 @@ export function generatePdfReportHtml(
             <span style="font-size:10px;color:#64748b;">${escapeHtml(
               CATEGORY_LABELS[res.category]?.[lang] || res.category
             )} &bull; <strong>${
-        res.is_primary_shot
+        isVO
+          ? isId
+            ? '🎙️ File Audio'
+            : '🎙️ Audio File'
+          : res.is_primary_shot
           ? isId
             ? '🎬 Shot Utama'
             : '🎬 Primary Shot'

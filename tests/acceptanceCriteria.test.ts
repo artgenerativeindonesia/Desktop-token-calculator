@@ -204,6 +204,8 @@ describe('PRD Bab 15 — Full Acceptance Criteria Suite (AC-01 s/d AC-14)', () =
     const items = useProjectStore.getState().project.items;
     const voItem = items.find((i) => i.category === 'voice_over');
     expect(voItem).toBeDefined();
+    expect(voItem?.label).toContain('File Audio');
+    expect(voItem?.quantity_type).toBe('asset');
 
     if (voItem) {
       // Simulasikan penulisan naskah (Script)

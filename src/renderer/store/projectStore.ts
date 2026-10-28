@@ -702,10 +702,10 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           category: 'voice_over',
           label:
             state.language === 'id'
-              ? `Voice Over ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`
-              : `Voice Over ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`,
+              ? `File Audio ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`
+              : `Audio File ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`,
           quantity: 1,
-          quantity_type: 'shot',
+          quantity_type: 'asset',
           duration_seconds: voDuration,
           attempts_per_item:
             state.project.assumptions.default_attempts_per_shot || 1,
@@ -725,8 +725,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           pricing,
           notes:
             state.language === 'id'
-              ? 'Narasi sulih suara resmi ElevenLabs.'
-              : 'Official ElevenLabs voice over narration.',
+              ? 'File audio narasi / dialog resmi ElevenLabs.'
+              : 'Official ElevenLabs voice over audio file.',
         };
 
         return {

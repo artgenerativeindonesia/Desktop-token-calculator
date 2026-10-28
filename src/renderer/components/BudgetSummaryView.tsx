@@ -767,10 +767,10 @@ export const BudgetSummaryView: React.FC = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="vv-card-quiet p-3 rounded-[12px]">
                   <span className="text-[10px] text-[var(--vv-text-muted)] block">
-                    {isId ? 'Jumlah Baris Narasi' : 'Narration Items'}
+                    {isId ? 'Jumlah File Audio' : 'Audio Files'}
                   </span>
                   <span className="text-base font-bold text-[var(--vv-text-primary)] font-mono">
-                    {voItems.length} {isId ? 'baris' : 'lines'}
+                    {voItems.length} {isId ? 'file' : 'files'}
                   </span>
                 </div>
 

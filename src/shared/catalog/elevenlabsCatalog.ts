@@ -72,7 +72,7 @@ export interface ElevenLabsModelEntry {
   latency_description: string;
   language_count: number;
   supported_languages: string[];
-  category: 'multilingual' | 'conversational_fast' | 'monolingual' | 'experimental';
+  category: 'multilingual' | 'conversational_fast' | 'monolingual' | 'experimental' | 'sts';
   description_id: string;
   description_en: string;
   recommended_use_id: string;
@@ -368,6 +368,68 @@ export const ELEVENLABS_SUBSCRIPTION_PLANS: ElevenLabsSubscriptionPlan[] = [
 
 export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
   {
+    model_id: 'eleven_v4',
+    model_name: 'Eleven v4 (Flagship Next-Gen)',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 250,
+    latency_description: '~250ms high-fidelity latency',
+    language_count: 90,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu', 'ta', 'te', 'mr', 'ur',
+      'bn', 'gu', 'kn', 'ml', 'sw', 'af', 'sq', 'hy', 'az', 'eu', 'be', 'bs',
+      'ca', 'et', 'gl', 'ka', 'is', 'ga', 'kk', 'lv', 'lt', 'mk', 'mt', 'fa',
+      'sr', 'sl', 'cy', 'tl', 'ne', 'si', 'km', 'my', 'lo', 'mn'
+    ],
+    category: 'multilingual',
+    tier_badge: 'NEW',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-v4',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model unggulan termutakhir (flagship) generasi ke-4 ElevenLabs dengan kedalaman emosional manusiawi, kontrol intonasi teatrikal, kemampuan dialog multi-karakter, dan dukungan 90+ bahasa.',
+    description_en:
+      'ElevenLabs next-generation flagship v4 model delivering unprecedented emotional depth, theatrical voice modulation, multi-speaker dialogue pacing, and native support for 90+ languages.',
+    recommended_use_id:
+      'Pilihan terbaik untuk naskah film sinematik, akting suara karakter berkepribadian kuat, audiobook dramatis, dan dialog sinematik berkualitas studio.',
+    recommended_use_en:
+      'Best for cinematic film narration, dramatic character acting, emotive audiobooks, and studio-grade voiceover.',
+  },
+  {
+    model_id: 'eleven_v4_turbo',
+    model_name: 'Eleven v4 Turbo (Low Latency Flagship)',
+    credit_multiplier_per_character: 0.5, // 50% discount
+    latency_ms_approx: 100,
+    latency_description: '~100ms real-time low latency',
+    language_count: 90,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu', 'ta', 'te', 'mr', 'ur',
+      'bn', 'gu', 'kn', 'ml', 'sw', 'af', 'sq', 'hy', 'az', 'eu', 'be', 'bs',
+      'ca', 'et', 'gl', 'ka', 'is', 'ga', 'kk', 'lv', 'lt', 'mk', 'mt', 'fa',
+      'sr', 'sl', 'cy', 'tl', 'ne', 'si', 'km', 'my', 'lo', 'mn'
+    ],
+    category: 'conversational_fast',
+    tier_badge: 'NEW',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-v4-turbo',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Varian real-time generasi ke-4 dengan kecepatan inferensi ultra cepat (~100ms), tarif hemat diskon 50% (0.5 credit/karakter), dan dukungan ekspresi 90+ bahasa.',
+    description_en:
+      'Fourth-generation ultra-fast real-time model (~100ms latency) with 50% credit discount (0.5 credits/char) and 90+ language coverage.',
+    recommended_use_id:
+      'Sangat direkomendasikan untuk agen percakapan interaktif real-time, live streaming AI, dubbing cepat konten media sosial, dan asisten suara dinamis.',
+    recommended_use_en:
+      'Ideal for conversational AI agents, interactive live streams, rapid social media dubbing, and responsive virtual actors.',
+  },
+  {
     model_id: 'eleven_multilingual_v2',
     model_name: 'Eleven Multilingual v2',
     credit_multiplier_per_character: 1.0,
@@ -434,7 +496,7 @@ export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
       'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu'
     ],
     category: 'conversational_fast',
-    tier_badge: 'NEW',
+    tier_badge: 'POPULER',
     is_active: true,
     supports_voice_cloning: true,
     source_name: 'ElevenLabs Official Models Documentation',
@@ -448,6 +510,34 @@ export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
       'Pilihan terbaik untuk live streaming interactive, game NPC real-time, dialog interaktif, agen percakapan AI, dan produksi cepat bervolume besar.',
     recommended_use_en:
       'Best for real-time conversational agents, interactive game NPCs, live voice streams, and high-volume fast turnaround audio.',
+  },
+  {
+    model_id: 'eleven_flash_v2',
+    model_name: 'Eleven Flash v2',
+    credit_multiplier_per_character: 0.5,
+    latency_ms_approx: 75,
+    latency_description: '~75ms low latency',
+    language_count: 29,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr'
+    ],
+    category: 'conversational_fast',
+    tier_badge: 'STANDARD',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-flash-v2',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model ringan berlatensi rendah (~75ms) generasi flash v2 dengan diskon 50% credit untuk percakapan cepat dalam 29 bahasa.',
+    description_en:
+      'Lightweight low-latency (~75ms) flash v2 model with 50% credit discount for fast conversational audio in 29 languages.',
+    recommended_use_id:
+      'Agen percakapan real-time dan produksi volume tinggi beralur kerja cepat.',
+    recommended_use_en:
+      'Real-time conversational bots and high volume rapid speech generation.',
   },
   {
     model_id: 'eleven_turbo_v2_5',
@@ -476,6 +566,34 @@ export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
       'Sempurna untuk video promosi media sosial (TikTok, Reels, YouTube Shorts), explainer video, materi e-learning, dan podcast mingguan.',
     recommended_use_en:
       'Perfect for social video voiceovers (Shorts, Reels, TikTok), product explainers, e-learning courses, and weekly podcasts.',
+  },
+  {
+    model_id: 'eleven_turbo_v2',
+    model_name: 'Eleven Turbo v2',
+    credit_multiplier_per_character: 0.5,
+    latency_ms_approx: 250,
+    latency_description: '~250ms fast latency',
+    language_count: 29,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr'
+    ],
+    category: 'conversational_fast',
+    tier_badge: 'STANDARD',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-turbo-v2',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model turbo generasi kedua teruji dengan performa cepat dan tarif hemat 50% credit.',
+    description_en:
+      'Proven second-generation turbo model offering fast turnaround and 50% credit savings.',
+    recommended_use_id:
+      'Produksi video media sosial cepat dan podcast reguler.',
+    recommended_use_en:
+      'Rapid social video narration and regular podcasts.',
   },
   {
     model_id: 'eleven_v3',
@@ -507,6 +625,58 @@ export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
       'Proyek internasional multi-bahasa, lokalisasi film lintas benua, dubbing cerdas, dan dialek bahasa yang jarang didukung AI konvensional.',
     recommended_use_en:
       'Global multi-language films, cross-border localization, smart AI dubbing, and regional dialect preservation.',
+  },
+  {
+    model_id: 'eleven_multilingual_sts_v2',
+    model_name: 'Eleven Multilingual STS v2 (Speech to Speech)',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 350,
+    latency_description: '~350ms voice changer latency',
+    language_count: 29,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr'
+    ],
+    category: 'sts',
+    tier_badge: 'NEW',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#speech-to-speech',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model Speech-to-Speech resmi untuk mengubah karakter suara rekaman audio pengguna menjadi suara kloning AI dengan mempertahankan ekspresi, ritme emosi, dan intonasi asli pengisi suara.',
+    description_en:
+      'Official Speech-to-Speech model to convert recorded actor voices into cloned AI character voices while preserving the exact emotional delivery, timing, and nuances.',
+    recommended_use_id:
+      'Penggantian suara aktor (voice changer), dubbing film sinematik ekspresif, dan transfer gaya akting suara manusia ke karakter AI.',
+    recommended_use_en:
+      'Actor voice transformation, expressive cinematic dubbing, and transferring human vocal performance to AI characters.',
+  },
+  {
+    model_id: 'eleven_english_sts_v2',
+    model_name: 'Eleven English STS v2 (Speech to Speech)',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 300,
+    latency_description: '~300ms English STS latency',
+    language_count: 1,
+    supported_languages: ['en'],
+    category: 'sts',
+    tier_badge: 'STANDARD',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#speech-to-speech',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model Speech-to-Speech khusus bahasa Inggris untuk mengubah suara pengisi suara bahasa Inggris ke karakter suara lain secara akurat.',
+    description_en:
+      'English-optimized Speech-to-Speech voice conversion model maintaining exact vocal cadence.',
+    recommended_use_id:
+      'Voiceover dubbing khusus bahasa Inggris dan game character voice changing.',
+    recommended_use_en:
+      'English voiceover dubbing and game character vocal transformation.',
   },
   {
     model_id: 'eleven_monolingual_v1',
@@ -838,7 +1008,7 @@ export function toCatalogModelEntry(model: ElevenLabsModelEntry): CatalogModelEn
     supported_categories: ['voice_over'],
     description_id: model.description_id,
     description_en: model.description_en,
-    default_quantity_type: 'shot',
+    default_quantity_type: 'asset',
     supports_duration: true,
     default_duration_seconds: 10,
     parameters: [

@@ -12,6 +12,42 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.11.1] - Penyempurnaan Terminologi File Audio & Update Katalog Lengkap 11 Model Resmi ElevenLabs (Termasuk v4 & v4 Turbo)
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.11.1`
+
+### Ditambahkan (Added)
+1. **Pembaruan Katalog Lengkap 11 Model AI Suara Resmi ElevenLabs (`elevenlabsCatalog.ts`)**:
+   - Berdasarkan riset dokumentasi API resmi ElevenLabs, menambahkan seluruh varian model resmi terbaru:
+     - **Eleven v4 (Flagship Next-Gen)**: Model generasi ke-4 tercanggih dengan kedalaman emosional manusiawi, kontrol intonasi teatrikal, dialog multi-karakter, dan dukungan 90+ bahasa (1.0 credit/karakter).
+     - **Eleven v4 Turbo (Low Latency Flagship)**: Model generasi ke-4 real-time (~100ms) dengan diskon hemat 50% credit (0.5 credit/karakter) dalam 90+ bahasa.
+     - **Eleven Flash v2**: Model latensi kilat (~75ms) untuk kebutuhan volume tinggi hemat biaya (0.5 credit/karakter).
+     - **Eleven Turbo v2**: Model percakapan cepat generasi kedua yang teruji (0.5 credit/karakter).
+     - **Eleven Multilingual STS v2 (Speech to Speech)**: Model pengubah karakter suara rekaman aktor (voice changer) dengan mempertahankan intonasi, artikulasi, dan nuansa emosional asli (1.0 credit/karakter).
+     - **Eleven English STS v2 (Speech to Speech)**: Model Speech-to-Speech khusus performa bahasa Inggris (1.0 credit/karakter).
+   - Menjadikan total 11 model AI suara resmi ElevenLabs tersedia lengkap dan siap dipilih langsung oleh sineas.
+
+### Diubah (Changed)
+1. **Refaktor Menyeluruh Terminologi Voice Over ("File Audio" Menggantikan "Shot")**:
+   - Menghapus penggunaan istilah "Shot" untuk sulih suara/voice over dan menggantinya dengan istilah baku **"file audio"** (Bahasa Indonesia) atau **"audio file"** (Bahasa Inggris).
+   - Penamaan otomatis item baru disesuaikan menjadi `File Audio 01 (Nama Model)` / `Audio File 01 (Model Name)`.
+   - Pertanyaan kuantitas di modal dan tabel secara dinamis menampilkan *"Mau Buat Berapa File Audio?"* saat kategori `voice_over` dipilih.
+   - Kolom satuan dan rincian kuantitas voice over menampilkan satuan `file audio`, bukan `shot`.
+   - Tombol simpan di dalam modal bertuliskan *"Selesai & Simpan File Audio"*.
+   - Badge peran di daftar item secara khusus menampilkan badge `🎙️ File Audio` (tidak lagi tertukar atau membingungkan dengan tombol `🎬 Shot Utama`).
+   - Di dalam modal pengaturan, bagian peran digantikan dengan pesan informatif ramah pengguna bahwa file audio adalah track suara tersendiri dan tidak menambah hitungan shot kamera video.
+   - Pada kartu ringkasan Langkah 4 (Budget Summary), metrik diperjelas menjadi *"Jumlah File Audio"*.
+   - Pada dokumen cetak PDF resmi, baris voice over secara konsisten dilabeli `🎙️ File Audio` / `🎙️ Audio File` dengan satuan `file audio`.
+2. **Penyempurnaan Tombol Navigasi Departemen**:
+   - Memperbaiki tombol kembali pada Departemen Voice Over dan Musik dari *"Kembali ke Adegan Video"* menjadi *"Kembali ke Shot / Video"* agar konsisten dengan standarisasi istilah bebas "adegan".
+
+### Diperbaiki (Fixed)
+1. **Integritas Pengetikan & Pengujian**:
+   - Memperbarui suite tes unit dan tes kriteria penerimaan hingga mencapai 88 pengujian otomatis yang semuanya lulus 100%.
+   - Menjaga nol error TypeScript (`tsc --noEmit`) dan build produksi Vite yang mulus.
+
+---
+
 ## Versi [1.11.0] - Tahap 3: Integrasi Kategori Resmi ElevenLabs Voice Over & Fitur Dwi-Input Naskah Sineas
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.11.0`
