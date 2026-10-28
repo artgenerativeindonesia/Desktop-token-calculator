@@ -12,6 +12,57 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.13.0] - Penyempurnaan Menyeluruh Fitur Musik Suno AI: Penyesuaian Model Mutakhir (Lini v6), Konteks Musik Sineas, Sambungan Lagu (Extend Runs), dan Separasi Audio Multi-Stems
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.13.0`
+
+### Ditambahkan (Added)
+1. **Dukungan Model Unggulan Resmi Terkini Suno AI (Lini v6 & v6-wild)**:
+   - Berdasarkan riset langsung pada sistem resmi Suno (suno.com), lini v6 adalah generasi resmi terkini (September 2026).
+   - Menghadirkan **Suno v6** (Flagship Core Studio, seimbang, vokal ultra-realistis, durasi hingga 8 menit / 480s), **Suno v6-wild** (Varian eksperimental untuk aransemen berani & genre-blending tak terduga, durasi hingga 8 menit), dan **Suno v6-mini** (Ringan, cepat, efisien, tersedia untuk semua pengguna termasuk Free, hingga 8 menit). Model v4, v3.5, dan v3 tetap didukung sebagai model historis teruji.
+2. **Konteks Musik Perfilman Nyata (Scene / Music Role Selector)**:
+   - Menggantikan pilihan kategori visual yang membingungkan dengan **6 Peran Musik Adegan Film**:
+     - 🎬 **Lagu Tema Utama (Theme / OST)**: Lagu pengiring utama atau pembuka cerita.
+     - 🎭 **Musik Latar Adegan (Scene Underscore / BGM)**: Atmosfer dialog aman tanpa tabrakan frekuensi percakapan aktor.
+     - ⚡ **Aksi & Ketegangan (Action & Suspense Score)**: Tensi dinamis, tempo cepat, crescendo.
+     - 💧 **Emosional & Haru (Dramatic Cue)**: Sentuhan piano dan dawai menyentuh kalbu.
+     - 🔔 **Jingle & Sonic Brand (Intro / Outro)**: Cue pendek penanda identitas merek atau iklan promosi.
+     - 📜 **Musik Penutup (End Credits)**: Soundtrack penutup cerita hingga akhir film.
+3. **Fitur Sambungan Lagu (Extend Runs) dengan Kalkulasi Kredit Otomatis**:
+   - Sineas dapat menentukan jumlah perpanjangan babak lagu (`extend_count`, misal Part 2, Part 3) untuk membangun klimaks adegan atau pergantian segmen cerita.
+   - Setiap 1 kali extend otomatis dihitung menambah **10 kredit Suno** dan menghasilkan 2 variasi kelanjutan baru. Penggabungan full song setelah extend selesai adalah gratis (0 kredit).
+4. **Separasi Audio Multi-Stems (Pemisahan Track Instrumen untuk Audio Mixing Film)**:
+   - Pilihan 3 mode resmi Suno yang sangat vital bagi penata suara / sound designer di software video editor (Premiere, DaVinci Resolve, Logic, Pro Tools):
+     - **Stereo Mix (Tanpa Stems)**: +0 Kredit (1 file audio gabungan standar).
+     - **2-Stems Split (Vokal + Backing Musik)**: +20 Kredit per lagu (Split from Mix: 2 stems x 10 cr). Sangat krusial untuk *Dialog Safety* agar editor bisa mengecilkan volume musik saat aktor berbicara.
+     - **Full Studio Auto-Split (Hingga 12 Tracks Stems)**: +50 Kredit per lagu (Auto-Split Studio). Memisahkan Drums, Bass, Guitars, Synths, Strings, Vocals, FX secara independen.
+5. **Pengaturan Format Musik Ber-Lirik & Vokal Khusus**:
+   - Saat memilih *Lagu Lengkap dengan Lirik & Vokal*, pengguna dapat memilih **Gaya Vokal** (Paduan Suara/Choir, Vokal Pria Pop, Diva Wanita Emosional, Bisikan Atmosferik, Rock, Rap/Hip-Hop).
+   - Input **Naskah Lirik Terstruktur** dilengkapi tombol bantuan cepat menyisipkan tag resmi Suno: `[Verse 1]`, `[Chorus]`, `[Verse 2]`, `[Bridge]`, `[Outro]`.
+   - Saat memilih *Instrumental Saja*, tersedia chips klik-cepat instrumen dominan (Dawai/Cello, Grand Piano, Sub-Bass 808, Brass Megah, Gitar Akustik, Ambient Pad).
+6. **Negative Prompt / Exclude Styles**:
+   - Kolom input gaya instrumen terlarang agar tidak merusak mood adegan (contoh: *no drums, no heavy distortion, no brass*).
+7. **Kartu Rincian Live Suno Terperinci (4-Grid Matrix)**:
+   - Menampilkan rincian transparan: (1) Audisi Generasi Awal, (2) Sambungan Extend, (3) Separasi Stems, dan (4) Total Kredit Suno per Track & Total Proyek (USD & IDR).
+8. **Pengembangan Rangkaian Unit Test Suno (`tests/sunoCatalog.test.ts`)**:
+   - Menambahkan 4 unit test baru menguji `calculateSunoTrackCredits`, konstanta `SUNO_STEM_CREDITS`, model v6/v6-wild (480s), serta kalkulasi budget terintegrasi extend & multi-stem (total 114 test lulus).
+
+### Diubah (Changed)
+1. **Rumus Kalkulasi Kredit & Biaya Musik di Mesin Hitung (`calculationEngine.ts`)**:
+   - Menghitung akurat kebutuhan kredit per lagu:
+     `Kredit per Track = (Audisi × 10) + (Extend × 10) + Biaya Stems`
+   - Menghitung total kredit proyek dengan memperhitungkan kuantitas track dan alokasi cadangan regenerasi (`gReserve`).
+2. **Tampilan Baris Tabel Rencana Produksi (`ProductionPlannerView.tsx`)**:
+   - Menampilkan badge Peran Musik Adegan (OST, BGM Scene, Action, dll.), indikator Stems (2-Stems / 12-Stems), jumlah Extend (`+1 Extend`), genre & durasi secara rapi dan mudah dibaca.
+
+### Diperbaiki (Fixed)
+1. **Pembersihan Selector Kategori Visual pada Modal Musik**:
+   - Menghilangkan 9 tombol kategori visual (text-to-image, upscale, dll.) dan checkbox Unlimited Higgsfield dari modal musik, menggantikannya secara terfokus pada parameter musik Suno.
+2. **Penyempurnaan Fallback Model Suno**:
+   - Mengubah fallback default model Suno ke `suno_v6` sebagai flagship aktif resmi terkini.
+
+---
+
 ## Versi [1.12.0] - Integrasi Katalog Resmi Suno AI Music Generator, Manajemen Paket Langganan & Pelacakan Kredit Musik Transparan (Tahap 4)
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.12.0`

@@ -670,15 +670,31 @@ export function calculateProjectBudget(
         'pro';
       const activePlan = getSunoPlanById(activePlanId);
 
-      // Aturan Baku Suno: 1 kali generate = 10 kredit menghasilkan 2 variasi lagu
+      // Aturan Baku Suno AI:
+      // 1. Base audisi generasi per track: attempts * 10 kredit (menghasilkan attempts * 2 variasi klip awal)
+      // 2. Sambungan/Extend per track: extendRuns * 10 kredit (menghasilkan extendRuns * 2 variasi perpanjangan)
+      // 3. Separasi stem: none = 0 cr, two_stems = 20 cr, full_stems = 50 cr per lagu
       const creditsPerGen = 10;
+      const extendRuns = Math.max(0, Math.floor(item.extend_count || 0));
+      const stemMode = item.stem_separation_mode || 'none';
+      const stemCost =
+        stemMode === 'full_stems' ? 50 : stemMode === 'two_stems' ? 20 : 0;
 
-      const itemPlannedSuno = new Decimal(gPlanned).times(creditsPerGen);
+      const plannedGenPerTrack = attempts + extendRuns;
+      const plannedCreditsPerTrack =
+        plannedGenPerTrack * creditsPerGen + stemCost;
+
+      const musicPlannedGen = effectiveQty * plannedGenPerTrack;
+      const musicBudgetedGen = musicPlannedGen + gReserve;
+
+      const itemPlannedSuno = new Decimal(effectiveQty).times(
+        plannedCreditsPerTrack
+      );
       const itemReserveSuno = new Decimal(gReserve).times(creditsPerGen);
-      const itemBudgetedSuno = new Decimal(gBudget).times(creditsPerGen);
+      const itemBudgetedSuno = itemPlannedSuno.plus(itemReserveSuno);
 
       let itemTotalCredit: number | null = null;
-      if (gBudget > 0) {
+      if (itemBudgetedSuno.greaterThan(0)) {
         sumOneVideoSunoCredit = sumOneVideoSunoCredit.plus(itemBudgetedSuno);
         hasSunoItems = true;
         itemTotalCredit = itemBudgetedSuno.toNumber();
@@ -693,11 +709,11 @@ export function calculateProjectBudget(
         pricing.price_value !== null &&
         pricing.price_value >= 0
       ) {
-        bBaseDec = new Decimal(gPlanned).times(pricing.price_value);
+        bBaseDec = new Decimal(musicPlannedGen).times(pricing.price_value);
         bReserveDec = new Decimal(gReserve).times(pricing.price_value);
       } else {
-        bBaseDec = new Decimal(itemPlannedSuno).times(activePlan.usd_per_credit);
-        bReserveDec = new Decimal(itemReserveSuno).times(activePlan.usd_per_credit);
+        bBaseDec = itemPlannedSuno.times(activePlan.usd_per_credit);
+        bReserveDec = itemReserveSuno.times(activePlan.usd_per_credit);
       }
 
       const baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
@@ -730,9 +746,9 @@ export function calculateProjectBudget(
 
       const catSum = categorySummaries[item.category];
       catSum.item_count += 1;
-      catSum.planned_generations += gPlanned;
+      catSum.planned_generations += musicPlannedGen;
       catSum.reserve_generations += gReserve;
-      catSum.budgeted_generations += gBudget;
+      catSum.budgeted_generations += musicBudgetedGen;
       catSum.base_cost_usd = new Decimal(catSum.base_cost_usd)
         .plus(baseCostUsd)
         .toDecimalPlaces(4)
@@ -762,7 +778,7 @@ export function calculateProjectBudget(
         pricing.price_value !== null &&
         pricing.price_value >= 0
           ? pricing.price_value
-          : new Decimal(creditsPerGen)
+          : new Decimal(plannedCreditsPerTrack)
               .times(activePlan.usd_per_credit)
               .toDecimalPlaces(4)
               .toNumber();
@@ -777,11 +793,11 @@ export function calculateProjectBudget(
         model_name: item.model_selection.model_name,
         effective_quantity: effectiveQty,
         attempts_per_item: attempts,
-        planned_generations: gPlanned,
+        planned_generations: musicPlannedGen,
         reserve_generations: gReserve,
-        budgeted_generations: gBudget,
+        budgeted_generations: musicBudgetedGen,
         unit_multiplier: 1,
-        pricing_unit: 'per_generation',
+        pricing_unit: 'per_asset',
         unit_price_usd: musicUnitPriceUsd,
         base_cost_usd: baseCostUsd,
         reserve_cost_usd: reserveCostUsd,
@@ -789,7 +805,7 @@ export function calculateProjectBudget(
         base_cost_idr: baseCostIdr,
         reserve_cost_idr: reserveCostIdr,
         total_cost_idr: totalCostIdr,
-        unit_credit: creditsPerGen,
+        unit_credit: plannedCreditsPerTrack,
         total_credit: itemTotalCredit,
         pricing_status: pricing.status === 'manual' ? 'manual' : 'verified',
         is_item_complete: effectiveQty > 0,
@@ -1362,7 +1378,10 @@ export function createProductionItemFromCatalog(
     baseItem.is_primary_shot = false; // Aset Pendukung (Background Music)
     baseItem.duration_seconds = durationSec > 0 ? durationSec : 120;
     baseItem.is_instrumental = true;
+    baseItem.music_role = 'bgm_scene';
     baseItem.music_genre = 'Sinematik Megah';
+    baseItem.extend_count = 0;
+    baseItem.stem_separation_mode = 'none';
   }
 
   return baseItem;

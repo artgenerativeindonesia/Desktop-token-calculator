@@ -181,7 +181,23 @@ export interface ProductionItem {
   music_prompt?: string;
   music_genre?: string;
   is_instrumental?: boolean;
+  music_role?: MusicSceneRole;
+  music_vocal_style?: string;
+  music_lyrics?: string;
+  extend_count?: number; // Jumlah sambungan/kelanjutan lagu yang direncanakan (Part 2, Part 3, dst.)
+  stem_separation_mode?: MusicStemSeparationMode; // None (0 cr), Two Stems (20 cr), Full Stems (50 cr)
+  exclude_styles?: string; // Gaya/instrumen terlarang (negative prompt)
 }
+
+export type MusicSceneRole =
+  | 'theme_ost'
+  | 'bgm_scene'
+  | 'action_score'
+  | 'emotional'
+  | 'jingle'
+  | 'credits';
+
+export type MusicStemSeparationMode = 'none' | 'two_stems' | 'full_stems';
 
 /** PRD Bab 8.1, 8.3, 8.8, 10.2: Objek BudgetAssumptions */
 export interface BudgetAssumptions {

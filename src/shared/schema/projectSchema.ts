@@ -82,6 +82,14 @@ export const ProductionItemSchema = z.object({
   music_prompt: z.string().optional(),
   music_genre: z.string().optional(),
   is_instrumental: z.boolean().optional(),
+  music_role: z
+    .enum(['theme_ost', 'bgm_scene', 'action_score', 'emotional', 'jingle', 'credits'])
+    .optional(),
+  music_vocal_style: z.string().optional(),
+  music_lyrics: z.string().optional(),
+  extend_count: z.number().int().nonnegative().optional(),
+  stem_separation_mode: z.enum(['none', 'two_stems', 'full_stems']).optional(),
+  exclude_styles: z.string().optional(),
 });
 
 export const ElevenLabsSubscriptionPlanSchema = z.object({

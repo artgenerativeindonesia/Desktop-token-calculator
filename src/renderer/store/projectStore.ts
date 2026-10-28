@@ -145,6 +145,12 @@ interface ProjectStoreState {
         | 'music_prompt'
         | 'music_genre'
         | 'is_instrumental'
+        | 'music_role'
+        | 'music_vocal_style'
+        | 'music_lyrics'
+        | 'extend_count'
+        | 'stem_separation_mode'
+        | 'exclude_styles'
       >
     >
   ) => void;
@@ -811,8 +817,11 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           is_primary_shot: false,
           is_unlimited: false,
           is_instrumental: true,
+          music_role: 'bgm_scene',
           music_genre: 'Sinematik Megah',
           music_prompt: '',
+          extend_count: 0,
+          stem_separation_mode: 'none',
           model_selection: {
             provider: musicModel.provider,
             model_id: musicModel.model_id,

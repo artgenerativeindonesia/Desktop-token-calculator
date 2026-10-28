@@ -8,6 +8,8 @@ import {
   calculateSunoCredits,
   calculateSunoCostUsd,
   calculateSunoCostIdr,
+  calculateSunoTrackCredits,
+  SUNO_STEM_CREDITS,
   applySunoPlanRateToCatalog,
   fetchSunoCatalogAuto,
 } from '../src/shared/catalog/sunoCatalog';
@@ -22,14 +24,24 @@ import {
 
 describe('Suno AI Music Generator — Official Catalog & Engine Suite (Tahap 4)', () => {
   describe('1. Model Catalog Integrity', () => {
-    it('memuat model resmi Suno v4, v3.5, v3, v6 mini, dan v6', () => {
+    it('memuat model resmi Suno v6, v6-wild, v6-mini, v4, v3.5, dan v3', () => {
       const modelIds = SUNO_MODELS_CATALOG.map((m) => m.model_id);
+      expect(modelIds).toContain('suno_v6');
+      expect(modelIds).toContain('suno_v6_wild');
+      expect(modelIds).toContain('suno_v6_mini');
       expect(modelIds).toContain('suno_v4');
       expect(modelIds).toContain('suno_v3_5');
       expect(modelIds).toContain('suno_v3');
-      expect(modelIds).toContain('suno_v6_mini');
-      expect(modelIds).toContain('suno_v6');
-      expect(SUNO_MODELS_CATALOG.length).toBeGreaterThanOrEqual(5);
+      expect(SUNO_MODELS_CATALOG.length).toBeGreaterThanOrEqual(6);
+    });
+
+    it('model v6 dan v6-wild mendukung durasi hingga 8 menit (480 detik)', () => {
+      const v6 = getSunoModelById('suno_v6');
+      expect(v6.max_duration_seconds).toBe(480);
+      expect(v6.tier_badge).toBe('NEW');
+
+      const v6Wild = getSunoModelById('suno_v6_wild');
+      expect(v6Wild.max_duration_seconds).toBe(480);
     });
 
     it('setiap model resmi Suno berbiaya tepat 10 kredit per tombol generate', () => {
@@ -47,11 +59,11 @@ describe('Suno AI Music Generator — Official Catalog & Engine Suite (Tahap 4)'
 
     it('getSunoModelById mengembalikan model yang tepat dan fallback aman', () => {
       const v4 = getSunoModelById('suno_v4');
-      expect(v4.model_name).toBe('Suno v4 (Flagship Next-Gen)');
+      expect(v4.model_name).toBe('Suno v4 (Flagship Next-Gen Historis)');
       expect(v4.max_duration_seconds).toBe(240);
 
       const unknown = getSunoModelById('unknown_model_xyz');
-      expect(unknown.model_id).toBe('suno_v4'); // fallback aman
+      expect(unknown.model_id).toBe('suno_v6'); // fallback aman ke flagship resmi v6
     });
   });
 
@@ -116,6 +128,38 @@ describe('Suno AI Music Generator — Official Catalog & Engine Suite (Tahap 4)'
       const premierCatalog = applySunoPlanRateToCatalog(SUNO_AS_CATALOG_MODELS, 'premier');
       const v4Premier = premierCatalog.find((m) => m.model_id === 'suno_v4');
       expect(v4Premier?.pricing_variants[0].price_value).toBe(0.03);
+    });
+
+    it('SUNO_STEM_CREDITS mendefinisikan tarif resmi 0 (none), 20 (two_stems), dan 50 (full_stems)', () => {
+      expect(SUNO_STEM_CREDITS.none).toBe(0);
+      expect(SUNO_STEM_CREDITS.two_stems).toBe(20);
+      expect(SUNO_STEM_CREDITS.full_stems).toBe(50);
+    });
+
+    it('calculateSunoTrackCredits menghitung alur kerja sineas: base attempts + extends + stems', () => {
+      // 1 run audisi, 0 extend, stereo mix
+      const basic = calculateSunoTrackCredits({ baseAttempts: 1, extendCount: 0, stemMode: 'none' });
+      expect(basic.baseCredits).toBe(10);
+      expect(basic.extendCredits).toBe(0);
+      expect(basic.stemCredits).toBe(0);
+      expect(basic.totalCreditsPerTrack).toBe(10);
+      expect(basic.totalVariationsPerTrack).toBe(2);
+
+      // 2 run audisi, 1 extend, two_stems (split vokal/musik)
+      const cinematic = calculateSunoTrackCredits({ baseAttempts: 2, extendCount: 1, stemMode: 'two_stems' });
+      expect(cinematic.baseCredits).toBe(20); // 2 * 10
+      expect(cinematic.extendCredits).toBe(10); // 1 * 10
+      expect(cinematic.stemCredits).toBe(20); // 20 cr
+      expect(cinematic.totalCreditsPerTrack).toBe(50); // 20 + 10 + 20
+      expect(cinematic.totalVariationsPerTrack).toBe(6); // (2 + 1) * 2
+
+      // 3 run audisi, 2 extend, full_stems (studio 12 tracks)
+      const studio = calculateSunoTrackCredits({ baseAttempts: 3, extendCount: 2, stemMode: 'full_stems' });
+      expect(studio.baseCredits).toBe(30);
+      expect(studio.extendCredits).toBe(20);
+      expect(studio.stemCredits).toBe(50);
+      expect(studio.totalCreditsPerTrack).toBe(100);
+      expect(studio.totalVariationsPerTrack).toBe(10);
     });
 
     it('fetchSunoCatalogAuto mengembalikan katalog valid dan fallback snapshot', async () => {
@@ -266,6 +310,71 @@ describe('Suno AI Music Generator — Official Catalog & Engine Suite (Tahap 4)'
       expect(result.total_suno_credit).toBe(60);
       expect(result.total_cost_usd).toBe(0.24);
       expect(result.total_cost_idr).toBe(3900);
+    });
+
+    it('menghitung akurat alur kerja sineas: 1 track, 2 audisi, 1 extend, dan two_stems (20 cr)', () => {
+      const filmmakerMusicItem: ProductionItem = {
+        item_id: 'item-filmmaker-music',
+        category: 'music',
+        label: 'Adegan Aksi Sinematik (Full)',
+        quantity: 1,
+        quantity_type: 'asset',
+        duration_seconds: 180,
+        attempts_per_item: 2, // 2 audisi
+        extend_count: 1, // 1 extend
+        stem_separation_mode: 'two_stems', // 20 cr stems
+        music_role: 'action_score',
+        is_instrumental: true,
+        model_selection: {
+          provider: 'suno',
+          model_id: 'suno_v6',
+          model_name: 'Suno v6',
+          category: 'music',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_asset',
+          price_value: null,
+          currency: 'USD',
+          credit_cost: 10,
+          source_name: 'Suno Official Catalog',
+          source_url: 'https://suno.com/pricing',
+          retrieved_at: new Date().toISOString(),
+          status: 'verified',
+        },
+      };
+
+      const result = calculateProjectBudget(
+        [filmmakerMusicItem],
+        {
+          target_videos: 1,
+          default_attempts_per_shot: 2,
+          suno_plan_id: 'pro',
+          reserve_input_mode: 'percent',
+          reserve_percent: 0,
+          reserve_generations_override: 0,
+          estimation_mode: 'per_shot',
+          default_shots_per_video: 10,
+          final_duration_minutes: 1,
+        },
+        fx
+      );
+
+      // Generasi: (2 audisi + 1 extend) = 3 generasi
+      expect(result.item_results[0].planned_generations).toBe(3);
+      expect(result.item_results[0].budgeted_generations).toBe(3);
+
+      // Kredit: (2 * 10) + (1 * 10) + 20 (stems) = 50 Kredit Suno
+      expect(result.item_results[0].total_credit).toBe(50);
+      expect(result.total_suno_credit).toBe(50);
+
+      // Biaya Pro Plan: 50 * $0.004 = $0.2000
+      expect(result.item_results[0].total_cost_usd).toBe(0.2);
+      expect(result.total_cost_usd).toBe(0.2);
+
+      // Biaya IDR: $0.20 * 16250 = Rp 3.250
+      expect(result.item_results[0].total_cost_idr).toBe(3250);
+      expect(result.total_cost_idr).toBe(3250);
     });
 
     it('createProductionItemFromCatalog otomatis menginisialisasi properti default musik Suno', () => {

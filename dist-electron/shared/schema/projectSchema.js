@@ -78,6 +78,14 @@ exports.ProductionItemSchema = zod_1.z.object({
     music_prompt: zod_1.z.string().optional(),
     music_genre: zod_1.z.string().optional(),
     is_instrumental: zod_1.z.boolean().optional(),
+    music_role: zod_1.z
+        .enum(['theme_ost', 'bgm_scene', 'action_score', 'emotional', 'jingle', 'credits'])
+        .optional(),
+    music_vocal_style: zod_1.z.string().optional(),
+    music_lyrics: zod_1.z.string().optional(),
+    extend_count: zod_1.z.number().int().nonnegative().optional(),
+    stem_separation_mode: zod_1.z.enum(['none', 'two_stems', 'full_stems']).optional(),
+    exclude_styles: zod_1.z.string().optional(),
 });
 exports.ElevenLabsSubscriptionPlanSchema = zod_1.z.object({
     plan_id: zod_1.z.string().min(1),

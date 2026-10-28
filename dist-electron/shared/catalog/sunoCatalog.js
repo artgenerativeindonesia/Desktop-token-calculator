@@ -19,9 +19,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SUNO_AS_CATALOG_MODELS = exports.SUNO_VARIATIONS_PER_GENERATION = exports.SUNO_CREDITS_PER_GENERATION = exports.SUNO_MODELS_CATALOG = exports.SUNO_SNAPSHOT_RETRIEVED_AT = exports.SUNO_PLANS_CATALOG = exports.SUNO_SUBSCRIPTION_PLANS = void 0;
+exports.SUNO_AS_CATALOG_MODELS = exports.SUNO_VARIATIONS_PER_GENERATION = exports.SUNO_CREDITS_PER_GENERATION = exports.SUNO_MODELS_CATALOG = exports.SUNO_STEM_CREDITS = exports.SUNO_SNAPSHOT_RETRIEVED_AT = exports.SUNO_PLANS_CATALOG = exports.SUNO_SUBSCRIPTION_PLANS = void 0;
 exports.getSunoPlanById = getSunoPlanById;
 exports.getSunoModelById = getSunoModelById;
+exports.calculateSunoTrackCredits = calculateSunoTrackCredits;
 exports.calculateSunoCredits = calculateSunoCredits;
 exports.calculateSunoCostUsd = calculateSunoCostUsd;
 exports.calculateSunoCostIdr = calculateSunoCostIdr;
@@ -86,16 +87,75 @@ function getSunoPlanById(planId) {
     return match || exports.SUNO_SUBSCRIPTION_PLANS[1]; // default: Pro
 }
 exports.SUNO_SNAPSHOT_RETRIEVED_AT = '2026-10-29T00:00:00.000Z';
+/**
+ * Biaya Tambahan Separasi Audio Stem Resmi Suno:
+ * - None (Stereo Mix): 0 kredit tambahan
+ * - Two Stems (Split from Mix / Vokal & Backing Track): 2 stems x 10 = 20 kredit per lagu
+ * - Full Stems (Auto-Split Studio hingga 12 tracks drum, bass, keys, guitar, strings, dll.): 50 kredit per lagu
+ */
+exports.SUNO_STEM_CREDITS = {
+    none: 0,
+    two_stems: 20,
+    full_stems: 50,
+};
 exports.SUNO_MODELS_CATALOG = [
     {
-        model_id: 'suno_v4',
-        model_name: 'Suno v4 (Flagship Next-Gen)',
+        model_id: 'suno_v6',
+        model_name: 'Suno v6 (Flagship Core Studio)',
         credits_per_generation: 10,
         variations_per_generation: 2,
-        max_duration_seconds: 240, // 4 menit (dapat di-extend hingga 8 menit)
+        max_duration_seconds: 480, // Hingga 8 menit penuh per generasi klip
         tier_badge: 'NEW',
-        description_id: 'Model generasi ke-4 resmi tercanggih dengan aransemen musik sinematik, kualitas audio studio 48kHz, vokal sangat jernih, dan struktur lagu dinamis.',
-        description_en: 'Official flagship 4th-gen model with cinematic arrangements, 48kHz studio audio fidelity, expressive vocals, and dynamic song structures.',
+        description_id: 'Model flagship generasi ke-6 resmi tercanggih (September 2026). Komposisi seimbang, kontrol presisi tinggi, vokal ultra-realistis, dan kualitas audio berstandar industri hingga 8 menit per generasi klip.',
+        description_en: 'Official flagship 6th-gen core model (September 2026). Balanced composition, ultra-lifelike expressive vocals, and studio-grade audio up to 8 minutes per run.',
+        supports_stems: true,
+        supports_extend: true,
+        source_name: 'Suno Official Model Index',
+        source_url: 'https://suno.com/pricing',
+        retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
+        is_active: true,
+    },
+    {
+        model_id: 'suno_v6_wild',
+        model_name: 'Suno v6-wild (Experimental & Avant-Garde)',
+        credits_per_generation: 10,
+        variations_per_generation: 2,
+        max_duration_seconds: 480, // Hingga 8 menit penuh per generasi klip
+        tier_badge: 'NEW',
+        description_id: 'Varian eksperimental resmi dari model v6 untuk aransemen berani, tekstur instrumen kaya, dan genre-blending yang tidak terduga hingga 8 menit (Khusus Pro & Premier).',
+        description_en: 'Official experimental v6 variant for daring arrangements, rich instrument textures, and unexpected genre crossovers up to 8 minutes (Pro & Premier only).',
+        supports_stems: true,
+        supports_extend: true,
+        source_name: 'Suno Official Model Index',
+        source_url: 'https://suno.com/pricing',
+        retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
+        is_active: true,
+    },
+    {
+        model_id: 'suno_v6_mini',
+        model_name: 'Suno v6-mini (Fast & Agile Ideation)',
+        credits_per_generation: 10,
+        variations_per_generation: 2,
+        max_duration_seconds: 480, // Hingga 8 menit penuh
+        tier_badge: 'POPULER',
+        description_id: 'Versi ringan dan berkecepatan tinggi dari arsitektur v6. Sangat efisien untuk eksplorasi cepat ide lagu latar, jingle dinamis, dan dapat diakses semua pengguna termasuk Free.',
+        description_en: 'Lightweight, high-speed edition of the v6 architecture. Highly efficient for rapid BGM ideation, dynamic jingles, and accessible to all users including Free.',
+        supports_stems: true,
+        supports_extend: true,
+        source_name: 'Suno Official Model Index',
+        source_url: 'https://suno.com/pricing',
+        retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
+        is_active: true,
+    },
+    {
+        model_id: 'suno_v4',
+        model_name: 'Suno v4 (Flagship Next-Gen Historis)',
+        credits_per_generation: 10,
+        variations_per_generation: 2,
+        max_duration_seconds: 240, // 4 menit
+        tier_badge: 'PREMIUM',
+        description_id: 'Model teruji generasi ke-4 resmi dengan audio studio 48kHz, aransemen sinematik kaya, dan struktur lagu dinamis hingga 4 menit per generasi.',
+        description_en: 'Proven 4th-gen flagship model featuring 48kHz studio audio, rich cinematic arrangements, and dynamic structure up to 4 minutes.',
         supports_stems: true,
         supports_extend: true,
         source_name: 'Suno Official Model Index',
@@ -109,9 +169,9 @@ exports.SUNO_MODELS_CATALOG = [
         credits_per_generation: 10,
         variations_per_generation: 2,
         max_duration_seconds: 240, // 4 menit
-        tier_badge: 'POPULER',
-        description_id: 'Model teruji paling stabil untuk pembuatan lagu komersial lengkap (verse, chorus, bridge, outro) hingga 4 menit per generasi.',
-        description_en: 'Proven reliable workhorse for full-length song structures (verse, chorus, bridge, outro) up to 4 minutes per run.',
+        tier_badge: 'STANDARD',
+        description_id: 'Model workhorse klasik paling stabil untuk pembuatan lagu komersial terstruktur lengkap (verse, chorus, bridge, outro) hingga 4 menit.',
+        description_en: 'Classic reliable workhorse for full-length song structures (verse, chorus, bridge, outro) up to 4 minutes per run.',
         supports_stems: true,
         supports_extend: true,
         source_name: 'Suno Official Model Index',
@@ -135,42 +195,33 @@ exports.SUNO_MODELS_CATALOG = [
         retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
         is_active: true,
     },
-    {
-        model_id: 'suno_v6_mini',
-        model_name: 'Suno v6-mini (Fast & Agile)',
-        credits_per_generation: 10,
-        variations_per_generation: 2,
-        max_duration_seconds: 180, // 3 menit
-        tier_badge: 'PREMIUM',
-        description_id: 'Model ringan generasi baru berkecepatan tinggi, ideal untuk pembuatan sketsa ide lagu latar dan jingle dinamis.',
-        description_en: 'Next-gen lightweight high-speed model, optimal for rapid background soundtrack ideation and dynamic jingles.',
-        supports_stems: true,
-        supports_extend: true,
-        source_name: 'Suno Official Model Index',
-        source_url: 'https://suno.com/pricing',
-        retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
-        is_active: true,
-    },
-    {
-        model_id: 'suno_v6',
-        model_name: 'Suno v6 (Orchestral & Studio)',
-        credits_per_generation: 10,
-        variations_per_generation: 2,
-        max_duration_seconds: 300, // 5 menit
-        tier_badge: 'NEW',
-        description_id: 'Model generasi masa depan dengan kemampuan orkestrasi multi-layer dan separasi instrumen tingkat lanjut.',
-        description_en: 'Cutting-edge model with multi-layer orchestration and advanced stem-separation support.',
-        supports_stems: true,
-        supports_extend: true,
-        source_name: 'Suno Official Model Index',
-        source_url: 'https://suno.com/pricing',
-        retrieved_at: exports.SUNO_SNAPSHOT_RETRIEVED_AT,
-        is_active: true,
-    },
 ];
 function getSunoModelById(modelId) {
     const match = exports.SUNO_MODELS_CATALOG.find((m) => m.model_id === modelId);
-    return match || exports.SUNO_MODELS_CATALOG[0]; // fallback to Suno v4
+    return match || exports.SUNO_MODELS_CATALOG[0]; // fallback to Suno v6
+}
+/**
+ * Menghitung rincian kredit per lagu/track untuk alur kerja sineas:
+ * 1. Base audisi generasi: attempts * 10 kredit (menghasilkan attempts * 2 variasi klip lagu)
+ * 2. Extend/sambungan durasi: extendCount * 10 kredit (menghasilkan extendCount * 2 variasi kelanjutan)
+ * 3. Separasi stem instrumen: 0 (none), 20 (2-stems), atau 50 (full 12-stems) kredit per lagu
+ */
+function calculateSunoTrackCredits(params) {
+    const baseAttempts = Math.max(1, Math.floor(params.baseAttempts || 1));
+    const extendCount = Math.max(0, Math.floor(params.extendCount || 0));
+    const stemMode = params.stemMode || 'none';
+    const stemCredits = exports.SUNO_STEM_CREDITS[stemMode] || 0;
+    const baseCredits = baseAttempts * exports.SUNO_CREDITS_PER_GENERATION;
+    const extendCredits = extendCount * exports.SUNO_CREDITS_PER_GENERATION;
+    const totalCreditsPerTrack = baseCredits + extendCredits + stemCredits;
+    const totalVariationsPerTrack = (baseAttempts + extendCount) * exports.SUNO_VARIATIONS_PER_GENERATION;
+    return {
+        baseCredits,
+        extendCredits,
+        stemCredits,
+        totalCreditsPerTrack,
+        totalVariationsPerTrack,
+    };
 }
 // ============================================================================
 // 3. KALKULASI KONSUMSI KREDIT & BIAYA SUNO AI (USD & IDR)
