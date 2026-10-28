@@ -131,11 +131,27 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
       expect(model.supported_languages).toContain('id');
     });
 
+    it('eleven_flash_v2: 0.5 credit/char (diskon 50%), ~75ms, 29 bahasa', () => {
+      const model = getElevenLabsModelById('eleven_flash_v2');
+      expect(model.credit_multiplier_per_character).toBe(0.5);
+      expect(model.latency_ms_approx).toBe(75);
+      expect(model.language_count).toBeGreaterThanOrEqual(29);
+      expect(model.supported_languages).toContain('id');
+    });
+
     it('eleven_turbo_v2_5: 0.5 credit/char (diskon 50%), ~250ms, 32 bahasa', () => {
       const model = getElevenLabsModelById('eleven_turbo_v2_5');
       expect(model.credit_multiplier_per_character).toBe(0.5);
       expect(model.latency_ms_approx).toBe(250);
       expect(model.language_count).toBeGreaterThanOrEqual(32);
+    });
+
+    it('eleven_turbo_v2: 0.5 credit/char (diskon 50%), ~250ms, 29 bahasa', () => {
+      const model = getElevenLabsModelById('eleven_turbo_v2');
+      expect(model.credit_multiplier_per_character).toBe(0.5);
+      expect(model.latency_ms_approx).toBe(250);
+      expect(model.language_count).toBeGreaterThanOrEqual(29);
+      expect(model.supported_languages).toContain('id');
     });
 
     it('eleven_v3: 1.0 credit/char, 70+ bahasa', () => {
@@ -151,10 +167,31 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
       expect(model.supported_languages).toContain('id');
     });
 
+    it('eleven_english_sts_v2: Speech to Speech voice changer English, 1.0 credit/char', () => {
+      const model = getElevenLabsModelById('eleven_english_sts_v2');
+      expect(model.credit_multiplier_per_character).toBe(1.0);
+      expect(model.category).toBe('sts');
+      expect(model.supported_languages).toEqual(['en']);
+    });
+
     it('eleven_monolingual_v1: 1.0 credit/char, English only', () => {
       const model = getElevenLabsModelById('eleven_monolingual_v1');
       expect(model.credit_multiplier_per_character).toBe(1.0);
       expect(model.supported_languages).toEqual(['en']);
+    });
+
+    it('Verifikasi 100% dari 11 model ElevenLabs memiliki parameter lengkap, aktif, dan valid', () => {
+      expect(ELEVENLABS_MODELS_CATALOG).toHaveLength(11);
+      for (const m of ELEVENLABS_MODELS_CATALOG) {
+        expect(m.model_id).toBeTruthy();
+        expect(m.model_name).toBeTruthy();
+        expect([0.5, 1.0]).toContain(m.credit_multiplier_per_character);
+        expect(m.latency_ms_approx).toBeGreaterThan(0);
+        expect(m.language_count).toBeGreaterThan(0);
+        expect(m.supported_languages.length).toBeGreaterThan(0);
+        expect(m.is_active).toBe(true);
+        expect(m.source_url).toContain('elevenlabs.io');
+      }
     });
   });
 
@@ -278,12 +315,28 @@ describe('ElevenLabs Official Catalog & Voice Engine', () => {
   describe('5. Bridge Adaptor ke CatalogModelEntry', () => {
     it('mengadaptasi semua 11 model ElevenLabs ke struktur CatalogModelEntry standar dengan quantity_type asset (file audio)', () => {
       expect(ELEVENLABS_AS_CATALOG_MODELS).toHaveLength(11);
-      const first = ELEVENLABS_AS_CATALOG_MODELS[0];
-      expect(first.provider).toBe('elevenlabs');
-      expect(first.supported_categories).toEqual(['voice_over']);
-      expect(first.default_quantity_type).toBe('asset');
-      expect(first.pricing_variants[0].pricing_unit).toBe('per_second');
-      expect(first.pricing_variants[0].status).toBe('verified');
+      for (const m of ELEVENLABS_AS_CATALOG_MODELS) {
+        expect(m.provider).toBe('elevenlabs');
+        expect(m.supported_categories).toEqual(['voice_over']);
+        expect(m.default_quantity_type).toBe('asset');
+        expect(m.pricing_variants[0].pricing_unit).toBe('per_second');
+        expect(m.pricing_variants[0].status).toBe('verified');
+      }
+    });
+
+    it('memastikan terminologi file audio terdistribusi konsisten pada seluruh 11 model bridge', () => {
+      const modelNames = ELEVENLABS_AS_CATALOG_MODELS.map((m) => m.model_name);
+      expect(modelNames).toContain('Eleven v4 (Flagship Next-Gen)');
+      expect(modelNames).toContain('Eleven v4 Turbo (Low Latency Flagship)');
+      expect(modelNames).toContain('Eleven Multilingual v2');
+      expect(modelNames).toContain('Eleven Flash v2.5');
+      expect(modelNames).toContain('Eleven Flash v2');
+      expect(modelNames).toContain('Eleven Turbo v2.5');
+      expect(modelNames).toContain('Eleven Turbo v2');
+      expect(modelNames).toContain('Eleven v3 (Multilingual Alpha)');
+      expect(modelNames).toContain('Eleven Multilingual STS v2 (Speech to Speech)');
+      expect(modelNames).toContain('Eleven English STS v2 (Speech to Speech)');
+      expect(modelNames).toContain('Eleven English v1 (Monolingual Legacy)');
     });
   });
 
