@@ -752,17 +752,25 @@ export const SPEECH_SPEED_PROFILES: Record<'id' | 'en', SpeechSpeedProfile> = {
 // 5. FUNGSI PEMBANTU KONVERSI & ESTIMASI (DWI-INPUT SINEAS)
 // ============================================================================
 
+export function getSpeedPresetMultiplier(preset?: string): number {
+  if (preset === 'fast') return 1.15;
+  if (preset === 'slow') return 0.85;
+  return 1.0;
+}
+
 /**
  * Konversi Durasi (detik) ke Estimasi Jumlah Karakter Naskah.
- * Contoh: Durasi shot 10 detik Bahasa Indonesia -> ~145 karakter naskah.
+ * Contoh: Durasi 10 detik Bahasa Indonesia -> ~145 karakter naskah.
  */
 export function convertDurationToCharacters(
   seconds: number,
-  lang: 'id' | 'en' = 'id'
+  lang: 'id' | 'en' = 'id',
+  speedPreset?: string
 ): number {
   if (!Number.isFinite(seconds) || seconds <= 0) return 0;
   const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
-  return Math.round(seconds * profile.characters_per_second);
+  const speedMult = getSpeedPresetMultiplier(speedPreset);
+  return Math.round(seconds * profile.characters_per_second * speedMult);
 }
 
 /**
@@ -771,11 +779,13 @@ export function convertDurationToCharacters(
  */
 export function convertCharactersToDuration(
   chars: number,
-  lang: 'id' | 'en' = 'id'
+  lang: 'id' | 'en' = 'id',
+  speedPreset?: string
 ): number {
   if (!Number.isFinite(chars) || chars <= 0) return 0;
   const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
-  const seconds = chars / profile.characters_per_second;
+  const speedMult = getSpeedPresetMultiplier(speedPreset);
+  const seconds = chars / (profile.characters_per_second * speedMult);
   return Math.round(seconds * 100) / 100; // Pembulatan rapi ke 2 desimal
 }
 
@@ -871,10 +881,15 @@ export function calculateElevenLabsCostIdr(
   usdToIdrRate: number = DEFAULT_USD_TO_IDR_RATE
 ): number {
   if (!Number.isFinite(credits) || credits <= 0) return 0;
-  const costUsd = calculateElevenLabsCostUsd(credits, planId);
-  if (costUsd === 0) return 0;
+  const plan = getElevenLabsPlanById(planId);
+  if (plan.monthly_price_usd === 0 || plan.usd_per_credit === 0) return 0;
 
-  const costIdr = new Decimal(costUsd).times(usdToIdrRate).toNumber();
+  // Hitung langsung dengan Decimal presisi penuh (tanpa potong desimal USD di tengah jalan)
+  const costIdr = new Decimal(credits)
+    .times(plan.usd_per_credit)
+    .times(usdToIdrRate)
+    .toDecimalPlaces(2)
+    .toNumber();
   return Math.round(costIdr);
 }
 
@@ -1013,29 +1028,17 @@ export function toCatalogModelEntry(model: ElevenLabsModelEntry): CatalogModelEn
     default_duration_seconds: 10,
     parameters: [
       {
-        key: 'language',
-        label_id: 'Bahasa Naskah',
-        label_en: 'Script Language',
-        type: 'select',
-        options: [
-          { value: 'id', label: 'Bahasa Indonesia (~14.5 karakter/detik)' },
-          { value: 'en', label: 'Bahasa Inggris (~16.5 karakter/detik)' },
-        ],
-        defaultValue: 'id',
-        affectsPricing: false,
-      },
-      {
         key: 'speed_preset',
-        label_id: 'Kecepatan Tempo',
-        label_en: 'Tempo Preset',
+        label_id: 'Kecepatan Tempo Bicara',
+        label_en: 'Speech Tempo Preset',
         type: 'select',
         options: [
-          { value: 'normal', label: 'Normal (1.0x)' },
-          { value: 'fast', label: 'Cepat (1.15x)' },
-          { value: 'slow', label: 'Lambat Khidmat (0.85x)' },
+          { value: 'normal', label: 'Normal (1.0x — ~14.5 kar/dtk ID, ~16.5 kar/dtk EN)' },
+          { value: 'fast', label: 'Cepat / Energik (1.15x — lebih padat karakter per detik)' },
+          { value: 'slow', label: 'Lambat / Khidmat (0.85x — lebih renggang karakter per detik)' },
         ],
         defaultValue: 'normal',
-        affectsPricing: false,
+        affectsPricing: true,
       },
     ],
     pricing_variants: pricingVariants,
@@ -1047,6 +1050,39 @@ export function toCatalogModelEntry(model: ElevenLabsModelEntry): CatalogModelEn
 
 export const ELEVENLABS_AS_CATALOG_MODELS: CatalogModelEntry[] =
   ELEVENLABS_MODELS_CATALOG.map(toCatalogModelEntry);
+
+/**
+ * Memperbarui tarif USD per detik pada model-model ElevenLabs di dalam katalog gabungan
+ * sesuai dengan paket langganan ElevenLabs yang aktif (Starter, Creator, Pro, Scale, Business).
+ */
+export function applyElevenLabsPlanRateToCatalog(
+  catalog: CatalogModelEntry[],
+  planId: ElevenLabsSubscriptionTier | string,
+): CatalogModelEntry[] {
+  const plan = getElevenLabsPlanById(planId as ElevenLabsSubscriptionTier);
+  const usdPerCredit = plan.usd_per_credit;
+  return catalog.map((model) => {
+    const isElevenLabs =
+      model.provider === 'elevenlabs' ||
+      model.model_id.startsWith('eleven_') ||
+      (model.supported_categories.length === 1 && model.supported_categories[0] === 'voice_over');
+    if (!isElevenLabs) return model;
+
+    return {
+      ...model,
+      pricing_variants: model.pricing_variants.map((variant) => {
+        if (typeof variant.credit_cost === 'number' && variant.credit_cost >= 0) {
+          const newPriceValue = Number((variant.credit_cost * usdPerCredit).toFixed(4));
+          return {
+            ...variant,
+            price_value: newPriceValue,
+          };
+        }
+        return variant;
+      }),
+    };
+  });
+}
 
 // ============================================================================
 // 7. REAL-TIME CONNECTOR OTOMATIS (FALLBACK OFFLINE + LIVE FETCHER)

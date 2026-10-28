@@ -2579,7 +2579,13 @@ export function applyCreditPlanRateToCatalog(
 ): CatalogModelEntry[] {
   if (!Number.isFinite(usdPerCredit) || usdPerCredit <= 0) return catalog;
   return catalog.map((model) => {
-    if (model.model_id === 'custom/unverified-preview-model') return model;
+    if (
+      model.model_id === 'custom/unverified-preview-model' ||
+      model.provider.toLowerCase() === 'elevenlabs' ||
+      model.supported_categories.includes('voice_over')
+    ) {
+      return model;
+    }
     return {
       ...model,
       pricing_variants: model.pricing_variants.map((variant) => {

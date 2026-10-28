@@ -7,6 +7,7 @@ exports.formatDurationMmSs = formatDurationMmSs;
 exports.generatePdfReportHtml = generatePdfReportHtml;
 const project_1 = require("../types/project");
 const calculationEngine_1 = require("../engine/calculationEngine");
+const elevenlabsCatalog_1 = require("../catalog/elevenlabsCatalog");
 const CATEGORY_LABELS = {
     text_to_image: { id: 'Text to Image', en: 'Text to Image' },
     image_to_image: { id: 'Image to Image', en: 'Image to Image' },
@@ -188,28 +189,32 @@ function generatePdfReportHtml(project, overrideLang) {
                 .map(([k, v]) => `${k}: ${v}`)
                 .join(', ')
             : '-';
-        const unitLabel = res.pricing_unit === 'per_second'
-            ? isId
-                ? `Per Detik (${sourceItem?.duration_seconds ?? 0}s)`
-                : `Per Second (${sourceItem?.duration_seconds ?? 0}s)`
-            : res.pricing_unit === 'per_asset'
-                ? isId
-                    ? 'Per Aset'
-                    : 'Per Asset'
-                : isId
-                    ? 'Per Generasi'
-                    : 'Per Generation';
         const isVO = res.category === 'voice_over';
+        const unitLabel = isVO
+            ? isId
+                ? 'Per File Audio'
+                : 'Per Audio File'
+            : res.pricing_unit === 'per_second'
+                ? isId
+                    ? `Per Detik (${sourceItem?.duration_seconds ?? 0}s)`
+                    : `Per Second (${sourceItem?.duration_seconds ?? 0}s)`
+                : res.pricing_unit === 'per_asset'
+                    ? isId
+                        ? 'Per Aset'
+                        : 'Per Asset'
+                    : isId
+                        ? 'Per Generasi'
+                        : 'Per Generation';
         const attemptsCount = res.attempts_per_item || cadanganMultiplier;
         const countBreakdown = isVO
             ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
             : res.reserve_generations > 0
                 ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
                 : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
-        const voChars = sourceItem?.script_text && sourceItem.script_text.length > 0
+        const voChars = sourceItem?.script_text && sourceItem.script_text.trim().length > 0
             ? sourceItem.script_text.length
             : sourceItem?.character_count ||
-                Math.round((res.duration_seconds || 10) * 14.5);
+                (0, elevenlabsCatalog_1.convertDurationToCharacters)(res.duration_seconds || 10, sourceItem?.script_language ?? 'id', String(sourceItem?.model_selection?.parameter_values?.speed_preset || 'normal'));
         return `
         <tr>
           <td style="text-align:center;">${idx + 1}</td>

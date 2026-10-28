@@ -12,6 +12,34 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.11.2] - Audit Presisi Kalkulasi, Akuntansi Bottom-Up Rupiah & Sinkronisasi Penuh Tahap 1–3
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.11.2`
+
+### Ditambahkan (Added)
+1. **Pengali Tempo Bicara (`speed_preset`) pada Estimasi Durasi Voice Over (`elevenlabsCatalog.ts`, `calculationEngine.ts`, `ProductionPlannerView.tsx`, `projectStore.ts`)**:
+   - Menambahkan fungsi `getSpeedPresetMultiplier` (`normal` = 1.0x, `fast` = 1.15x, `slow` = 0.85x) yang secara otomatis menyesuaikan proyeksi jumlah karakter dan kebutuhan credit ElevenLabs ketika pengguna menggunakan mode input durasi bicara.
+2. **Input Kuantitas File Audio & Rincian Pengali Cadangan di Modal Voice Over (`ProductionPlannerView.tsx`)**:
+   - Menambahkan input *"Mau Buat Berapa File Audio?"* langsung di dalam modal pengaturan Voice Over beserta indikator transparan perkalian cadangan Langkah 2 (`file audio × cadangan = total kali buat`).
+3. **Helper Sinkronisasi Tarif Paket ElevenLabs ke Katalog (`applyElevenLabsPlanRateToCatalog`)**:
+   - Memastikan perubahan paket langganan ElevenLabs (Starter, Creator, Pro, Scale, Business) langsung memperbarui tarif referensi model-model ElevenLabs di katalog gabungan tanpa mengganggu model video/gambar Higgsfield.
+
+### Diubah (Changed)
+1. **Rumus "Rata-rata Biaya per 1 Shot Utama" (`DashboardView.tsx` & `BudgetSummaryView.tsx`)**:
+   - Sesuai arahan produser/sineas, metrik rata-rata per shot kini membagi **Total Seluruh Anggaran** dengan **Total Shot Utama (`total_primary_shots`)** (termasuk porsi biaya aset pendukung seperti gambar konsep, upscale, dan voice over sebagai *production overhead* pendukung shot utama, dengan *fallback* otomatis ke total item jika proyek belum memiliki shot utama).
+2. **Akuntansi Bottom-Up Presisi Penuh Tanpa Selisih Pembulatan Rp 1 (`calculationEngine.ts` & `elevenlabsCatalog.ts`)**:
+   - Menghitung nilai Rupiah (IDR) pada setiap baris tahap langsung dari nilai `Decimal` berpresisi penuh (tanpa pemotongan 4 desimal USD di tengah jalan), lalu menjumlahkan subtotal 1 video, subtotal kategori, dan Grand Total secara *bottom-up* dari baris tabel sehingga penjumlahan manual kalkulator dijamin 100% cocok hingga satuan Rupiah terkecil.
+
+### Diperbaiki (Fixed)
+1. **Isolasi Tarif Paket Langganan Higgsfield vs ElevenLabs (`higgsfieldCatalog.ts` & `projectStore.ts`)**:
+   - Memperbaiki fungsi `applyCreditPlanRateToCatalog` agar mengecualikan model `voice_over` (ElevenLabs) sehingga penggantian paket langganan Higgsfield tidak pernah menimpa harga per credit resmi ElevenLabs.
+   - Memperbaiki `resetAllCatalogOverrides` agar mengembalikan `DEFAULT_COMBINED_CATALOG` (Higgsfield + ElevenLabs) secara utuh.
+2. **Sinkronisasi Kartu Live Kalkulasi Voice Over dengan Footer Modal & PDF (`ProductionPlannerView.tsx`, `BudgetSummaryView.tsx`, `pdfReportBuilder.ts`)**:
+   - Memperbaiki Kartu Ringkasan Live ElevenLabs di dalam modal agar ikut mengalikan jumlah file audio dan cadangan Langkah 2 sehingga nilainya 100% identik dengan *"Subtotal Tahap Ini"* di bagian bawah modal.
+   - Memperbaiki pembagi multi-video pada kartu rata-rata di Langkah 1 dan Langkah 4, menambahkan kategori `voice_over` ke daftar distribusi Langkah 1, serta menampilkan tarif per 1 file audio secara presisi di laporan PDF.
+
+---
+
 ## Versi [1.11.1] - Penyempurnaan Terminologi File Audio & Update Katalog Lengkap 11 Model Resmi ElevenLabs (Termasuk v4 & v4 Turbo)
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.11.1`

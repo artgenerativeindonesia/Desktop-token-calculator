@@ -6,6 +6,7 @@ import {
   VerificationStatus,
 } from '../types/project';
 import { calculateProjectBudget } from '../engine/calculationEngine';
+import { convertDurationToCharacters } from '../catalog/elevenlabsCatalog';
 
 const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
   text_to_image: { id: 'Text to Image', en: 'Text to Image' },
@@ -233,20 +234,23 @@ export function generatePdfReportHtml(
             .map(([k, v]) => `${k}: ${v}`)
             .join(', ')
         : '-';
-      const unitLabel =
-        res.pricing_unit === 'per_second'
-          ? isId
-            ? `Per Detik (${sourceItem?.duration_seconds ?? 0}s)`
-            : `Per Second (${sourceItem?.duration_seconds ?? 0}s)`
-          : res.pricing_unit === 'per_asset'
-          ? isId
-            ? 'Per Aset'
-            : 'Per Asset'
-          : isId
-          ? 'Per Generasi'
-          : 'Per Generation';
-
       const isVO = res.category === 'voice_over';
+      const unitLabel = isVO
+        ? isId
+          ? 'Per File Audio'
+          : 'Per Audio File'
+        : res.pricing_unit === 'per_second'
+        ? isId
+          ? `Per Detik (${sourceItem?.duration_seconds ?? 0}s)`
+          : `Per Second (${sourceItem?.duration_seconds ?? 0}s)`
+        : res.pricing_unit === 'per_asset'
+        ? isId
+          ? 'Per Aset'
+          : 'Per Asset'
+        : isId
+        ? 'Per Generasi'
+        : 'Per Generation';
+
       const attemptsCount = res.attempts_per_item || cadanganMultiplier;
       const countBreakdown = isVO
         ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
@@ -255,10 +259,14 @@ export function generatePdfReportHtml(
         : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
 
       const voChars =
-        sourceItem?.script_text && sourceItem.script_text.length > 0
+        sourceItem?.script_text && sourceItem.script_text.trim().length > 0
           ? sourceItem.script_text.length
           : sourceItem?.character_count ||
-            Math.round((res.duration_seconds || 10) * 14.5);
+            convertDurationToCharacters(
+              res.duration_seconds || 10,
+              sourceItem?.script_language ?? 'id',
+              String(sourceItem?.model_selection?.parameter_values?.speed_preset || 'normal')
+            );
 
       return `
         <tr>

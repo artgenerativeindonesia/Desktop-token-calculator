@@ -27,17 +27,12 @@ import {
   Sliders,
   Sparkles,
 } from 'lucide-react';
-import { ProcessCategory } from '../../shared/types/project';
+import {
+  ALL_PROCESS_CATEGORIES,
+  ProcessCategory,
+} from '../../shared/types/project';
 
-const ALL_CATEGORIES: ProcessCategory[] = [
-  'text_to_image',
-  'image_to_image',
-  'image_to_video',
-  'video_to_video',
-  'text_to_video',
-  'upscale_image',
-  'upscale_video',
-];
+const ALL_CATEGORIES: ProcessCategory[] = ALL_PROCESS_CATEGORIES;
 
 export const DashboardView: React.FC = () => {
   const {
@@ -81,13 +76,20 @@ export const DashboardView: React.FC = () => {
     project.assumptions.reserve_generations_override ||
     1;
 
-  // Rata-rata per shot pokok
+  const targetVideosCount = Math.max(1, calc.target_videos || 1);
+  const totalItemsAllVideos = totalSceneQuantity * targetVideosCount;
+  const primaryShotDivisor =
+    calc.total_primary_shots > 0
+      ? calc.total_primary_shots
+      : totalItemsAllVideos;
+
+  // Rata-rata per 1 Shot Utama (termasuk overhead aset pendukung & multi-video)
   const avgCostPerItemIdr =
-    totalSceneQuantity > 0 && calc.total_cost_idr !== null
-      ? calc.total_cost_idr / totalSceneQuantity
+    primaryShotDivisor > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / primaryShotDivisor
       : null;
   const avgCostPerItemUsd =
-    totalSceneQuantity > 0 ? calc.total_cost_usd / totalSceneQuantity : 0;
+    primaryShotDivisor > 0 ? calc.total_cost_usd / primaryShotDivisor : 0;
 
   // Rata-rata per 1x generasi AI
   const avgCostPerGenIdr =
@@ -268,10 +270,22 @@ export const DashboardView: React.FC = () => {
             <div className="text-lg font-semibold tabular-nums text-[#0099ff] mt-1">
               {formatCurrencyUsd(calc.total_cost_usd, language)}
             </div>
-            <div className="text-xs text-[var(--vv-text-muted)] mt-1.5 font-mono flex items-center justify-end gap-1.5">
-              <span>{calc.one_video_primary_shot_count} {isId ? 'shot' : 'shots'}</span>
+            <div className="text-xs text-[var(--vv-text-muted)] mt-1.5 font-mono flex flex-wrap items-center justify-end gap-1.5">
+              <span>
+                {totalSceneQuantity} {isId ? 'item' : 'items'}
+              </span>
               <span>&times;</span>
-              <span>{cadanganMultiplier} {isId ? 'cadangan' : 'reserve'}</span>
+              <span>
+                {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'}
+              </span>
+              {targetVideosCount > 1 && (
+                <>
+                  <span>&times;</span>
+                  <span>
+                    {targetVideosCount} {isId ? 'video' : 'videos'}
+                  </span>
+                </>
+              )}
               <span>=</span>
               <strong className="text-[var(--vv-text-strong)]">
                 {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
@@ -401,7 +415,13 @@ export const DashboardView: React.FC = () => {
           <div className="my-4 grid grid-cols-2 gap-2.5 text-xs">
             <div className="vv-card-quiet p-3">
               <div className="text-[11px] text-[var(--vv-text-muted)] truncate">
-                {isId ? 'Rata-rata per 1 Shot' : 'Per 1 Final Shot'}
+                {calc.total_primary_shots > 0
+                  ? isId
+                    ? 'Rata-rata per 1 Shot Utama'
+                    : 'Per 1 Primary Shot'
+                  : isId
+                  ? 'Rata-rata per 1 Item'
+                  : 'Per 1 Item'}
               </div>
               <div className="text-sm font-bold tabular-nums text-right mt-1 truncate">
                 {avgCostPerItemIdr !== null

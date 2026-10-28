@@ -25,6 +25,7 @@ import {
   calculateElevenLabsCostUsd,
   calculateElevenLabsCredits,
   convertDurationToCharacters,
+  ELEVENLABS_AS_CATALOG_MODELS,
   ElevenLabsSubscriptionTier,
   getElevenLabsPlanById,
 } from '../catalog/elevenlabsCatalog';
@@ -397,6 +398,9 @@ export function calculateProjectBudget(
   let sumBaseUsd = new Decimal(0);
   let sumReserveUsd = new Decimal(0);
   let sumTotalUsd = new Decimal(0);
+  let sumBaseIdr = new Decimal(0);
+  let sumReserveIdr = new Decimal(0);
+  let sumTotalIdr = new Decimal(0);
   let sumTotalCredit = new Decimal(0);
   let hasCreditItems = false;
   let incompleteItemCount = 0;
@@ -462,19 +466,27 @@ export function calculateProjectBudget(
 
     // --- INTEGRASI KHUSUS TAHAP 3: VOICE OVER (ELEVENLABS) ---
     if (item.category === 'voice_over') {
-      const scriptText = item.script_text?.trim() ?? '';
+      const rawScriptText = item.script_text ?? '';
+      const hasScriptText = rawScriptText.trim().length > 0;
       const voLang = item.script_language ?? 'id';
+      const speedPreset = String(
+        item.model_selection.parameter_values?.speed_preset || 'normal'
+      );
       let voChars = 0;
 
-      if (scriptText.length > 0) {
-        voChars = scriptText.length;
+      if (hasScriptText) {
+        voChars = rawScriptText.length;
       } else if (
         typeof item.character_count === 'number' &&
         item.character_count > 0
       ) {
         voChars = Math.floor(item.character_count);
       } else if (item.duration_seconds > 0) {
-        voChars = convertDurationToCharacters(item.duration_seconds, voLang);
+        voChars = convertDurationToCharacters(
+          item.duration_seconds,
+          voLang,
+          speedPreset
+        );
       }
 
       if (voChars <= 0 && (!item.duration_seconds || item.duration_seconds <= 0)) {
@@ -515,10 +527,9 @@ export function calculateProjectBudget(
         itemTotalCredit = itemBudgetedElevenLabs.toNumber();
       }
 
-      // Biaya USD & IDR
+      // Biaya USD & IDR (Konsistensi Bottom-Up Akuntansi)
       let bBaseDec: Decimal;
       let bReserveDec: Decimal;
-      let bTotalDec: Decimal;
 
       if (
         pricing.status === 'manual' &&
@@ -527,7 +538,6 @@ export function calculateProjectBudget(
       ) {
         bBaseDec = new Decimal(gPlanned).times(pricing.price_value);
         bReserveDec = new Decimal(gReserve).times(pricing.price_value);
-        bTotalDec = bBaseDec.plus(bReserveDec);
       } else {
         bBaseDec = new Decimal(itemPlannedElevenLabs).times(
           activePlan.usd_per_credit
@@ -535,18 +545,18 @@ export function calculateProjectBudget(
         bReserveDec = new Decimal(itemReserveElevenLabs).times(
           activePlan.usd_per_credit
         );
-        bTotalDec = new Decimal(itemBudgetedElevenLabs).times(
-          activePlan.usd_per_credit
-        );
       }
-
-      sumBaseUsd = sumBaseUsd.plus(bBaseDec);
-      sumReserveUsd = sumReserveUsd.plus(bReserveDec);
-      sumTotalUsd = sumTotalUsd.plus(bTotalDec);
 
       const baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
       const reserveCostUsd = bReserveDec.toDecimalPlaces(4).toNumber();
-      const totalCostUsd = bTotalDec.toDecimalPlaces(4).toNumber();
+      const totalCostUsd = new Decimal(baseCostUsd)
+        .plus(reserveCostUsd)
+        .toDecimalPlaces(4)
+        .toNumber();
+
+      sumBaseUsd = sumBaseUsd.plus(baseCostUsd);
+      sumReserveUsd = sumReserveUsd.plus(reserveCostUsd);
+      sumTotalUsd = sumTotalUsd.plus(totalCostUsd);
 
       let baseCostIdr: number | null = null;
       let reserveCostIdr: number | null = null;
@@ -558,7 +568,14 @@ export function calculateProjectBudget(
           .times(fxDecimal)
           .toDecimalPlaces(2)
           .toNumber();
-        totalCostIdr = bTotalDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+        totalCostIdr = new Decimal(baseCostIdr)
+          .plus(reserveCostIdr)
+          .toDecimalPlaces(2)
+          .toNumber();
+
+        sumBaseIdr = sumBaseIdr.plus(baseCostIdr);
+        sumReserveIdr = sumReserveIdr.plus(reserveCostIdr);
+        sumTotalIdr = sumTotalIdr.plus(totalCostIdr);
       }
 
       const catSum = categorySummaries[item.category];
@@ -590,6 +607,16 @@ export function calculateProjectBudget(
           .toNumber();
       }
 
+      const voUnitPriceUsd =
+        pricing.status === 'manual' &&
+        pricing.price_value !== null &&
+        pricing.price_value >= 0
+          ? pricing.price_value
+          : new Decimal(creditsPerGen)
+              .times(activePlan.usd_per_credit)
+              .toDecimalPlaces(4)
+              .toNumber();
+
       itemResults.push({
         item_id: item.item_id,
         label: item.label,
@@ -603,9 +630,9 @@ export function calculateProjectBudget(
         planned_generations: gPlanned,
         reserve_generations: gReserve,
         budgeted_generations: gBudget,
-        unit_multiplier: unitMultiplier,
-        pricing_unit: pricing.pricing_unit,
-        unit_price_usd: activePlan.usd_per_credit,
+        unit_multiplier: 1,
+        pricing_unit: 'per_asset',
+        unit_price_usd: voUnitPriceUsd,
         base_cost_usd: baseCostUsd,
         reserve_cost_usd: reserveCostUsd,
         total_cost_usd: totalCostUsd,
@@ -679,15 +706,17 @@ export function calculateProjectBudget(
       // Breserve,i = Greserve,i * mult * P_i
       const bBaseDec = new Decimal(gPlanned).times(multDec).times(priceDec);
       const bReserveDec = new Decimal(gReserve).times(multDec).times(priceDec);
-      const bTotalDec = bBaseDec.plus(bReserveDec);
-
-      sumBaseUsd = sumBaseUsd.plus(bBaseDec);
-      sumReserveUsd = sumReserveUsd.plus(bReserveDec);
-      sumTotalUsd = sumTotalUsd.plus(bTotalDec);
 
       baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
       reserveCostUsd = bReserveDec.toDecimalPlaces(4).toNumber();
-      totalCostUsd = bTotalDec.toDecimalPlaces(4).toNumber();
+      totalCostUsd = new Decimal(baseCostUsd)
+        .plus(reserveCostUsd)
+        .toDecimalPlaces(4)
+        .toNumber();
+
+      sumBaseUsd = sumBaseUsd.plus(baseCostUsd);
+      sumReserveUsd = sumReserveUsd.plus(reserveCostUsd);
+      sumTotalUsd = sumTotalUsd.plus(totalCostUsd);
 
       if (fxDecimal) {
         baseCostIdr = bBaseDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
@@ -695,7 +724,14 @@ export function calculateProjectBudget(
           .times(fxDecimal)
           .toDecimalPlaces(2)
           .toNumber();
-        totalCostIdr = bTotalDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+        totalCostIdr = new Decimal(baseCostIdr)
+          .plus(reserveCostIdr)
+          .toDecimalPlaces(2)
+          .toNumber();
+
+        sumBaseIdr = sumBaseIdr.plus(baseCostIdr);
+        sumReserveIdr = sumReserveIdr.plus(reserveCostIdr);
+        sumTotalIdr = sumTotalIdr.plus(totalCostIdr);
       }
 
       if (pricing.status === 'manual') {
@@ -742,7 +778,7 @@ export function calculateProjectBudget(
       }
     }
 
-    // Update Category Summary
+    // Update Category Summary (Konsistensi Bottom-Up Akuntansi)
     const catSum = categorySummaries[item.category];
     catSum.item_count += 1;
     catSum.planned_generations += gPlanned;
@@ -761,9 +797,9 @@ export function calculateProjectBudget(
         .plus(totalCostUsd)
         .toDecimalPlaces(4)
         .toNumber();
-      if (fxDecimal && catSum.total_cost_idr !== null) {
-        catSum.total_cost_idr = new Decimal(catSum.total_cost_usd)
-          .times(fxDecimal)
+      if (fxDecimal && catSum.total_cost_idr !== null && totalCostIdr !== null) {
+        catSum.total_cost_idr = new Decimal(catSum.total_cost_idr)
+          .plus(totalCostIdr)
           .toDecimalPlaces(2)
           .toNumber();
       }
@@ -829,13 +865,13 @@ export function calculateProjectBudget(
   const oneVideoTotalUsd = sumTotalUsd.toDecimalPlaces(4).toNumber();
 
   const oneVideoBaseIdr = fxDecimal
-    ? sumBaseUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
+    ? sumBaseIdr.toDecimalPlaces(2).toNumber()
     : null;
   const oneVideoReserveIdr = fxDecimal
-    ? sumReserveUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
+    ? sumReserveIdr.toDecimalPlaces(2).toNumber()
     : null;
   const oneVideoTotalIdr = fxDecimal
-    ? sumTotalUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
+    ? sumTotalIdr.toDecimalPlaces(2).toNumber()
     : null;
 
   const oneVideoTotalCredit = hasCreditItems
@@ -860,13 +896,13 @@ export function calculateProjectBudget(
   const finalTotalUsd = sumTotalUsd.times(vDec).toDecimalPlaces(4).toNumber();
 
   const finalBaseIdr = fxDecimal
-    ? sumBaseUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+    ? sumBaseIdr.times(vDec).toDecimalPlaces(2).toNumber()
     : null;
   const finalReserveIdr = fxDecimal
-    ? sumReserveUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+    ? sumReserveIdr.times(vDec).toDecimalPlaces(2).toNumber()
     : null;
   const finalTotalIdr = fxDecimal
-    ? sumTotalUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+    ? sumTotalIdr.times(vDec).toDecimalPlaces(2).toNumber()
     : null;
 
   const finalTotalCredit = hasCreditItems
@@ -941,8 +977,7 @@ export function calculateProjectBudget(
       .toDecimalPlaces(4)
       .toNumber();
     if (fxDecimal) {
-      costPerMinuteIdr = sumTotalUsd
-        .times(fxDecimal)
+      costPerMinuteIdr = sumTotalIdr
         .dividedBy(mDec)
         .toDecimalPlaces(2)
         .toNumber();
@@ -976,8 +1011,7 @@ export function calculateProjectBudget(
       .toDecimalPlaces(4)
       .toNumber();
     if (fxDecimal) {
-      costPerRawMinuteIdr = sumTotalUsd
-        .times(fxDecimal)
+      costPerRawMinuteIdr = sumTotalIdr
         .dividedBy(rawMinutesDec)
         .toDecimalPlaces(2)
         .toNumber();
@@ -1118,26 +1152,31 @@ export function createProductionItemFromCatalog(
   attempts = 2,
   customDurationSeconds?: number
 ): ProductionItem {
+  const combinedCatalog: CatalogModelEntry[] = [
+    ...HIGGSFIELD_MODEL_CATALOG,
+    ...ELEVENLABS_AS_CATALOG_MODELS,
+  ];
   const model =
-    getModelById(modelId) ||
-    HIGGSFIELD_MODEL_CATALOG.find((m) =>
+    getModelById(modelId, combinedCatalog) ||
+    combinedCatalog.find((m) =>
       m.supported_categories.includes(category)
     ) ||
     HIGGSFIELD_MODEL_CATALOG[0];
 
   const defaultParams = getDefaultParametersForModel(model);
   const pricing = resolveModelPricing(model, defaultParams);
+  const durationSec =
+    customDurationSeconds !== undefined
+      ? customDurationSeconds
+      : model.default_duration_seconds;
 
-  return {
+  const baseItem: ProductionItem = {
     item_id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     category,
     label,
     quantity,
     quantity_type: model.default_quantity_type,
-    duration_seconds:
-      customDurationSeconds !== undefined
-        ? customDurationSeconds
-        : model.default_duration_seconds,
+    duration_seconds: durationSec,
     attempts_per_item: attempts,
     use_project_target_multiplier: false,
     is_primary_shot: isDefaultPrimaryShot(category),
@@ -1150,6 +1189,17 @@ export function createProductionItemFromCatalog(
     },
     pricing,
   };
+
+  if (category === 'voice_over') {
+    baseItem.script_language = 'id';
+    baseItem.character_count = convertDurationToCharacters(
+      durationSec,
+      'id',
+      String(defaultParams.speed_preset || 'normal')
+    );
+  }
+
+  return baseItem;
 }
 
 /**

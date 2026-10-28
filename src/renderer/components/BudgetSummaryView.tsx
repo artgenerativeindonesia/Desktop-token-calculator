@@ -26,7 +26,10 @@ import {
   Scissors,
   Sparkles,
 } from 'lucide-react';
-import { getElevenLabsPlanById } from '../../shared/catalog/elevenlabsCatalog';
+import {
+  convertDurationToCharacters,
+  getElevenLabsPlanById,
+} from '../../shared/catalog/elevenlabsCatalog';
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -67,13 +70,23 @@ export const BudgetSummaryView: React.FC = () => {
       : 100;
   const reserveSharePercent = Math.max(0, 100 - baseSharePercent);
 
-  // Rata-rata per shot pokok
+  const targetVideosCount = Math.max(
+    1,
+    calc.target_videos || project.assumptions.target_videos || 1
+  );
+  const totalItemsAllVideos = totalSceneQuantity * targetVideosCount;
+  const primaryShotDivisor =
+    calc.total_primary_shots > 0
+      ? calc.total_primary_shots
+      : totalItemsAllVideos;
+
+  // Rata-rata per 1 Shot Utama (termasuk overhead aset pendukung & multi-video)
   const avgCostPerItemIdr =
-    totalSceneQuantity > 0 && calc.total_cost_idr !== null
-      ? calc.total_cost_idr / totalSceneQuantity
+    primaryShotDivisor > 0 && calc.total_cost_idr !== null
+      ? calc.total_cost_idr / primaryShotDivisor
       : null;
   const avgCostPerItemUsd =
-    totalSceneQuantity > 0 ? calc.total_cost_usd / totalSceneQuantity : 0;
+    primaryShotDivisor > 0 ? calc.total_cost_usd / primaryShotDivisor : 0;
 
   // Rata-rata per 1x generasi AI
   const avgCostPerGenIdr =
@@ -103,7 +116,10 @@ export const BudgetSummaryView: React.FC = () => {
     if (item.category === 'upscale_video' || item.category === 'upscale_image') {
       return false;
     }
-    const isPrimary = item.is_primary_shot !== false;
+    const isPrimary =
+      typeof item.is_primary_shot === 'boolean'
+        ? item.is_primary_shot
+        : isDefaultPrimaryShot(item.category);
     return isPrimary && isVideoCategory(item.category) && (item.duration_seconds || 0) > 0;
   });
 
@@ -119,33 +135,19 @@ export const BudgetSummaryView: React.FC = () => {
   );
 
   const rawPerVideoSec =
-    typeof (calc as any).one_video_raw_duration_seconds === 'number' &&
-    (calc as any).one_video_raw_duration_seconds > 0
-      ? (calc as any).one_video_raw_duration_seconds
-      : rawPrimaryDurationSeconds > 0
-      ? rawPrimaryDurationSeconds
-      : project.items.reduce(
-          (sum, item) =>
-            (item.duration_seconds || 0) > 0 &&
-            item.category !== 'upscale_video' &&
-            item.category !== 'upscale_image'
-              ? sum +
-                Math.max(0, item.quantity) *
-                  Math.max(0, item.duration_seconds || 0)
-              : sum,
-          0
-        );
+    typeof calc.one_video_duration_seconds === 'number'
+      ? calc.one_video_duration_seconds
+      : rawPrimaryDurationSeconds;
 
   const targetPerVideoSec =
-    typeof (calc as any).target_duration_seconds === 'number' &&
-    (calc as any).target_duration_seconds > 0
-      ? (calc as any).target_duration_seconds
+    typeof calc.target_duration_seconds === 'number' &&
+    calc.target_duration_seconds > 0
+      ? calc.target_duration_seconds
       : Math.round((project.assumptions.final_duration_minutes || 0) * 60);
 
-  const targetVideosCount = Math.max(1, project.assumptions.target_videos || 1);
   const diffSec =
-    typeof (calc as any).editing_buffer_seconds === 'number'
-      ? (calc as any).editing_buffer_seconds
+    typeof calc.editing_buffer_seconds === 'number'
+      ? calc.editing_buffer_seconds
       : rawPerVideoSec - targetPerVideoSec;
 
   const isBufferSafe = diffSec >= 0;
@@ -311,7 +313,11 @@ export const BudgetSummaryView: React.FC = () => {
                 {formatCurrencyUsd(calc.total_cost_usd, language)}
               </div>
               <div className="text-[11px] text-[var(--vv-text-muted)] mt-1.5">
-                {totalSceneQuantity} {isId ? 'shot/gambar' : 'shots/images'} &times; {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'} ={' '}
+                {totalSceneQuantity} {isId ? 'item' : 'items'} &times; {cadanganMultiplier} {isId ? 'cadangan' : 'reserve'}
+                {targetVideosCount > 1
+                  ? ` × ${targetVideosCount} ${isId ? 'video' : 'videos'}`
+                  : ''}{' '}
+                ={' '}
                 <strong className="text-[var(--vv-text-strong)]">
                   {calc.budgeted_generations} {isId ? 'kali buat' : 'tries'}
                 </strong>
@@ -698,20 +704,42 @@ export const BudgetSummaryView: React.FC = () => {
           const voItems = project.items.filter(
             (i) => i.category === 'voice_over'
           );
-          const totalChars = voItems.reduce((sum, item) => {
-            if (item.script_text && item.script_text.length > 0)
-              return sum + item.script_text.length;
-            if (
-              typeof item.character_count === 'number' &&
-              item.character_count > 0
-            )
-              return sum + item.character_count;
-            return sum + Math.round((item.duration_seconds || 10) * 14.5);
-          }, 0);
-          const totalVoSeconds = voItems.reduce(
-            (sum, item) => sum + (item.duration_seconds || 0),
+          const totalVoFilesPerVideo = voItems.reduce(
+            (sum, item) => sum + Math.max(0, Math.floor(item.quantity || 0)),
             0
           );
+          const totalCharsPerVideo = voItems.reduce((sum, item) => {
+            const qty = Math.max(0, Math.floor(item.quantity || 0));
+            const speedPreset = String(
+              item.model_selection.parameter_values?.speed_preset || 'normal'
+            );
+            let charsPerFile = 0;
+            if (item.script_text && item.script_text.trim().length > 0) {
+              charsPerFile = item.script_text.length;
+            } else if (
+              typeof item.character_count === 'number' &&
+              item.character_count > 0
+            ) {
+              charsPerFile = Math.floor(item.character_count);
+            } else {
+              charsPerFile = convertDurationToCharacters(
+                item.duration_seconds || 10,
+                item.script_language ?? 'id',
+                speedPreset
+              );
+            }
+            return sum + charsPerFile * qty;
+          }, 0);
+          const totalVoSecondsPerVideo = voItems.reduce(
+            (sum, item) =>
+              sum +
+              Math.max(0, Math.floor(item.quantity || 0)) *
+                (item.duration_seconds || 0),
+            0
+          );
+          const totalVoFiles = totalVoFilesPerVideo * targetVideosCount;
+          const totalChars = totalCharsPerVideo * targetVideosCount;
+          const totalVoSeconds = totalVoSecondsPerVideo * targetVideosCount;
           const activePlan = getElevenLabsPlanById(
             (calc.selected_elevenlabs_plan_id as any) || 'starter'
           );
@@ -770,7 +798,14 @@ export const BudgetSummaryView: React.FC = () => {
                     {isId ? 'Jumlah File Audio' : 'Audio Files'}
                   </span>
                   <span className="text-base font-bold text-[var(--vv-text-primary)] font-mono">
-                    {voItems.length} {isId ? 'file' : 'files'}
+                    {totalVoFiles} {isId ? 'file' : 'files'}
+                  </span>
+                  <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
+                    &times; {cadanganMultiplier}{' '}
+                    {isId ? 'cadangan' : 'reserve'} ={' '}
+                    {voCatSummary?.budgeted_generations ??
+                      totalVoFiles * cadanganMultiplier}
+                    x {isId ? 'buat' : 'gen'}
                   </span>
                 </div>
 
@@ -781,6 +816,11 @@ export const BudgetSummaryView: React.FC = () => {
                   <span className="text-base font-bold text-emerald-400 font-mono">
                     {totalChars.toLocaleString()} {isId ? 'karakter' : 'chars'}
                   </span>
+                  <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
+                    {isId
+                      ? 'Naskah bersih (sebelum cadangan)'
+                      : 'Net script (before reserve)'}
+                  </span>
                 </div>
 
                 <div className="vv-card-quiet p-3 rounded-[12px]">
@@ -790,6 +830,13 @@ export const BudgetSummaryView: React.FC = () => {
                   <span className="text-base font-bold text-amber-400 font-mono">
                     ⏱️ {totalVoSeconds}s ({formatMinSec(totalVoSeconds)})
                   </span>
+                  <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
+                    {targetVideosCount > 1
+                      ? `${totalVoSecondsPerVideo}s / video`
+                      : isId
+                      ? 'Durasi bersih 1 video'
+                      : 'Net duration 1 video'}
+                  </span>
                 </div>
 
                 <div className="vv-card-quiet p-3 rounded-[12px]">
@@ -798,6 +845,11 @@ export const BudgetSummaryView: React.FC = () => {
                   </span>
                   <span className="text-base font-bold text-sky-400 font-mono">
                     🎙️ {calc.total_elevenlabs_credit?.toLocaleString() ?? 0} Cr
+                  </span>
+                  <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
+                    {isId
+                      ? `Termasuk ${cadanganMultiplier}x cadangan`
+                      : `Includes ${cadanganMultiplier}x reserve`}
                   </span>
                 </div>
               </div>
@@ -825,16 +877,26 @@ export const BudgetSummaryView: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {/* Rata-rata per shot pokok */}
+            {/* Rata-rata per shot utama */}
             <div className="vv-card-quiet p-3.5 flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-[var(--vv-text-primary)]">
-                  {isId ? 'Rata-rata per 1 Shot / Gambar' : 'Avg Cost per Shot / Image'}
+                  {calc.total_primary_shots > 0
+                    ? isId
+                      ? 'Rata-rata per 1 Shot Utama'
+                      : 'Avg Cost per 1 Primary Shot'
+                    : isId
+                    ? 'Rata-rata per 1 Item'
+                    : 'Avg Cost per 1 Item'}
                 </div>
                 <div className="text-[11px] text-[var(--vv-text-muted)]">
-                  {isId
-                    ? `${totalSceneQuantity} shot/gambar (${calc.one_video_primary_shot_count} shot utama)`
-                    : `${totalSceneQuantity} shots/images (${calc.one_video_primary_shot_count} primary shots)`}
+                  {calc.total_primary_shots > 0
+                    ? isId
+                      ? `Total anggaran dibagi ${calc.total_primary_shots} shot utama (${totalItemsAllVideos} total item)`
+                      : `Total budget divided by ${calc.total_primary_shots} primary shots (${totalItemsAllVideos} total items)`
+                    : isId
+                    ? `${totalItemsAllVideos} total item`
+                    : `${totalItemsAllVideos} total items`}
                 </div>
               </div>
               <div className="text-right">

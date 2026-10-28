@@ -31,6 +31,8 @@ import {
   resolveModelPricing,
 } from '../../shared/catalog/higgsfieldCatalog';
 import {
+  applyElevenLabsPlanRateToCatalog,
+  convertDurationToCharacters,
   ELEVENLABS_AS_CATALOG_MODELS,
   ELEVENLABS_SUBSCRIPTION_PLANS,
   ElevenLabsSubscriptionTier,
@@ -246,17 +248,24 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   usdPerCredit: DEFAULT_USD_PER_CREDIT,
   selectedElevenLabsPlanId: 'starter',
   setSelectedElevenLabsPlanId: (planId) =>
-    set((state) => ({
-      selectedElevenLabsPlanId: planId,
-      hasUnsavedChanges: true,
-      project: recalculateProject({
-        ...state.project,
-        assumptions: {
-          ...state.project.assumptions,
-          elevenlabs_plan_id: planId,
-        },
-      }),
-    })),
+    set((state) => {
+      const updatedCatalog = applyElevenLabsPlanRateToCatalog(
+        state.catalog,
+        planId
+      );
+      return {
+        selectedElevenLabsPlanId: planId,
+        catalog: updatedCatalog,
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          assumptions: {
+            ...state.project.assumptions,
+            elevenlabs_plan_id: planId,
+          },
+        }),
+      };
+    }),
   recentProjects: [],
   isRefreshingFx: false,
   isRefreshingCatalog: false,
@@ -923,8 +932,21 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
             ? resolveModelPricing(model, updatedParams)
             : item.pricing;
 
+        const nextCharCount =
+          item.category === 'voice_over' &&
+          paramKey === 'speed_preset' &&
+          !(item.script_text && item.script_text.trim().length > 0) &&
+          item.duration_seconds > 0
+            ? convertDurationToCharacters(
+                item.duration_seconds,
+                item.script_language ?? 'id',
+                String(paramValue)
+              )
+            : item.character_count;
+
         return {
           ...item,
+          character_count: nextCharCount,
           model_selection: {
             ...item.model_selection,
             parameter_values: updatedParams,
@@ -1199,7 +1221,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   },
 
   resetAllCatalogOverrides: async () => {
-    let resetCatalog = HIGGSFIELD_MODEL_CATALOG;
+    let resetCatalog = DEFAULT_COMBINED_CATALOG;
     if (window.api) {
       resetCatalog = await window.api.resetCatalogOverrides();
     }
@@ -1222,16 +1244,21 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         catalog: resetCatalog,
         selectedCreditPlanId: 'api_standard',
         usdPerCredit: DEFAULT_USD_PER_CREDIT,
+        selectedElevenLabsPlanId: 'starter',
         project: recalculateProject({
           ...state.project,
+          assumptions: {
+            ...state.project.assumptions,
+            elevenlabs_plan_id: 'starter',
+          },
           items: updatedItems,
         }),
       };
     });
     get().showBanner(
       'info',
-      'Seluruh tarif katalog telah dikembalikan ke data referensi resmi Higgsfield.',
-      'All catalog rates have been reset to official Higgsfield reference data.'
+      'Seluruh tarif katalog telah dikembalikan ke data referensi resmi Higgsfield & ElevenLabs.',
+      'All catalog rates have been reset to official Higgsfield & ElevenLabs reference data.'
     );
   },
 

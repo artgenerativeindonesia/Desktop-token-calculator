@@ -16,6 +16,14 @@ import {
   ExchangeRate,
   ProductionItem,
 } from '../src/shared/types/project';
+import {
+  applyCreditPlanRateToCatalog,
+  HIGGSFIELD_MODEL_CATALOG,
+} from '../src/shared/catalog/higgsfieldCatalog';
+import {
+  applyElevenLabsPlanRateToCatalog,
+  ELEVENLABS_AS_CATALOG_MODELS,
+} from '../src/shared/catalog/elevenlabsCatalog';
 
 describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Criteria', () => {
   const validExchangeRate: ExchangeRate = {
@@ -889,6 +897,115 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
 
       // Total USD gabungan: (0.5 + 23 * 0.0002) * 3 = (0.5 + 0.0046) * 3 = 0.5046 * 3 = 1.5138 USD
       expect(calc.total_cost_usd).toBe(1.5138);
+    });
+
+    it('menghitung speed_preset (normal, fast, slow) dengan akurat pada mode durasi Voice Over', () => {
+      const baseVo = createProductionItemFromCatalog(
+        'voice_over',
+        'eleven_v4',
+        'Narasi Tempo',
+        1,
+        1,
+        10
+      );
+      baseVo.character_count = 0; // paksa kalkulasi dari durasi + speed_preset
+
+      const fastVo: ProductionItem = {
+        ...baseVo,
+        item_id: 'vo-fast',
+        model_selection: {
+          ...baseVo.model_selection,
+          parameter_values: { speed_preset: 'fast' },
+        },
+      };
+      const slowVo: ProductionItem = {
+        ...baseVo,
+        item_id: 'vo-slow',
+        model_selection: {
+          ...baseVo.model_selection,
+          parameter_values: { speed_preset: 'slow' },
+        },
+      };
+
+      const assumptions: BudgetAssumptions = {
+        estimation_mode: 'per_shot',
+        target_videos: 1,
+        final_duration_minutes: 1,
+        default_shots_per_video: 1,
+        default_attempts_per_shot: 1,
+        reserve_input_mode: 'count',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
+        elevenlabs_plan_id: 'starter',
+      };
+
+      // Normal: 10s * 14.5 * 1.0 = 145 cr
+      // Fast: round(10s * 14.5 * 1.15) = round(166.75) = 167 cr
+      // Slow: round(10s * 14.5 * 0.85) = round(123.25) = 123 cr
+      const calcNormal = calculateProjectBudget([baseVo], assumptions, validExchangeRate);
+      const calcFast = calculateProjectBudget([fastVo], assumptions, validExchangeRate);
+      const calcSlow = calculateProjectBudget([slowVo], assumptions, validExchangeRate);
+
+      expect(calcNormal.one_video_elevenlabs_credit).toBe(145);
+      expect(calcFast.one_video_elevenlabs_credit).toBe(167);
+      expect(calcSlow.one_video_elevenlabs_credit).toBe(123);
+    });
+
+    it('menjaga konsistensi akuntansi bottom-up (nol selisih Rp 1 antara jumlah baris dan Grand Total)', () => {
+      const fxOdd: ExchangeRate = {
+        ...validExchangeRate,
+        rate: 16250,
+      };
+      const sample = createSampleCommercialProject(fxOdd);
+      const voCreator = createProductionItemFromCatalog(
+        'voice_over',
+        'eleven_v4_turbo',
+        'Narasi Creator Tier',
+        2,
+        2,
+        15
+      );
+      const items = [...sample.items, voCreator];
+      const assumptions: BudgetAssumptions = {
+        ...sample.assumptions,
+        target_videos: 3,
+        elevenlabs_plan_id: 'creator',
+      };
+
+      const calc = calculateProjectBudget(items, assumptions, fxOdd);
+
+      // Jumlah IDR seluruh baris item (1 video) harus sama persis dengan one_video_total_cost_idr
+      const sumItemIdr = calc.item_results.reduce(
+        (acc, row) => acc + (row.total_cost_idr ?? 0),
+        0
+      );
+      expect(sumItemIdr).toBeCloseTo(calc.one_video_total_cost_idr ?? 0, 2);
+
+      // Jumlah IDR seluruh ringkasan kategori (multi-video) harus sama persis dengan total_cost_idr
+      const sumCatIdr = Object.values(calc.category_summaries).reduce(
+        (acc, cat) => acc + (cat.total_cost_idr ?? 0),
+        0
+      );
+      expect(sumCatIdr).toBeCloseTo(calc.total_cost_idr ?? 0, 2);
+    });
+
+    it('mengisolasi tarif paket Higgsfield dari model ElevenLabs di katalog gabungan', () => {
+      const combined = [...HIGGSFIELD_MODEL_CATALOG, ...ELEVENLABS_AS_CATALOG_MODELS];
+      const elBefore = combined.find((m) => m.model_id === 'eleven_v4')!;
+
+      // Ubah paket Higgsfield ke tarif ekstrem ($0.10/credit) -> ElevenLabs tidak boleh ikut berubah
+      const afterHiggsfieldChange = applyCreditPlanRateToCatalog(combined, 0.1);
+      const elAfterHiggs = afterHiggsfieldChange.find((m) => m.model_id === 'eleven_v4')!;
+      expect(elAfterHiggs.pricing_variants[0].price_value).toBe(
+        elBefore.pricing_variants[0].price_value
+      );
+
+      // Ubah paket ElevenLabs ke Pro ($0.000165/credit) -> Hanya ElevenLabs yang berubah
+      const afterElevenLabsChange = applyElevenLabsPlanRateToCatalog(combined, 'pro');
+      const elAfterPro = afterElevenLabsChange.find((m) => m.model_id === 'eleven_v4')!;
+      expect(elAfterPro.pricing_variants[0].price_value).toBeLessThan(
+        elBefore.pricing_variants[0].price_value!
+      );
     });
   });
 });
