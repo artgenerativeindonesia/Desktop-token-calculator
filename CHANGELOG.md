@@ -12,6 +12,30 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.10.1] - Input Target Durasi per Video di Langkah 2 dengan Preset Campuran Detik & Menit
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.10.1`
+
+### Diubah (Changed)
+1. **Penggantian Kartu Statis Menjadi Kotak Input Interaktif Target Durasi di Langkah 2 (`ProjectSetupView.tsx`)**:
+   - Mengganti kartu statis *"Alur Kerja Rapi & Tanpa Input Dobel"* menjadi kartu input interaktif **"Target Durasi Tiap (per) Video Jadi"**.
+   - Input langsung dalam satuan detik dengan dukungan slider interaktif dan bebas ketik angka berapa pun.
+   - Dilengkapi tombol pilihan cepat preset format campuran detik dan menit tanpa label sosmed:
+     - `15s`
+     - `30s`
+     - `60s (1m)`
+     - `90s (1.5m)`
+     - `120s (2m)`
+   - Menegaskan bahwa target durasi ini berlaku untuk **masing-masing (tiap) video**, bukan hanya 1 video dan bukan total seluruh video.
+   - Jika target video lebih dari 1 (misal 5 video), sistem otomatis menghitung dan menampilkan total akumulasi durasi seluruh video (misal 5 video × 60s = 300 detik / 5m 00s).
+   - Menyertakan catatan ramah sineas: durasi mentah shot AI di Langkah 3 boleh lebih panjang dari target ini karena akan dipotong (*trimming*) oleh video editor di post-produksi.
+
+### Ditambahkan (Added)
+1. **Aksi Penyimpan Durasi Detik di Store (`projectStore.ts`)**:
+   - Menambahkan fungsi `setFinalDurationSeconds(seconds: number)` yang mengonversi detik ke menit desimal secara instan dan presisi.
+
+---
+
 ## Versi [1.10.0] - Tahap 2: Kalkulator Durasi Bersih Video (Clean Duration) & Komparasi Buffer Editing Post-Produksi
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.10.0`

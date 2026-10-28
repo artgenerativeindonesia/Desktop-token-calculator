@@ -92,6 +92,7 @@ interface ProjectStoreState {
   setEstimationMode: (mode: EstimationMode) => void;
   setTargetVideos: (count: number) => void;
   setFinalDurationMinutes: (minutes: number) => void;
+  setFinalDurationSeconds: (seconds: number) => void;
   setDefaultShotsPerVideo: (shots: number) => void;
   setReserveByPercent: (percent: number) => void;
   setReserveByCount: (reserveCount: number) => void;
@@ -555,6 +556,21 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         },
       }),
     })),
+
+  setFinalDurationSeconds: (seconds) =>
+    set((state) => {
+      const cleanSec = Math.max(0, Number(seconds) || 0);
+      return {
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          assumptions: {
+            ...state.project.assumptions,
+            final_duration_minutes: cleanSec / 60,
+          },
+        }),
+      };
+    }),
 
   setDefaultShotsPerVideo: (shots) =>
     set((state) => ({
