@@ -160,4 +160,32 @@ describe('PRD Bab 15 — Full Acceptance Criteria Suite (AC-01 s/d AC-14)', () =
     expect(fxRes.exchangeRate.status).toBe('unavailable');
     expect(fxRes.error_id).toBeDefined();
   });
+
+  it('AC-15 (Anti-Black-Screen UI Render Check): Seluruh layar utama & 6 tab merender tanpa error runtime (baik 1 video, multi-video, maupun proyek kosong)', async () => {
+    const React = await import('react');
+    const { renderToString } = await import('react-dom/server');
+    const { App } = await import('../src/renderer/App');
+    const { useProjectStore } = await import('../src/renderer/store/projectStore');
+
+    const tabs = ['dashboard', 'setup', 'planner', 'summary', 'settings', 'pdf'] as const;
+
+    // 1. Uji proyek komersial dengan 1 video dan 5 video di seluruh 6 tab
+    useProjectStore.getState().loadCommercialSample();
+    for (const targetVideos of [1, 5]) {
+      useProjectStore.getState().setTargetVideos(targetVideos);
+      for (const tab of tabs) {
+        useProjectStore.getState().setActiveTab(tab);
+        const htmlApp = renderToString(React.createElement(App));
+        expect(htmlApp.length).toBeGreaterThan(200);
+      }
+    }
+
+    // 2. Uji proyek kosong (blank project) di seluruh 6 tab
+    useProjectStore.getState().createNewBlankProject('Proyek Kosong Uji Anti-Black-Screen');
+    for (const tab of tabs) {
+      useProjectStore.getState().setActiveTab(tab);
+      const htmlApp = renderToString(React.createElement(App));
+      expect(htmlApp.length).toBeGreaterThan(200);
+    }
+  });
 });

@@ -12,9 +12,7 @@ echo [INFO] Membuka jendela aplikasi desktop secara langsung tanpa instalasi...
 echo [INFO] Aplikasi TIDAK dipasang ke Windows / Control Panel Anda.
 echo.
 
-if not exist "dist\index.html" (
-    echo [INFO] Menyiapkan tampilan aplikasi...
-    call npm.cmd run build
-)
+echo [INFO] Memastikan tampilan aplikasi versi terbaru siap dijalankan...
+call npm.cmd run build
 
 call npx.cmd electron .

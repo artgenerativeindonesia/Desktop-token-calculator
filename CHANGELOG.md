@@ -12,6 +12,25 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.8.2] - Perbaikan Bug Layar Hitam (Black Screen) pada Langkah 3 & Pemasangan Sabuk Pengaman Layar
+- **Tanggal Perubahan**: 28 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.8.2`
+
+### Diperbaiki (Fixed)
+1. **Perbaikan Akar Masalah Layar Hitam (Black Screen) saat Membuka Langkah 3 (`ProductionPlannerView.tsx`)**:
+   - Menambahkan impor ikon `Sparkles` dari pustaka `lucide-react` pada `ProductionPlannerView.tsx`. Sebelumnya, ikon tersebut dipanggil pada kartu *Running Total* di baris 541 tanpa didaftarkan di bagian atas file, sehingga menekan tombol apa pun yang mengarah ke **Langkah 3** (seperti tombol *"03. Daftar Pekerjaan AI"*, *"Lanjut ke Langkah 3"*, *"Susun Daftar Adegan AI"*, atau *"Contoh Proyek Iklan Komersial"*) memicu `ReferenceError: Sparkles is not defined` dan membuat layar aplikasi berubah menjadi hitam.
+2. **Pembaruan Otomatis File `Klik-Untuk-Testing-Tanpa-Install.bat`**:
+   - Memperbarui skrip peluncur testing agar selalu menyusun ulang (`npm.cmd run build`) tampilan terbaru sebelum membuka jendela aplikasi, sehingga tidak pernah lagi membuka file tampilan lama yang tertinggal di folder `dist/`.
+
+### Ditambahkan (Added)
+1. **Sabuk Pengaman Anti-Black-Screen (`AppErrorBoundary` di `main.tsx`)**:
+   - Memasang pelindung layar utama (*Error Boundary*) yang mencegah aplikasi mati menjadi layar hitam kosong jika terjadi kendala tampilan, serta menyediakan tombol pemulihan instan (*Muat Ulang Tampilan*).
+2. **Pemeriksaan Ketat Sebelum Rilis (`package.json` & `acceptanceCriteria.test.ts`)**:
+   - Mengintegrasikan pengecekan ketat `tsc --noEmit` ke dalam perintah `build:renderer` agar komputer otomatis menolak pembuatan paket aplikasi jika ada satu pun ikon atau komponen yang lupa didaftarkan.
+   - Menambahkan pengujian otomatis **AC-15 (Anti-Black-Screen UI Render Check)** yang merender seluruh 6 layar utama aplikasi (baik mode 1 video, multi-video, maupun proyek kosong) untuk menjamin 0 error tampilan.
+
+---
+
 ## Versi [1.8.1] - Hasil Audit Sinergi 6 Sub-Agent: Penguatan Skema Data, Hardening PDF, dan Kartu Running Total Langkah 3
 - **Tanggal Perubahan**: 28 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.8.1`
