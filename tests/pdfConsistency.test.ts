@@ -274,4 +274,51 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
     expect(htmlId).toContain('-webkit-print-color-adjust: exact;');
     expect(htmlId).toContain('break-inside: avoid;');
   });
+
+  it('Memuat Rincian Voice Over Resmi ElevenLabs dalam Laporan PDF secara Bersih & Terpisah', () => {
+    const project = createSampleCommercialProject();
+    project.items.push({
+      item_id: 'vo-pdf-test',
+      category: 'voice_over',
+      label: 'Narasi Pembuka Sineas',
+      quantity: 1,
+      quantity_type: 'shot',
+      duration_seconds: 10,
+      attempts_per_item: 1,
+      script_text: 'Selamat datang di masa depan pembuatan video bersama AI!',
+      script_language: 'id',
+      character_count: 57,
+      model_selection: {
+        provider: 'elevenlabs',
+        model_id: 'eleven_multilingual_v2',
+        model_name: 'Eleven Multilingual v2',
+        category: 'voice_over',
+        parameter_values: {},
+      },
+      pricing: {
+        pricing_unit: 'per_asset',
+        price_value: 0,
+        currency: 'USD',
+        credit_cost: null,
+        credit_unit: undefined,
+        source_name: 'ElevenLabs Official',
+        source_url: 'https://elevenlabs.io',
+        retrieved_at: '2026-10-28T00:00:00.000Z',
+        status: 'verified',
+      },
+    });
+
+    const { html: htmlId } = generatePdfReportHtml(project, 'id');
+    const { html: htmlEn } = generatePdfReportHtml(project, 'en');
+
+    // 1. Label Voice Over dan Model ElevenLabs
+    expect(htmlId).toContain('Narasi Pembuka Sineas');
+    expect(htmlId).toContain('Eleven Multilingual v2');
+    expect(htmlId).toContain('Voice Over');
+    expect(htmlId).toContain('ElevenLabs');
+
+    // 2. Pemisahan Kredit ElevenLabs
+    expect(htmlId).toContain('Total Konsumsi Credit ElevenLabs (Voice Over)');
+    expect(htmlEn).toContain('Total ElevenLabs Credits (Voice Over)');
+  });
 });

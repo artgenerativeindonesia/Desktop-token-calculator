@@ -22,9 +22,11 @@ import {
   FileDown,
   Film,
   Layers,
+  Mic,
   Scissors,
   Sparkles,
 } from 'lucide-react';
+import { getElevenLabsPlanById } from '../../shared/catalog/elevenlabsCatalog';
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -34,6 +36,7 @@ const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_video',
   'upscale_image',
   'upscale_video',
+  'voice_over',
 ];
 
 export const BudgetSummaryView: React.FC = () => {
@@ -342,11 +345,18 @@ export const BudgetSummaryView: React.FC = () => {
                   <Coins className="w-4 h-4 text-[#0099ff]" />
                   <span>{isId ? 'Total Credit Platform' : 'Total Credits'}</span>
                 </div>
-                <span className="font-bold text-[var(--vv-text-primary)] font-mono">
-                  {calc.total_credit !== null
-                    ? `${calc.total_credit.toLocaleString()} Credits`
-                    : '-'}
-                </span>
+                <div className="text-right">
+                  <span className="font-bold text-[var(--vv-text-primary)] font-mono block">
+                    {calc.total_credit !== null
+                      ? `${calc.total_credit.toLocaleString()} Cr (Higgsfield)`
+                      : '-'}
+                  </span>
+                  {calc.total_elevenlabs_credit !== null && (
+                    <span className="text-[11px] font-bold font-mono text-sky-400 block mt-0.5">
+                      {calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -680,6 +690,122 @@ export const BudgetSummaryView: React.FC = () => {
       </div>
 
       {/* =====================================================================
+       * TIER 1.8: ELEVENLABS OFFICIAL VOICE OVER BREAKDOWN CARD
+       * Menampilkan detail narasi sulih suara resmi ElevenLabs yang dipisahkan
+       * ===================================================================== */}
+      {project.items.some((i) => i.category === 'voice_over') &&
+        (() => {
+          const voItems = project.items.filter(
+            (i) => i.category === 'voice_over'
+          );
+          const totalChars = voItems.reduce((sum, item) => {
+            if (item.script_text && item.script_text.length > 0)
+              return sum + item.script_text.length;
+            if (
+              typeof item.character_count === 'number' &&
+              item.character_count > 0
+            )
+              return sum + item.character_count;
+            return sum + Math.round((item.duration_seconds || 10) * 14.5);
+          }, 0);
+          const totalVoSeconds = voItems.reduce(
+            (sum, item) => sum + (item.duration_seconds || 0),
+            0
+          );
+          const activePlan = getElevenLabsPlanById(
+            (calc.selected_elevenlabs_plan_id as any) || 'starter'
+          );
+          const voCatSummary = calc.category_summaries['voice_over'];
+
+          return (
+            <div
+              className={`${cardClass} rounded-[18px] p-6 space-y-4 border border-sky-500/30 bg-sky-950/10`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--vv-border)]">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/35 flex items-center justify-center text-sky-400 shrink-0">
+                    <Mic className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-[var(--vv-text-primary)]">
+                        {isId
+                          ? 'Ringkasan Voice Over Resmi ElevenLabs'
+                          : 'Official ElevenLabs Voice Over Summary'}
+                      </h3>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">
+                        {activePlan.name_id.split(' ')[1]} Tier
+                      </span>
+                    </div>
+                    <p className="text-xs text-[var(--vv-text-muted)] mt-0.5">
+                      {isId
+                        ? 'Tarif resmi terhubung langsung dengan katalog ElevenLabs (dipisahkan dari kredit video Higgsfield).'
+                        : 'Official rates connected directly with ElevenLabs catalog (tracked separately from Higgsfield video credits).'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="shrink-0 text-left sm:text-right">
+                  <div className="text-xs text-[var(--vv-text-muted)]">
+                    {isId ? 'Total Biaya Voice Over' : 'Total Voice Over Cost'}
+                  </div>
+                  <div className="text-lg font-bold tabular-nums text-sky-400">
+                    {formatCurrencyIdr(
+                      voCatSummary?.total_cost_idr ?? 0,
+                      language
+                    )}
+                  </div>
+                  <div className="text-[11px] text-[var(--vv-text-muted)] tabular-nums">
+                    {formatCurrencyUsd(
+                      voCatSummary?.total_cost_usd ?? 0,
+                      language
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="vv-card-quiet p-3 rounded-[12px]">
+                  <span className="text-[10px] text-[var(--vv-text-muted)] block">
+                    {isId ? 'Jumlah Baris Narasi' : 'Narration Items'}
+                  </span>
+                  <span className="text-base font-bold text-[var(--vv-text-primary)] font-mono">
+                    {voItems.length} {isId ? 'baris' : 'lines'}
+                  </span>
+                </div>
+
+                <div className="vv-card-quiet p-3 rounded-[12px]">
+                  <span className="text-[10px] text-[var(--vv-text-muted)] block">
+                    {isId ? 'Total Karakter Naskah' : 'Total Script Characters'}
+                  </span>
+                  <span className="text-base font-bold text-emerald-400 font-mono">
+                    {totalChars.toLocaleString()} {isId ? 'karakter' : 'chars'}
+                  </span>
+                </div>
+
+                <div className="vv-card-quiet p-3 rounded-[12px]">
+                  <span className="text-[10px] text-[var(--vv-text-muted)] block">
+                    {isId ? 'Total Durasi Suara' : 'Total Voice Duration'}
+                  </span>
+                  <span className="text-base font-bold text-amber-400 font-mono">
+                    ⏱️ {totalVoSeconds}s ({formatMinSec(totalVoSeconds)})
+                  </span>
+                </div>
+
+                <div className="vv-card-quiet p-3 rounded-[12px]">
+                  <span className="text-[10px] text-[var(--vv-text-muted)] block">
+                    {isId ? 'Kredit ElevenLabs' : 'ElevenLabs Credits'}
+                  </span>
+                  <span className="text-base font-bold text-sky-400 font-mono">
+                    🎙️ {calc.total_elevenlabs_credit?.toLocaleString() ?? 0} Cr
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* =====================================================================
        * TIER 2: SECONDARY SCANNING ZONE — UNIT ECONOMICS & VISUAL CATEGORY SHARE
        * ===================================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
@@ -751,15 +877,27 @@ export const BudgetSummaryView: React.FC = () => {
                   <span>{t.totalCredit}</span>
                 </div>
                 <div className="text-[10px] text-[var(--vv-text-muted)] mt-0.5">
-                  {isId
+                  {calc.total_elevenlabs_credit !== null
+                    ? isId
+                      ? 'Kredit Higgsfield & ElevenLabs'
+                      : 'Higgsfield & ElevenLabs Credits'
+                    : isId
                     ? `Untuk total ${calc.budgeted_generations} kali proses AI`
                     : `For total ${calc.budgeted_generations} AI runs`}
                 </div>
               </div>
-              <div className="text-lg font-bold tabular-nums text-[#7acaff]">
-                {calc.total_credit !== null
-                  ? `${calc.total_credit.toLocaleString()} Credits`
-                  : t.unavailableLabel}
+              <div className="text-right">
+                <div className="text-base font-bold tabular-nums text-[#7acaff]">
+                  {calc.total_credit !== null
+                    ? `${calc.total_credit.toLocaleString()} Cr (Higgsfield)`
+                    : '-'}
+                </div>
+                {calc.total_elevenlabs_credit !== null && (
+                  <div className="text-xs font-bold tabular-nums text-sky-400 mt-0.5">
+                    {calc.total_elevenlabs_credit.toLocaleString()} Cr
+                    (ElevenLabs)
+                  </div>
+                )}
               </div>
             </div>
 

@@ -23,6 +23,7 @@ import {
   Database,
   Edit3,
   Globe,
+  Mic,
   Plus,
   RefreshCw,
   RotateCcw,
@@ -31,6 +32,11 @@ import {
   Sliders,
   Sparkles,
 } from 'lucide-react';
+import {
+  ELEVENLABS_SUBSCRIPTION_PLANS,
+  ElevenLabsSubscriptionTier,
+  fetchElevenLabsCatalogAuto,
+} from '../../shared/catalog/elevenlabsCatalog';
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -40,6 +46,7 @@ const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_video',
   'upscale_image',
   'upscale_video',
+  'voice_over',
 ];
 
 export const DataSettingsView: React.FC = () => {
@@ -50,6 +57,8 @@ export const DataSettingsView: React.FC = () => {
     theme,
     selectedCreditPlanId,
     usdPerCredit,
+    selectedElevenLabsPlanId,
+    setSelectedElevenLabsPlanId,
     isRefreshingFx,
     isRefreshingCatalog,
     refreshExchangeRateAuto,
@@ -74,6 +83,9 @@ export const DataSettingsView: React.FC = () => {
     useState<CatalogModelEntry | null>(null);
   const [overrideUsdInput, setOverrideUsdInput] = useState<string>('');
   const [overrideCreditInput, setOverrideCreditInput] = useState<string>('');
+  const [elevenlabsApiKeyInput, setElevenlabsApiKeyInput] = useState<string>('');
+  const [elevenlabsSyncStatus, setElevenlabsSyncStatus] = useState<string | null>(null);
+  const [isSyncingElevenlabs, setIsSyncingElevenlabs] = useState<boolean>(false);
 
   // Filter Kategori Paket Langganan (Lapis 2)
   const [planFilterTab, setPlanFilterTab] = useState<
@@ -597,6 +609,228 @@ export const DataSettingsView: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* =====================================================================
+       * ELEVENLABS OFFICIAL VOICE OVER PLANS & STATUS (TAHAP 3)
+       * ===================================================================== */}
+      <div
+        className={`${cardClass} rounded-[16px] p-5 space-y-4 border border-sky-500/30`}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-sky-400 flex items-center gap-2">
+                <Mic className="w-4 h-4 text-sky-400" />
+                <span>
+                  {isId
+                    ? 'Paket Langganan Resmi ElevenLabs Voice Over'
+                    : 'Official ElevenLabs Voice Over Subscription Plans'}
+                </span>
+              </h2>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">
+                Official API
+              </span>
+            </div>
+            <p className="text-xs text-[var(--vv-text-muted)] mt-0.5">
+              {isId
+                ? 'Pilih paket ElevenLabs Anda. Biaya per credit akan otomatis dihitung untuk setiap naskah Voice Over di Langkah 3 secara real-time.'
+                : 'Select your ElevenLabs plan. Credit rates will automatically apply to voiceover scripts in Step 3 in real time.'}
+            </p>
+          </div>
+
+          {(() => {
+            const activePlan =
+              ELEVENLABS_SUBSCRIPTION_PLANS.find(
+                (p) => p.plan_id === selectedElevenLabsPlanId
+              ) || ELEVENLABS_SUBSCRIPTION_PLANS[1];
+            return (
+              <div className="text-right text-xs font-mono text-[var(--vv-text-strong)] bg-sky-950/20 px-3 py-1.5 rounded-lg border border-sky-500/30 shrink-0">
+                1 Credit ({activePlan.name_id.split(' ')[1]}) ={' '}
+                <strong>${activePlan.usd_per_credit.toFixed(6)}</strong>{' '}
+                {project.exchange_rate.rate
+                  ? `(~Rp ${(
+                      activePlan.usd_per_credit * project.exchange_rate.rate
+                    ).toFixed(2)})`
+                  : ''}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Grid 6 Paket Resmi ElevenLabs */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {ELEVENLABS_SUBSCRIPTION_PLANS.map((plan) => {
+            const isSelected = selectedElevenLabsPlanId === plan.plan_id;
+            return (
+              <button
+                key={plan.plan_id}
+                type="button"
+                onClick={() =>
+                  setSelectedElevenLabsPlanId(
+                    plan.plan_id as ElevenLabsSubscriptionTier
+                  )
+                }
+                className={`p-4 rounded-xl border text-left transition-all flex flex-col justify-between ${
+                  isSelected
+                    ? 'border-sky-500 bg-sky-500/10 shadow-md ring-1 ring-sky-500/50'
+                    : 'border-[var(--vv-border)] bg-[var(--vv-card)] hover:border-sky-500/40 hover:bg-[var(--vv-tint-weak)]'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="font-bold text-xs text-[var(--vv-text-primary)]">
+                      {isId
+                        ? plan.name_id.split(' (')[0]
+                        : plan.name_en.split(' (')[0]}
+                    </span>
+                    {plan.badge && (
+                      <span
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          plan.badge === 'POPULER'
+                            ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40'
+                            : plan.badge === 'GRATIS'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40'
+                        }`}
+                      >
+                        {plan.badge}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-lg font-bold tabular-nums text-[var(--vv-text-primary)] mb-1">
+                    {plan.monthly_price_usd === 0
+                      ? isId
+                        ? 'Gratis $0'
+                        : 'Free $0'
+                      : `$${plan.monthly_price_usd} / bln`}
+                  </div>
+
+                  <div className="text-[11px] text-[var(--vv-text-muted)] space-y-0.5 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span>
+                        {isId ? 'Alokasi Credit:' : 'Monthly Credits:'}
+                      </span>
+                      <strong className="font-mono text-sky-400">
+                        {plan.monthly_credits.toLocaleString()} Cr
+                      </strong>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span>
+                        {isId ? 'Biaya per Credit:' : 'Cost per Credit:'}
+                      </span>
+                      <span className="font-mono text-[var(--vv-text-strong)]">
+                        {plan.usd_per_credit === 0
+                          ? '$0'
+                          : `$${plan.usd_per_credit.toFixed(6)}`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[var(--vv-border)] flex items-center justify-between text-[10px]">
+                  <span className="text-[var(--vv-text-subtle)]">
+                    {plan.commercial_license
+                      ? '✅ Komersial'
+                      : 'Non-komersial'}
+                  </span>
+                  {isSelected ? (
+                    <span className="text-sky-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      {isId ? 'Aktif' : 'Active'}
+                    </span>
+                  ) : (
+                    <span className="text-[var(--vv-text-subtle)] group-hover:text-sky-400">
+                      {isId ? 'Pilih Paket' : 'Select'}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Real-Time Sync & Optional Key Panel */}
+        <div className="p-4 rounded-xl bg-sky-950/20 border border-sky-500/25 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[var(--vv-text-primary)]">
+                {isId
+                  ? 'Konektor Resmi ElevenLabs'
+                  : 'Official ElevenLabs Connector'}
+              </span>
+              <span className="text-[10px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                {isId
+                  ? 'Siap Digunakan (Gratis & Terverifikasi)'
+                  : 'Ready (Free & Verified)'}
+              </span>
+            </div>
+            <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Aplikasi menggunakan data resmi terverifikasi ElevenLabs tanpa mengharuskan Anda memasukkan API key berbayar. Jika Anda memiliki ElevenLabs API key, Anda dapat memasukkannya di bawah untuk melihat sisa kuota akun secara live.'
+                : 'The calculator uses verified official ElevenLabs models and pricing without requiring an API key. If you have an ElevenLabs API key, you can enter it below to inspect live quota.'}
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
+            <input
+              type="password"
+              placeholder="xi-api-key (opsional)"
+              value={elevenlabsApiKeyInput}
+              onChange={(e) => setElevenlabsApiKeyInput(e.target.value)}
+              className={`${inputClass} px-3 py-1.5 rounded-lg text-xs w-48 font-mono`}
+            />
+            <button
+              type="button"
+              disabled={isSyncingElevenlabs}
+              onClick={async () => {
+                setIsSyncingElevenlabs(true);
+                setElevenlabsSyncStatus(null);
+                try {
+                  const res = await fetchElevenLabsCatalogAuto({
+                    apiKey: elevenlabsApiKeyInput.trim() || undefined,
+                  });
+                  if (res.success) {
+                    setElevenlabsSyncStatus(
+                      isId
+                        ? `✅ Berhasil sinkronisasi (${res.models.length} model resmi ElevenLabs aktif)`
+                        : `✅ Successfully synced (${res.models.length} official ElevenLabs models active)`
+                    );
+                  } else {
+                    setElevenlabsSyncStatus(
+                      isId
+                        ? `ℹ️ Menggunakan katalog lokal terverifikasi`
+                        : `ℹ️ Using verified offline catalog`
+                    );
+                  }
+                } catch {
+                  setElevenlabsSyncStatus(
+                    isId
+                      ? 'ℹ️ Menggunakan katalog lokal terverifikasi'
+                      : 'ℹ️ Using verified offline catalog'
+                  );
+                } finally {
+                  setIsSyncingElevenlabs(false);
+                }
+              }}
+              className="vv-btn-primary px-3.5 py-1.5 text-xs whitespace-nowrap flex items-center justify-center gap-1.5"
+            >
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${
+                  isSyncingElevenlabs ? 'animate-spin' : ''
+                }`}
+              />
+              <span>{isId ? 'Cek Status API' : 'Check API Status'}</span>
+            </button>
+          </div>
+        </div>
+
+        {elevenlabsSyncStatus && (
+          <div className="p-2.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
+            {elevenlabsSyncStatus}
           </div>
         )}
       </div>

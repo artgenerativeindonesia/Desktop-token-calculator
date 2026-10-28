@@ -13,6 +13,7 @@ exports.clearCustomRateOverrides = clearCustomRateOverrides;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const higgsfieldCatalog_1 = require("../../shared/catalog/higgsfieldCatalog");
+const elevenlabsCatalog_1 = require("../../shared/catalog/elevenlabsCatalog");
 function getCustomModelsPathFromOverrides(overridesFilePath) {
     if (!overridesFilePath)
         return undefined;
@@ -30,7 +31,11 @@ function loadMergedCatalog(overridesFilePath) {
     const customModels = customModelsPath
         ? loadCustomUserModels(customModelsPath)
         : [];
-    const combinedBase = [...customModels, ...higgsfieldCatalog_1.HIGGSFIELD_MODEL_CATALOG];
+    const combinedBase = [
+        ...customModels,
+        ...higgsfieldCatalog_1.HIGGSFIELD_MODEL_CATALOG,
+        ...elevenlabsCatalog_1.ELEVENLABS_AS_CATALOG_MODELS,
+    ];
     return combinedBase.map((model) => {
         const custom = overrides[model.model_id];
         if (!custom)

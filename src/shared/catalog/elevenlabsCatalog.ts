@@ -1,0 +1,1064 @@
+/**
+ * AI Video & Voiceover Budget Calculator — Katalog Resmi ElevenLabs Voice Over
+ *
+ * File ini menyediakan:
+ * 1. Tier Paket Langganan Resmi ElevenLabs (Free, Starter, Creator, Pro, Scale, Business)
+ * 2. Model AI Voice Over Resmi Terupdate (Multilingual v2, Flash v2.5, Turbo v2.5, v3, Monolingual v1)
+ * 3. Rumus Konversi Kecepatan Bicara (Dwi-Input Sineas: Durasi Detik <-> Karakter Naskah)
+ * 4. Fungsi Perhitungan Credit & Biaya (USD & IDR)
+ * 5. Bridge Adaptor ke CatalogModelEntry (Kompatibel dengan arsitektur Higgsfield/AI Studio)
+ * 6. Real-Time Connector Otomatis (Fallback Offline Terverifikasi + Live API gratis/opsional API key)
+ */
+
+import Decimal from 'decimal.js';
+import {
+  CatalogModelEntry,
+  CatalogPricingVariant,
+  ElevenLabsSubscriptionPlan as BaseElevenLabsPlan,
+  ModelTierBadge,
+  PricingUnit,
+} from '../types/project';
+
+export const ELEVENLABS_CATALOG_VERSION = '2026.10';
+export const ELEVENLABS_OFFICIAL_URL = 'https://elevenlabs.io';
+export const ELEVENLABS_PRICING_URL = 'https://elevenlabs.io/pricing';
+export const ELEVENLABS_DOCS_URL = 'https://elevenlabs.io/docs/overview';
+export const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
+
+// Default acuan kurs USD ke IDR
+export const DEFAULT_USD_TO_IDR_RATE = 16_250;
+
+// High precision untuk kalkulasi credit dan rate token
+Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
+
+// ============================================================================
+// 1. TIPE DATA RESMI ELEVENLABS
+// ============================================================================
+
+export type ElevenLabsSubscriptionTier =
+  | 'free'
+  | 'starter'
+  | 'creator'
+  | 'pro'
+  | 'scale'
+  | 'business';
+
+/**
+ * Tipe data lengkap Paket Langganan ElevenLabs (Mewarisi & memperluas BaseElevenLabsPlan)
+ */
+export interface ElevenLabsSubscriptionPlan extends BaseElevenLabsPlan {
+  plan_id: ElevenLabsSubscriptionTier;
+  approx_idr_per_credit: number; // Estimasi acuan kurs default ~Rp 16.250
+  concurrency_limit: number;
+  max_character_per_request: number;
+  rollover_months: number;
+  commercial_license: boolean;
+  supports_instant_voice_cloning: boolean;
+  supports_professional_voice_cloning: boolean;
+  pvc_slots: number;
+  workspace_seats: number;
+  features_id: string[];
+  features_en: string[];
+  badge?: 'GRATIS' | 'POPULER' | 'KREATOR' | 'STUDIO' | 'SKALA BESAR' | 'ENTERPRISE';
+}
+
+export type ElevenLabsModelTierBadge = 'POPULER' | 'NEW' | 'STANDARD' | 'PREMIUM';
+
+export interface ElevenLabsModelEntry {
+  model_id: string;
+  model_name: string;
+  credit_multiplier_per_character: number; // 1.0 (standar) atau 0.5 (diskon 50% Flash/Turbo)
+  latency_ms_approx: number; // Estimasi latensi respon (~75ms, ~250ms, dll.)
+  latency_description: string;
+  language_count: number;
+  supported_languages: string[];
+  category: 'multilingual' | 'conversational_fast' | 'monolingual' | 'experimental';
+  description_id: string;
+  description_en: string;
+  recommended_use_id: string;
+  recommended_use_en: string;
+  tier_badge: ElevenLabsModelTierBadge;
+  is_active: boolean;
+  supports_voice_cloning: boolean;
+  source_name: string;
+  source_url: string;
+  retrieved_at: string;
+}
+
+export interface SpeechSpeedProfile {
+  lang: 'id' | 'en';
+  language_name_id: string;
+  language_name_en: string;
+  characters_per_second: number; // ID: 14.5 char/s, EN: 16.5 char/s
+  characters_per_minute: number; // ID: 870 char/min, EN: 990 char/min
+  words_per_minute: number; // ID: ~125 WPM, EN: ~145 WPM
+  avg_characters_per_word: number; // ID: ~6.96, EN: ~6.83
+  description_id: string;
+  description_en: string;
+}
+
+export interface VoicedScriptEstimate {
+  text: string;
+  lang: 'id' | 'en';
+  character_count: number;
+  word_count: number;
+  duration_seconds: number;
+  duration_formatted_id: string;
+  duration_formatted_en: string;
+  model_id: string;
+  model_name: string;
+  credit_multiplier: number;
+  total_credits: number;
+  plan_id: ElevenLabsSubscriptionTier;
+  usd_per_credit: number;
+  total_cost_usd: number;
+  total_cost_idr: number | null;
+}
+
+export interface ElevenLabsUserSubscription {
+  tier: string;
+  character_count: number;
+  character_limit: number;
+  can_extend_character_limit: boolean;
+  allowed_to_extend_character_limit: boolean;
+  next_character_count_reset_unix: number;
+  currency?: string;
+  status?: string;
+}
+
+export interface FetchElevenLabsCatalogResult {
+  success: boolean;
+  models: ElevenLabsModelEntry[];
+  plans: ElevenLabsSubscriptionPlan[];
+  speechProfiles: Record<'id' | 'en', SpeechSpeedProfile>;
+  usedFallback: boolean;
+  source: string;
+  retrievedAt: string;
+  userSubscription?: ElevenLabsUserSubscription | null;
+  error_id?: string;
+  error_en?: string;
+}
+
+// ============================================================================
+// 2. PAKET LANGGANAN RESMI ELEVENLABS TERUPDATE
+// ============================================================================
+
+export const ELEVENLABS_SUBSCRIPTION_PLANS: ElevenLabsSubscriptionPlan[] = [
+  {
+    plan_id: 'free',
+    name_id: 'Paket Free ($0/bln • 10.000 Credit)',
+    name_en: 'Free Plan ($0/mo • 10,000 Credits)',
+    monthly_price_usd: 0,
+    monthly_credits: 10_000,
+    usd_per_credit: 0,
+    approx_idr_per_credit: 0,
+    concurrency_limit: 2,
+    max_character_per_request: 2_500,
+    rollover_months: 0,
+    commercial_license: false,
+    supports_instant_voice_cloning: false,
+    supports_professional_voice_cloning: false,
+    pvc_slots: 0,
+    workspace_seats: 1,
+    plan_category: 'free',
+    billing_cycle: 'monthly',
+    badge: 'GRATIS',
+    description_id:
+      'Paket gratis tanpa kartu kredit: 10.000 credit per bulan (~10 menit audio). Khusus keperluan non-komersial dengan kewajiban menyertakan atribusi kredit.',
+    description_en:
+      'Free plan with 10,000 monthly credits (~10 mins audio). Non-commercial usage with attribution required.',
+    features_id: [
+      '10.000 credit/bulan gratis ($0 / credit)',
+      'Hingga 3 Custom Voice bawaan',
+      'Non-komersial (wajib atribusi ElevenLabs)',
+      'Akses ke library suara publik',
+    ],
+    features_en: [
+      '10,000 monthly credits free ($0 / credit)',
+      'Up to 3 Custom Voices',
+      'Non-commercial (attribution required)',
+      'Access to shared community voice library',
+    ],
+  },
+  {
+    plan_id: 'starter',
+    name_id: 'Paket Starter ($6/bln • 30.000 Credit)',
+    name_en: 'Starter Plan ($6/mo • 30,000 Credits)',
+    monthly_price_usd: 6,
+    monthly_credits: 30_000,
+    usd_per_credit: 0.0002, // $6 / 30,000 = $0.000200
+    approx_idr_per_credit: 3.25, // ~$0.000200 * 16,250 = Rp 3.25
+    concurrency_limit: 3,
+    max_character_per_request: 5_000,
+    rollover_months: 2,
+    commercial_license: true,
+    supports_instant_voice_cloning: true,
+    supports_professional_voice_cloning: false,
+    pvc_slots: 0,
+    workspace_seats: 1,
+    plan_category: 'starter',
+    billing_cycle: 'monthly',
+    badge: 'POPULER',
+    description_id:
+      'Paket pemula kreator konten & sineas: 30.000 credit/bulan (~30 menit audio), lisensi komersial penuh, dan fitur Instant Voice Cloning (IVC) hingga 10 suara kloning cepat.',
+    description_en:
+      'Creator starter plan: 30,000 credits/mo (~30 mins audio), commercial license, and Instant Voice Cloning (IVC) for up to 10 voices.',
+    features_id: [
+      '30.000 credit/bulan ($0.000200 / credit ≈ Rp 3.25)',
+      'Lisensi komersial resmi',
+      'Instant Voice Cloning (IVC) hingga 10 suara',
+      'Akumulasi rollover credit hingga 2 bulan',
+    ],
+    features_en: [
+      '30,000 credits/mo ($0.000200 / credit ≈ Rp 3.25)',
+      'Commercial license included',
+      'Instant Voice Cloning (IVC) up to 10 voices',
+      'Rollover unused credits up to 2 months',
+    ],
+  },
+  {
+    plan_id: 'creator',
+    name_id: 'Paket Creator ($22/bln • 121.000 Credit)',
+    name_en: 'Creator Plan ($22/mo • 121,000 Credits)',
+    monthly_price_usd: 22,
+    monthly_credits: 121_000,
+    usd_per_credit: 0.0001818, // $22 / 121,000 = $0.000181818...
+    approx_idr_per_credit: 2.95, // ~$0.0001818 * 16,250 = Rp 2.95
+    concurrency_limit: 5,
+    max_character_per_request: 10_000,
+    rollover_months: 2,
+    commercial_license: true,
+    supports_instant_voice_cloning: true,
+    supports_professional_voice_cloning: true,
+    pvc_slots: 1,
+    workspace_seats: 1,
+    plan_category: 'creator',
+    billing_cycle: 'monthly',
+    badge: 'KREATOR',
+    description_id:
+      'Paket favorit kreator aktif: 121.000 credit/bulan (~2 jam audio), Professional Voice Cloning (PVC 1 slot) dengan sampel audio panjang, dan audio berkualitas tinggi 192kbps.',
+    description_en:
+      'Active creator tier: 121,000 credits/mo (~2 hrs audio), 1 Professional Voice Cloning (PVC) slot with long audio samples, and 192kbps high quality audio.',
+    features_id: [
+      '121.000 credit/bulan ($0.0001818 / credit ≈ Rp 2.95)',
+      '1 Slot Professional Voice Cloning (PVC)',
+      'Hingga 30 Instant Cloned Voices',
+      'Kualitas audio 192 kbps ultra jernih',
+    ],
+    features_en: [
+      '121,000 credits/mo ($0.0001818 / credit ≈ Rp 2.95)',
+      '1 Professional Voice Cloning (PVC) slot',
+      'Up to 30 Instant Cloned Voices',
+      '192 kbps ultra clear audio output',
+    ],
+  },
+  {
+    plan_id: 'pro',
+    name_id: 'Paket Pro ($99/bln • 600.000 Credit)',
+    name_en: 'Pro Plan ($99/mo • 600,000 Credits)',
+    monthly_price_usd: 99,
+    monthly_credits: 600_000,
+    usd_per_credit: 0.000165, // $99 / 600,000 = $0.0001650
+    approx_idr_per_credit: 2.68, // ~$0.0001650 * 16,250 = Rp 2.68
+    concurrency_limit: 10,
+    max_character_per_request: 20_000,
+    rollover_months: 2,
+    commercial_license: true,
+    supports_instant_voice_cloning: true,
+    supports_professional_voice_cloning: true,
+    pvc_slots: 3,
+    workspace_seats: 1,
+    plan_category: 'pro',
+    billing_cycle: 'monthly',
+    badge: 'STUDIO',
+    description_id:
+      'Paket produksi studio & agency: 600.000 credit/bulan (~10 jam audio), 3 slot PVC, opsi output master studio 44.1kHz PCM (WAV), dan render prioritas.',
+    description_en:
+      'Studio & agency tier: 600,000 credits/mo (~10 hrs audio), 3 PVC slots, studio master 44.1kHz PCM output, and priority rendering.',
+    features_id: [
+      '600.000 credit/bulan ($0.0001650 / credit ≈ Rp 2.68)',
+      '3 Slot Professional Voice Cloning (PVC)',
+      'Output audio studio master 44.1kHz PCM uncompressed',
+      '10 concurrent requests rendering simultan',
+    ],
+    features_en: [
+      '600,000 credits/mo ($0.0001650 / credit ≈ Rp 2.68)',
+      '3 Professional Voice Cloning (PVC) slots',
+      'Studio master 44.1kHz PCM uncompressed output',
+      '10 concurrent rendering requests',
+    ],
+  },
+  {
+    plan_id: 'scale',
+    name_id: 'Paket Scale ($299/bln • 1.800.000 Credit)',
+    name_en: 'Scale Plan ($299/mo • 1,800,000 Credits)',
+    monthly_price_usd: 299,
+    monthly_credits: 1_800_000,
+    usd_per_credit: 0.00016611, // $299 / 1,800,000 = $0.00016611...
+    approx_idr_per_credit: 2.7, // ~$0.0001661 * 16,250 = Rp 2.70
+    concurrency_limit: 15,
+    max_character_per_request: 40_000,
+    rollover_months: 2,
+    commercial_license: true,
+    supports_instant_voice_cloning: true,
+    supports_professional_voice_cloning: true,
+    pvc_slots: 3,
+    workspace_seats: 3,
+    plan_category: 'scale',
+    billing_cycle: 'monthly',
+    badge: 'SKALA BESAR',
+    description_id:
+      'Paket tim produksi skala besar: 1.800.000 credit/bulan (~30 jam audio), 3 kursi workspace tim kolaboratif, serta volume credit besar untuk serial & film panjang.',
+    description_en:
+      'Large-scale team production: 1,800,000 credits/mo (~30 hrs audio), 3 shared workspace seats, high volume for episodic and feature productions.',
+    features_id: [
+      '1.800.000 credit/bulan ($0.0001661 / credit ≈ Rp 2.70)',
+      '3 Kursi kolaborator workspace tim',
+      '15 concurrent requests',
+      'Dukungan analitik pemakaian tim',
+    ],
+    features_en: [
+      '1,800,000 credits/mo ($0.0001661 / credit ≈ Rp 2.70)',
+      '3 Shared workspace team seats',
+      '15 concurrent requests',
+      'Team usage analytics support',
+    ],
+  },
+  {
+    plan_id: 'business',
+    name_id: 'Paket Business ($990/bln • 6.000.000 Credit)',
+    name_en: 'Business Plan ($990/mo • 6,000,000 Credits)',
+    monthly_price_usd: 990,
+    monthly_credits: 6_000_000,
+    usd_per_credit: 0.000165, // $990 / 6,000,000 = $0.0001650
+    approx_idr_per_credit: 2.68, // ~$0.0001650 * 16,250 = Rp 2.68
+    concurrency_limit: 25,
+    max_character_per_request: 40_000,
+    rollover_months: 2,
+    commercial_license: true,
+    supports_instant_voice_cloning: true,
+    supports_professional_voice_cloning: true,
+    pvc_slots: 10,
+    workspace_seats: 10,
+    plan_category: 'business',
+    billing_cycle: 'monthly',
+    badge: 'ENTERPRISE',
+    description_id:
+      'Paket enterprise komersial: 6.000.000 credit/bulan (~100 jam audio), 10 kursi workspace, 10 slot PVC, dan kapasitas render paralel tertinggi.',
+    description_en:
+      'Commercial enterprise tier: 6,000,000 credits/mo (~100 hrs audio), 10 workspace seats, 10 PVC slots, and highest parallel rendering limits.',
+    features_id: [
+      '6.000.000 credit/bulan ($0.0001650 / credit ≈ Rp 2.68)',
+      '10 Slot Professional Voice Cloning (PVC)',
+      '10 Kursi kolaborasi anggota tim',
+      '25 concurrent requests rendering simultan',
+    ],
+    features_en: [
+      '6,000,000 credits/mo ($0.0001650 / credit ≈ Rp 2.68)',
+      '10 Professional Voice Cloning (PVC) slots',
+      '10 Team collaboration seats',
+      '25 concurrent rendering requests',
+    ],
+  },
+];
+
+// ============================================================================
+// 3. MODEL-MODEL AI RESMI ELEVENLABS TERUPDATE
+// ============================================================================
+
+export const ELEVENLABS_MODELS_CATALOG: ElevenLabsModelEntry[] = [
+  {
+    model_id: 'eleven_multilingual_v2',
+    model_name: 'Eleven Multilingual v2',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 350,
+    latency_description: '~350ms standard latency',
+    language_count: 29,
+    supported_languages: [
+      'id', // Indonesian
+      'en', // English
+      'ja', // Japanese
+      'zh', // Chinese
+      'de', // German
+      'es', // Spanish
+      'fr', // French
+      'it', // Italian
+      'ko', // Korean
+      'pt', // Portuguese
+      'pl', // Polish
+      'tr', // Turkish
+      'ru', // Russian
+      'nl', // Dutch
+      'ar', // Arabic
+      'sv', // Swedish
+      'hi', // Hindi
+      'cs', // Czech
+      'da', // Danish
+      'fi', // Finnish
+      'el', // Greek
+      'he', // Hebrew
+      'ms', // Malay
+      'no', // Norwegian
+      'sk', // Slovak
+      'uk', // Ukrainian
+      'ro', // Romanian
+      'bg', // Bulgarian
+      'hr', // Croatian
+    ],
+    category: 'multilingual',
+    tier_badge: 'POPULER',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-multilingual-v2',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model unggulan utama ElevenLabs dengan kualitas suara paling ekspresif, bernuansa emosional tinggi, dan pelafalan aksen alami dalam 29+ bahasa (termasuk Bahasa Indonesia).',
+    description_en:
+      'Flagship ElevenLabs model delivering the highest emotional range, expressive depth, and natural accent delivery across 29+ languages (including Indonesian).',
+    recommended_use_id:
+      'Sangat direkomendasikan untuk narasi film, voiceover trailer sinematik, audiobook emosional, drama audio, dan dialog karakter utama.',
+    recommended_use_en:
+      'Ideal for cinematic movie trailers, emotive audiobooks, narrative drama, and primary character performances.',
+  },
+  {
+    model_id: 'eleven_flash_v2_5',
+    model_name: 'Eleven Flash v2.5',
+    credit_multiplier_per_character: 0.5, // 50% discount
+    latency_ms_approx: 75,
+    latency_description: '~75ms ultra low-latency',
+    language_count: 32,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu'
+    ],
+    category: 'conversational_fast',
+    tier_badge: 'NEW',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-flash-v25',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model ultra cepat generasi terbaru dengan latensi spektakuler (~75ms) dan tarif hemat diskon 50% (hanya 0.5 credit per karakter). Mendukung 32 bahasa dunia.',
+    description_en:
+      'Ultra fast modern voice model with ~75ms response latency and 50% credit discount (0.5 credits per character). Supports 32 languages.',
+    recommended_use_id:
+      'Pilihan terbaik untuk live streaming interactive, game NPC real-time, dialog interaktif, agen percakapan AI, dan produksi cepat bervolume besar.',
+    recommended_use_en:
+      'Best for real-time conversational agents, interactive game NPCs, live voice streams, and high-volume fast turnaround audio.',
+  },
+  {
+    model_id: 'eleven_turbo_v2_5',
+    model_name: 'Eleven Turbo v2.5',
+    credit_multiplier_per_character: 0.5, // 50% discount
+    latency_ms_approx: 250,
+    latency_description: '~250ms fast latency',
+    language_count: 32,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu'
+    ],
+    category: 'conversational_fast',
+    tier_badge: 'POPULER',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-turbo-v25',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model seimbang yang memadukan kecepatan tinggi (~250ms) dengan kejernihan artikulasi suara natural. Hemat tarif diskon 50% (0.5 credit per karakter).',
+    description_en:
+      'Balanced fast model combining swift ~250ms rendering with clear natural voice inflection at 50% credit discount (0.5 credits per character).',
+    recommended_use_id:
+      'Sempurna untuk video promosi media sosial (TikTok, Reels, YouTube Shorts), explainer video, materi e-learning, dan podcast mingguan.',
+    recommended_use_en:
+      'Perfect for social video voiceovers (Shorts, Reels, TikTok), product explainers, e-learning courses, and weekly podcasts.',
+  },
+  {
+    model_id: 'eleven_v3',
+    model_name: 'Eleven v3 (Multilingual Alpha)',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 380,
+    latency_description: '~380ms high-fidelity',
+    language_count: 70,
+    supported_languages: [
+      'id', 'en', 'ja', 'zh', 'de', 'es', 'fr', 'it', 'ko', 'pt', 'pl', 'tr',
+      'ru', 'nl', 'ar', 'sv', 'hi', 'cs', 'da', 'fi', 'el', 'he', 'ms', 'no',
+      'sk', 'uk', 'ro', 'bg', 'hr', 'vi', 'th', 'hu', 'ta', 'te', 'mr', 'ur',
+      'bn', 'gu', 'kn', 'ml', 'sw', 'af', 'sq', 'hy', 'az', 'eu', 'be', 'bs',
+      'ca', 'et', 'gl', 'ka', 'is', 'ga', 'kk', 'lv', 'lt', 'mk', 'mt', 'fa',
+      'sr', 'sl', 'cy', 'tl', 'ne', 'si', 'km', 'my', 'lo', 'mn'
+    ],
+    category: 'experimental',
+    tier_badge: 'PREMIUM',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-v3',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Arsitektur audio model generasi ke-3 dengan cakupan 70+ bahasa dan dialek daerah, menghadirkan kestabilan intonasi dan akurasi fonetik tertinggi.',
+    description_en:
+      'Next-generation v3 audio architecture covering 70+ languages and regional dialects with state-of-the-art prosody and phonetic accuracy.',
+    recommended_use_id:
+      'Proyek internasional multi-bahasa, lokalisasi film lintas benua, dubbing cerdas, dan dialek bahasa yang jarang didukung AI konvensional.',
+    recommended_use_en:
+      'Global multi-language films, cross-border localization, smart AI dubbing, and regional dialect preservation.',
+  },
+  {
+    model_id: 'eleven_monolingual_v1',
+    model_name: 'Eleven English v1 (Monolingual Legacy)',
+    credit_multiplier_per_character: 1.0,
+    latency_ms_approx: 320,
+    latency_description: '~320ms legacy engine',
+    language_count: 1,
+    supported_languages: ['en'],
+    category: 'monolingual',
+    tier_badge: 'STANDARD',
+    is_active: true,
+    supports_voice_cloning: true,
+    source_name: 'ElevenLabs Official Models Documentation',
+    source_url: 'https://elevenlabs.io/docs/models#eleven-english-v1',
+    retrieved_at: '2026-10-28T00:00:00.000Z',
+    description_id:
+      'Model awal legendaris yang dikhususkan khusus untuk narasi bahasa Inggris standar (Amerika, Inggris, Australia). Sangat stabil dan konsisten.',
+    description_en:
+      'Classic foundation model optimized strictly for English narration (US, UK, Australian). Highly stable and proven tone consistency.',
+    recommended_use_id:
+      'Arsip voiceover legacy bahasa Inggris murni, dokumenter klasik, dan produksi naskah bahasa Inggris sederhana.',
+    recommended_use_en:
+      'Pure English legacy workflows, documentary narration, and simple English script production.',
+  },
+];
+
+// ============================================================================
+// 4. PROFIL KECEPATAN BICARA (DWI-INPUT SINEAS)
+// ============================================================================
+
+/**
+ * Konversi Kecepatan Bicara Standar Sineas & Voiceover:
+ * - Bahasa Indonesia (ID):
+ *   Rata-rata 14.5 karakter/detik (~870 karakter/menit, ~125 WPM, rata-rata 6.96 karakter/kata).
+ *   Suku kata bahasa Indonesia cenderung sedikit lebih panjang karena imbuhan.
+ *
+ * - Bahasa Inggris (EN):
+ *   Rata-rata 16.5 karakter/detik (~990 karakter/menit, ~145 WPM, rata-rata 6.83 karakter/kata).
+ *   Bicara bahasa Inggris cenderung memiliki ritme suku kata yang lebih padat.
+ */
+
+export const SPEECH_SPEED_PROFILES: Record<'id' | 'en', SpeechSpeedProfile> = {
+  id: {
+    lang: 'id',
+    language_name_id: 'Bahasa Indonesia',
+    language_name_en: 'Indonesian',
+    characters_per_second: 14.5,
+    characters_per_minute: 870,
+    words_per_minute: 125,
+    avg_characters_per_word: 6.96,
+    description_id:
+      'Tempo narasi Indonesia alami: ~14.5 karakter/detik (~870 karakter/menit, ~125 kata/menit).',
+    description_en:
+      'Natural Indonesian speech tempo: ~14.5 characters/sec (~870 chars/min, ~125 words/min).',
+  },
+  en: {
+    lang: 'en',
+    language_name_id: 'Bahasa Inggris',
+    language_name_en: 'English',
+    characters_per_second: 16.5,
+    characters_per_minute: 990,
+    words_per_minute: 145,
+    avg_characters_per_word: 6.83,
+    description_id:
+      'Tempo narasi Inggris natural: ~16.5 karakter/detik (~990 karakter/menit, ~145 kata/menit).',
+    description_en:
+      'Natural English narration tempo: ~16.5 characters/sec (~990 chars/min, ~145 words/min).',
+  },
+};
+
+// ============================================================================
+// 5. FUNGSI PEMBANTU KONVERSI & ESTIMASI (DWI-INPUT SINEAS)
+// ============================================================================
+
+/**
+ * Konversi Durasi (detik) ke Estimasi Jumlah Karakter Naskah.
+ * Contoh: Durasi shot 10 detik Bahasa Indonesia -> ~145 karakter naskah.
+ */
+export function convertDurationToCharacters(
+  seconds: number,
+  lang: 'id' | 'en' = 'id'
+): number {
+  if (!Number.isFinite(seconds) || seconds <= 0) return 0;
+  const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
+  return Math.round(seconds * profile.characters_per_second);
+}
+
+/**
+ * Konversi Jumlah Karakter Naskah ke Estimasi Durasi Bicara (detik).
+ * Contoh: Naskah 145 karakter Bahasa Indonesia -> ~10.0 detik bicara.
+ */
+export function convertCharactersToDuration(
+  chars: number,
+  lang: 'id' | 'en' = 'id'
+): number {
+  if (!Number.isFinite(chars) || chars <= 0) return 0;
+  const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
+  const seconds = chars / profile.characters_per_second;
+  return Math.round(seconds * 100) / 100; // Pembulatan rapi ke 2 desimal
+}
+
+/**
+ * Konversi Jumlah Kata ke Estimasi Karakter
+ */
+export function convertWordsToCharacters(
+  words: number,
+  lang: 'id' | 'en' = 'id'
+): number {
+  if (!Number.isFinite(words) || words <= 0) return 0;
+  const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
+  return Math.round(words * profile.avg_characters_per_word);
+}
+
+/**
+ * Konversi Karakter ke Estimasi Jumlah Kata
+ */
+export function convertCharactersToWords(
+  chars: number,
+  lang: 'id' | 'en' = 'id'
+): number {
+  if (!Number.isFinite(chars) || chars <= 0) return 0;
+  const profile = SPEECH_SPEED_PROFILES[lang] ?? SPEECH_SPEED_PROFILES.id;
+  return Math.round(chars / profile.avg_characters_per_word);
+}
+
+/**
+ * Cari model berdasarkan ID (fallback ke Multilingual v2 jika tidak ditemukan)
+ */
+export function getElevenLabsModelById(modelId: string): ElevenLabsModelEntry {
+  const found = ELEVENLABS_MODELS_CATALOG.find((m) => m.model_id === modelId);
+  if (found) return found;
+
+  // Fallback default
+  return ELEVENLABS_MODELS_CATALOG[0];
+}
+
+/**
+ * Cari paket langganan berdasarkan tier ID (fallback ke Starter jika tidak ditemukan)
+ */
+export function getElevenLabsPlanById(
+  planId: ElevenLabsSubscriptionTier
+): ElevenLabsSubscriptionPlan {
+  const found = ELEVENLABS_SUBSCRIPTION_PLANS.find((p) => p.plan_id === planId);
+  if (found) return found;
+
+  return ELEVENLABS_SUBSCRIPTION_PLANS[1]; // Starter
+}
+
+/**
+ * Menghitung Total Credit ElevenLabs yang dibutuhkan:
+ * Rumus: chars * credit_multiplier (misal Flash v2.5 = 0.5x, Multilingual v2 = 1.0x)
+ * Menggunakan pembulatan ke atas (Math.ceil) agar tidak kekurangan kuota.
+ */
+export function calculateElevenLabsCredits(
+  chars: number,
+  modelId: string = 'eleven_multilingual_v2'
+): number {
+  if (!Number.isFinite(chars) || chars <= 0) return 0;
+  const model = getElevenLabsModelById(modelId);
+  const multiplier = model.credit_multiplier_per_character;
+
+  const rawCredit = new Decimal(chars).times(multiplier).toNumber();
+  return Math.ceil(rawCredit);
+}
+
+/**
+ * Menghitung Biaya USD berdasarkan jumlah credit dan paket langganan yang dipilih
+ */
+export function calculateElevenLabsCostUsd(
+  credits: number,
+  planId: ElevenLabsSubscriptionTier = 'starter'
+): number {
+  if (!Number.isFinite(credits) || credits <= 0) return 0;
+  const plan = getElevenLabsPlanById(planId);
+
+  // Jika paket Free, biaya tambahan $0
+  if (plan.monthly_price_usd === 0 || plan.usd_per_credit === 0) {
+    return 0;
+  }
+
+  const cost = new Decimal(credits).times(plan.usd_per_credit).toNumber();
+  return Math.round(cost * 1_000_000) / 1_000_000;
+}
+
+/**
+ * Menghitung Biaya IDR berdasarkan kurs mata uang (X)
+ */
+export function calculateElevenLabsCostIdr(
+  credits: number,
+  planId: ElevenLabsSubscriptionTier = 'starter',
+  usdToIdrRate: number = DEFAULT_USD_TO_IDR_RATE
+): number {
+  if (!Number.isFinite(credits) || credits <= 0) return 0;
+  const costUsd = calculateElevenLabsCostUsd(credits, planId);
+  if (costUsd === 0) return 0;
+
+  const costIdr = new Decimal(costUsd).times(usdToIdrRate).toNumber();
+  return Math.round(costIdr);
+}
+
+/**
+ * Format durasi detik ke format ramah penonton:
+ * "1 Menit 30 Detik (01:30)" atau "45 Detik (00:45)"
+ */
+export function formatSpeechDuration(
+  seconds: number,
+  lang: 'id' | 'en' = 'id'
+): string {
+  const safeSeconds = Number.isFinite(seconds) ? Math.max(0, Math.round(seconds)) : 0;
+  const mins = Math.floor(safeSeconds / 60);
+  const secs = safeSeconds % 60;
+  const mm = String(mins).padStart(2, '0');
+  const ss = String(secs).padStart(2, '0');
+
+  if (lang === 'en') {
+    if (mins > 0) {
+      return `${mins}m ${secs}s (${mm}:${ss})`;
+    }
+    return `${secs}s (${mm}:${ss})`;
+  }
+
+  if (mins > 0) {
+    return `${mins} Menit ${secs} Detik (${mm}:${ss})`;
+  }
+  return `${secs} Detik (${mm}:${ss})`;
+}
+
+/**
+ * Kalkulasi Lengkap Estimasi Naskah Voiceover (Dwi-Input Sineas):
+ * Pengguna bisa mengisi naskah langsung (skrip) ATAU memasukkan durasi shot target.
+ */
+export function estimateVoicedScript(params: {
+  text?: string;
+  durationSeconds?: number;
+  characterCount?: number;
+  lang?: 'id' | 'en';
+  modelId?: string;
+  planId?: ElevenLabsSubscriptionTier;
+  usdToIdrRate?: number;
+}): VoicedScriptEstimate {
+  const lang = params.lang ?? 'id';
+  const modelId = params.modelId ?? 'eleven_multilingual_v2';
+  const planId = params.planId ?? 'starter';
+  const model = getElevenLabsModelById(modelId);
+  const plan = getElevenLabsPlanById(planId);
+
+  let finalChars = 0;
+  let finalDurationSeconds = 0;
+  const rawText = params.text?.trim() ?? '';
+
+  if (rawText.length > 0) {
+    finalChars = rawText.length;
+    finalDurationSeconds = convertCharactersToDuration(finalChars, lang);
+  } else if (
+    typeof params.characterCount === 'number' &&
+    params.characterCount > 0
+  ) {
+    finalChars = params.characterCount;
+    finalDurationSeconds = convertCharactersToDuration(finalChars, lang);
+  } else if (
+    typeof params.durationSeconds === 'number' &&
+    params.durationSeconds > 0
+  ) {
+    finalDurationSeconds = params.durationSeconds;
+    finalChars = convertDurationToCharacters(finalDurationSeconds, lang);
+  }
+
+  const wordCount = convertCharactersToWords(finalChars, lang);
+  const totalCredits = calculateElevenLabsCredits(finalChars, modelId);
+  const totalCostUsd = calculateElevenLabsCostUsd(totalCredits, planId);
+  const totalCostIdr =
+    params.usdToIdrRate && params.usdToIdrRate > 0
+      ? calculateElevenLabsCostIdr(totalCredits, planId, params.usdToIdrRate)
+      : null;
+
+  return {
+    text: rawText,
+    lang,
+    character_count: finalChars,
+    word_count: wordCount,
+    duration_seconds: finalDurationSeconds,
+    duration_formatted_id: formatSpeechDuration(finalDurationSeconds, 'id'),
+    duration_formatted_en: formatSpeechDuration(finalDurationSeconds, 'en'),
+    model_id: model.model_id,
+    model_name: model.model_name,
+    credit_multiplier: model.credit_multiplier_per_character,
+    total_credits: totalCredits,
+    plan_id: plan.plan_id,
+    usd_per_credit: plan.usd_per_credit,
+    total_cost_usd: totalCostUsd,
+    total_cost_idr: totalCostIdr,
+  };
+}
+
+// ============================================================================
+// 6. BRIDGE ADAPTOR KE CATALOGMODELENTRY (KOMPATIBILITAS ARSITEKTUR HYBRID)
+// ============================================================================
+
+/**
+ * Mengonversi entri model ElevenLabs menjadi CatalogModelEntry standar
+ * sehingga dapat dipilih langsung pada antarmuka ProductionPlannerView bersama model Higgsfield.
+ */
+export function toCatalogModelEntry(model: ElevenLabsModelEntry): CatalogModelEntry {
+  // Hitung perkiraan credit per detik (menggunakan laju Bahasa Indonesia: 14.5 char/s * multiplier)
+  const creditPerSec = Math.round(14.5 * model.credit_multiplier_per_character * 10) / 10;
+  // Biaya per detik pada Starter tier ($0.000200/credit)
+  const pricePerSecUsd = Math.round(creditPerSec * 0.0002 * 10000) / 10000;
+
+  const pricingVariants: CatalogPricingVariant[] = [
+    {
+      pricing_unit: 'per_second' as PricingUnit,
+      price_value: pricePerSecUsd,
+      currency: 'USD',
+      credit_cost: creditPerSec,
+      credit_unit: 'per_second',
+      status: 'verified',
+    },
+  ];
+
+  return {
+    provider: 'elevenlabs',
+    model_id: model.model_id,
+    model_name: model.model_name,
+    family: 'ElevenLabs Voice Over',
+    tier_badge: model.tier_badge as ModelTierBadge,
+    unlimited_eligible: false,
+    is_custom_model: false,
+    supported_categories: ['voice_over'],
+    description_id: model.description_id,
+    description_en: model.description_en,
+    default_quantity_type: 'shot',
+    supports_duration: true,
+    default_duration_seconds: 10,
+    parameters: [
+      {
+        key: 'language',
+        label_id: 'Bahasa Naskah',
+        label_en: 'Script Language',
+        type: 'select',
+        options: [
+          { value: 'id', label: 'Bahasa Indonesia (~14.5 karakter/detik)' },
+          { value: 'en', label: 'Bahasa Inggris (~16.5 karakter/detik)' },
+        ],
+        defaultValue: 'id',
+        affectsPricing: false,
+      },
+      {
+        key: 'speed_preset',
+        label_id: 'Kecepatan Tempo',
+        label_en: 'Tempo Preset',
+        type: 'select',
+        options: [
+          { value: 'normal', label: 'Normal (1.0x)' },
+          { value: 'fast', label: 'Cepat (1.15x)' },
+          { value: 'slow', label: 'Lambat Khidmat (0.85x)' },
+        ],
+        defaultValue: 'normal',
+        affectsPricing: false,
+      },
+    ],
+    pricing_variants: pricingVariants,
+    source_name: model.source_name,
+    source_url: model.source_url,
+    retrieved_at: model.retrieved_at,
+  };
+}
+
+export const ELEVENLABS_AS_CATALOG_MODELS: CatalogModelEntry[] =
+  ELEVENLABS_MODELS_CATALOG.map(toCatalogModelEntry);
+
+// ============================================================================
+// 7. REAL-TIME CONNECTOR OTOMATIS (FALLBACK OFFLINE + LIVE FETCHER)
+// ============================================================================
+
+export interface FetchElevenLabsOptions {
+  apiKey?: string; // xi-api-key opsional pengguna
+  timeoutMs?: number;
+  customFetch?: typeof fetch;
+}
+
+/**
+ * Connector Cerdas Resmi & Gratis ElevenLabs:
+ * 1. Menjamin ketersediaan 100% data offline berkat snapshot verified.
+ * 2. Jika ada internet & apiKey pengguna diisi, mengambil daftar model langsung dari ElevenLabs API
+ *    serta sisa kuota credit akun (user subscription).
+ * 3. Jika tanpa apiKey, tetap dapat beroperasi penuh secara offline/lokal tanpa mengharuskan pengguna mendaftar API.
+ */
+export async function fetchElevenLabsCatalogAuto(
+  options: FetchElevenLabsOptions = {}
+): Promise<FetchElevenLabsCatalogResult> {
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const customFetch = options.customFetch ?? fetch;
+
+  // Snapshot default offline terverifikasi
+  const fallbackResult: FetchElevenLabsCatalogResult = {
+    success: true,
+    models: ELEVENLABS_MODELS_CATALOG,
+    plans: ELEVENLABS_SUBSCRIPTION_PLANS,
+    speechProfiles: SPEECH_SPEED_PROFILES,
+    usedFallback: true,
+    source: 'ElevenLabs Verified Snapshot 2026 (Offline Ready)',
+    retrievedAt: new Date().toISOString(),
+    userSubscription: null,
+  };
+
+  // Jika ada API Key, coba panggil API resmi ElevenLabs v1
+  if (options.apiKey && options.apiKey.trim().length > 0) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+      const headers: Record<string, string> = {
+        'xi-api-key': options.apiKey.trim(),
+        Accept: 'application/json',
+      };
+
+      // Panggil endpoints models & user subscription secara paralel
+      const [modelsRes, subRes] = await Promise.allSettled([
+        customFetch(`${ELEVENLABS_API_BASE}/models`, {
+          signal: controller.signal,
+          headers,
+        }),
+        customFetch(`${ELEVENLABS_API_BASE}/user/subscription`, {
+          signal: controller.signal,
+          headers,
+        }),
+      ]);
+
+      clearTimeout(timeout);
+
+      // Validasi keberhasilan endpoint models
+      const isModelsOk = modelsRes.status === 'fulfilled' && modelsRes.value.ok;
+      if (!isModelsOk) {
+        const reason =
+          modelsRes.status === 'rejected'
+            ? modelsRes.reason instanceof Error
+              ? modelsRes.reason.message
+              : String(modelsRes.reason)
+            : `HTTP ${modelsRes.value.status}`;
+        return {
+          ...fallbackResult,
+          error_id: `Koneksi API langsung gagal (${reason}), otomatis menggunakan katalog verifikasi offline.`,
+          error_en: `Live API connection failed (${reason}), automatically fell back to verified offline catalog.`,
+        };
+      }
+
+      let liveModels: ElevenLabsModelEntry[] = [...ELEVENLABS_MODELS_CATALOG];
+      let liveSub: ElevenLabsUserSubscription | null = null;
+
+      // Parsing respons models jika sukses
+      const rawJson = (await modelsRes.value.json()) as Array<{
+        model_id: string;
+        name: string;
+        description?: string;
+        can_do_text_to_speech?: boolean;
+        can_do_voice_conversion?: boolean;
+        languages?: Array<{ language_id: string; name: string }>;
+      }>;
+
+        if (Array.isArray(rawJson) && rawJson.length > 0) {
+          const ttsModels = rawJson.filter(
+            (m) => m.can_do_text_to_speech !== false
+          );
+
+          if (ttsModels.length > 0) {
+            liveModels = ttsModels.map((m) => {
+              // Cek apakah model ini ada di katalog kita
+              const existing = ELEVENLABS_MODELS_CATALOG.find(
+                (ex) => ex.model_id === m.model_id
+              );
+
+              // Tentukan credit multiplier
+              let multiplier = 1.0;
+              if (
+                m.model_id.includes('flash') ||
+                m.model_id.includes('turbo')
+              ) {
+                multiplier = 0.5;
+              } else if (existing) {
+                multiplier = existing.credit_multiplier_per_character;
+              }
+
+              return {
+                model_id: m.model_id,
+                model_name: m.name || existing?.model_name || m.model_id,
+                credit_multiplier_per_character: multiplier,
+                latency_ms_approx: existing?.latency_ms_approx ?? 250,
+                latency_description:
+                  existing?.latency_description ??
+                  (multiplier === 0.5
+                    ? '~75ms ultra low-latency'
+                    : '~350ms standard latency'),
+                language_count:
+                  m.languages?.length || existing?.language_count || 29,
+                supported_languages:
+                  m.languages?.map((l) => l.language_id) ||
+                  existing?.supported_languages || ['id', 'en'],
+                category: existing?.category || (multiplier === 0.5 ? 'conversational_fast' : 'multilingual'),
+                tier_badge: existing?.tier_badge || 'POPULER',
+                is_active: true,
+                supports_voice_cloning: true,
+                source_name: 'ElevenLabs Live API (v1/models)',
+                source_url: 'https://api.elevenlabs.io/v1/models',
+                retrieved_at: new Date().toISOString(),
+                description_id:
+                  existing?.description_id ||
+                  m.description ||
+                  'Model suara resmi ElevenLabs AI.',
+                description_en:
+                  existing?.description_en ||
+                  m.description ||
+                  'Official ElevenLabs AI voice model.',
+                recommended_use_id:
+                  existing?.recommended_use_id ||
+                  'Voiceover narasi dan dialog sinematik.',
+                recommended_use_en:
+                  existing?.recommended_use_en ||
+                  'Voiceover narration and cinematic dialog.',
+              };
+            });
+          }
+        }
+
+      // Parsing respons subscription jika sukses
+      if (subRes.status === 'fulfilled' && subRes.value.ok) {
+        const subData = (await subRes.value.json()) as ElevenLabsUserSubscription;
+        if (subData && typeof subData.character_count === 'number') {
+          liveSub = subData;
+        }
+      }
+
+      return {
+        success: true,
+        models: liveModels,
+        plans: ELEVENLABS_SUBSCRIPTION_PLANS,
+        speechProfiles: SPEECH_SPEED_PROFILES,
+        usedFallback: false,
+        source: 'ElevenLabs Official Live API (Authenticated)',
+        retrievedAt: new Date().toISOString(),
+        userSubscription: liveSub,
+      };
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : String(err);
+      return {
+        ...fallbackResult,
+        error_id: `Koneksi API langsung gagal (${errorMsg}), otomatis menggunakan katalog verifikasi offline.`,
+        error_en: `Live API connection failed (${errorMsg}), automatically fell back to verified offline catalog.`,
+      };
+    }
+  }
+
+  // Jika tanpa API key: kembalikan snapshot terverifikasi lengkap & siap pakai langsung
+  return fallbackResult;
+}

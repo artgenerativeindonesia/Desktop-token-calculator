@@ -17,17 +17,10 @@ exports.createSampleCommercialProject = createSampleCommercialProject;
 const decimal_js_1 = __importDefault(require("decimal.js"));
 const project_1 = require("../types/project");
 const higgsfieldCatalog_1 = require("../catalog/higgsfieldCatalog");
+const elevenlabsCatalog_1 = require("../catalog/elevenlabsCatalog");
 // PRD FR-14: Akurasi internal tinggi sebelum pembulatan tampilan
 decimal_js_1.default.set({ precision: 28, rounding: decimal_js_1.default.ROUND_HALF_UP });
-const ALL_CATEGORIES = [
-    'text_to_image',
-    'image_to_image',
-    'image_to_video',
-    'video_to_video',
-    'text_to_video',
-    'upscale_image',
-    'upscale_video',
-];
+const ALL_CATEGORIES = project_1.ALL_PROCESS_CATEGORIES;
 /**
  * Menentukan status bawaan apakah suatu kategori tergolong "Shot / Gambar Utama"
  * - Video (text_to_video, image_to_video): Shot Utama (true)
@@ -228,7 +221,7 @@ function allocateReserveAcrossItems(itemPlannedGenerations, assumptions) {
  * Mesin Kalkulasi Utama (PRD Bab 8.1 s/d 8.10)
  * Digunakan bersama oleh UI dan Generator PDF (PRD FR-06, FR-11, FR-14, NFR-01, NFR-02).
  */
-function calculateProjectBudget(items, assumptions, exchangeRate) {
+function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selectedElevenLabsPlanId) {
     const warnings = [];
     // Validasi kurs (PRD Bab 8.6 & 9.3)
     const hasValidExchangeRate = exchangeRate.rate !== null &&
@@ -313,6 +306,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     let sumTotalCredit = new decimal_js_1.default(0);
     let hasCreditItems = false;
     let incompleteItemCount = 0;
+    // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
+    let sumOneVideoElevenLabsCredit = new decimal_js_1.default(0);
+    let hasElevenLabsItems = false;
     let oneVideoPrimaryShotCount = 0;
     let oneVideoSupportingAssetCount = 0;
     let sumOneVideoDurationDec = new decimal_js_1.default(0);
@@ -353,6 +349,141 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         const unitMultiplier = pricing.pricing_unit === 'per_second'
             ? Math.max(0, item.duration_seconds)
             : 1;
+        // --- INTEGRASI KHUSUS TAHAP 3: VOICE OVER (ELEVENLABS) ---
+        if (item.category === 'voice_over') {
+            const scriptText = item.script_text?.trim() ?? '';
+            const voLang = item.script_language ?? 'id';
+            let voChars = 0;
+            if (scriptText.length > 0) {
+                voChars = scriptText.length;
+            }
+            else if (typeof item.character_count === 'number' &&
+                item.character_count > 0) {
+                voChars = Math.floor(item.character_count);
+            }
+            else if (item.duration_seconds > 0) {
+                voChars = (0, elevenlabsCatalog_1.convertDurationToCharacters)(item.duration_seconds, voLang);
+            }
+            if (voChars <= 0 && (!item.duration_seconds || item.duration_seconds <= 0)) {
+                incompleteItemCount += 1;
+                categorySummaries[item.category].has_incomplete_items = true;
+                const reasonId = `Item Voice Over "${item.label}" belum memiliki teks naskah atau durasi.`;
+                const reasonEn = `Voice Over item "${item.label}" has no script text or duration.`;
+                itemWarnings.push(reasonId);
+                warnings.push({
+                    code: 'INCOMPLETE_VOICE_OVER',
+                    severity: 'warning',
+                    message_id: reasonId,
+                    message_en: reasonEn,
+                    item_id: item.item_id,
+                });
+            }
+            const activePlanId = assumptions.elevenlabs_plan_id ||
+                selectedElevenLabsPlanId ||
+                'starter';
+            const activePlan = (0, elevenlabsCatalog_1.getElevenLabsPlanById)(activePlanId);
+            const creditsPerGen = (0, elevenlabsCatalog_1.calculateElevenLabsCredits)(voChars, item.model_selection.model_id);
+            const itemPlannedElevenLabs = new decimal_js_1.default(gPlanned).times(creditsPerGen);
+            const itemReserveElevenLabs = new decimal_js_1.default(gReserve).times(creditsPerGen);
+            const itemBudgetedElevenLabs = new decimal_js_1.default(gBudget).times(creditsPerGen);
+            let itemTotalCredit = null;
+            if (gBudget > 0 && voChars > 0) {
+                sumOneVideoElevenLabsCredit =
+                    sumOneVideoElevenLabsCredit.plus(itemBudgetedElevenLabs);
+                hasElevenLabsItems = true;
+                itemTotalCredit = itemBudgetedElevenLabs.toNumber();
+            }
+            // Biaya USD & IDR
+            let bBaseDec;
+            let bReserveDec;
+            let bTotalDec;
+            if (pricing.status === 'manual' &&
+                pricing.price_value !== null &&
+                pricing.price_value >= 0) {
+                bBaseDec = new decimal_js_1.default(gPlanned).times(pricing.price_value);
+                bReserveDec = new decimal_js_1.default(gReserve).times(pricing.price_value);
+                bTotalDec = bBaseDec.plus(bReserveDec);
+            }
+            else {
+                bBaseDec = new decimal_js_1.default(itemPlannedElevenLabs).times(activePlan.usd_per_credit);
+                bReserveDec = new decimal_js_1.default(itemReserveElevenLabs).times(activePlan.usd_per_credit);
+                bTotalDec = new decimal_js_1.default(itemBudgetedElevenLabs).times(activePlan.usd_per_credit);
+            }
+            sumBaseUsd = sumBaseUsd.plus(bBaseDec);
+            sumReserveUsd = sumReserveUsd.plus(bReserveDec);
+            sumTotalUsd = sumTotalUsd.plus(bTotalDec);
+            const baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
+            const reserveCostUsd = bReserveDec.toDecimalPlaces(4).toNumber();
+            const totalCostUsd = bTotalDec.toDecimalPlaces(4).toNumber();
+            let baseCostIdr = null;
+            let reserveCostIdr = null;
+            let totalCostIdr = null;
+            if (fxDecimal) {
+                baseCostIdr = bBaseDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+                reserveCostIdr = bReserveDec
+                    .times(fxDecimal)
+                    .toDecimalPlaces(2)
+                    .toNumber();
+                totalCostIdr = bTotalDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+            }
+            const catSum = categorySummaries[item.category];
+            catSum.item_count += 1;
+            catSum.planned_generations += gPlanned;
+            catSum.reserve_generations += gReserve;
+            catSum.budgeted_generations += gBudget;
+            catSum.base_cost_usd = new decimal_js_1.default(catSum.base_cost_usd)
+                .plus(baseCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            catSum.reserve_cost_usd = new decimal_js_1.default(catSum.reserve_cost_usd)
+                .plus(reserveCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            catSum.total_cost_usd = new decimal_js_1.default(catSum.total_cost_usd)
+                .plus(totalCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            if (fxDecimal && catSum.total_cost_idr !== null && totalCostIdr !== null) {
+                catSum.total_cost_idr = new decimal_js_1.default(catSum.total_cost_idr)
+                    .plus(totalCostIdr)
+                    .toDecimalPlaces(2)
+                    .toNumber();
+            }
+            if (itemTotalCredit !== null) {
+                catSum.total_credit = new decimal_js_1.default(catSum.total_credit)
+                    .plus(itemTotalCredit)
+                    .toNumber();
+            }
+            itemResults.push({
+                item_id: item.item_id,
+                label: item.label,
+                category: item.category,
+                is_primary_shot: isPrimaryShot,
+                duration_seconds: item.duration_seconds || 0,
+                is_eligible_duration_clip: isEligibleDuration,
+                model_name: item.model_selection.model_name,
+                effective_quantity: effectiveQty,
+                attempts_per_item: attempts,
+                planned_generations: gPlanned,
+                reserve_generations: gReserve,
+                budgeted_generations: gBudget,
+                unit_multiplier: unitMultiplier,
+                pricing_unit: pricing.pricing_unit,
+                unit_price_usd: activePlan.usd_per_credit,
+                base_cost_usd: baseCostUsd,
+                reserve_cost_usd: reserveCostUsd,
+                total_cost_usd: totalCostUsd,
+                base_cost_idr: baseCostIdr,
+                reserve_cost_idr: reserveCostIdr,
+                total_cost_idr: totalCostIdr,
+                unit_credit: creditsPerGen,
+                total_credit: itemTotalCredit,
+                pricing_status: pricing.status === 'manual' ? 'manual' : 'verified',
+                is_item_complete: voChars > 0 || (item.duration_seconds || 0) > 0,
+                warnings: itemWarnings,
+            });
+            continue;
+        }
         const isUnlimitedActive = item.is_unlimited === true;
         const hasValidPrice = isUnlimitedActive
             ? unitMultiplier > 0 && gPlanned > 0
@@ -737,6 +868,16 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         total_cost_idr: finalTotalIdr,
         total_credit: finalTotalCredit,
         has_credit_items: hasCreditItems,
+        // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
+        total_elevenlabs_credit: hasElevenLabsItems
+            ? sumOneVideoElevenLabsCredit.times(vDec).toNumber()
+            : null,
+        one_video_elevenlabs_credit: hasElevenLabsItems
+            ? sumOneVideoElevenLabsCredit.toNumber()
+            : null,
+        selected_elevenlabs_plan_id: assumptions.elevenlabs_plan_id ||
+            selectedElevenLabsPlanId ||
+            'starter',
         // Proyeksi 1 Video Murni
         target_videos: targetVideosCount,
         one_video_planned_generations: oneVideoPlannedGen,

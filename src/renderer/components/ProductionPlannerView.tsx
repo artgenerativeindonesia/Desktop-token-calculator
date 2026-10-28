@@ -33,6 +33,17 @@ import {
   Trash2,
   Volume2,
 } from 'lucide-react';
+import {
+  SPEECH_SPEED_PROFILES,
+  convertDurationToCharacters,
+  convertCharactersToDuration,
+  calculateElevenLabsCredits,
+  calculateElevenLabsCostUsd,
+  calculateElevenLabsCostIdr,
+  getElevenLabsModelById,
+  getElevenLabsPlanById,
+  ELEVENLABS_MODELS_CATALOG,
+} from '../../shared/catalog/elevenlabsCatalog';
 
 export type DepartmentTab = 'all' | 'video' | 'stills' | 'voiceover' | 'music';
 
@@ -73,6 +84,7 @@ const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_video',
   'upscale_image',
   'upscale_video',
+  'voice_over',
 ];
 
 export const ProductionPlannerView: React.FC = () => {
@@ -172,6 +184,7 @@ export const ProductionPlannerView: React.FC = () => {
     if (dept === 'all') return true;
     if (dept === 'video') return VIDEO_CATEGORIES.includes(cat);
     if (dept === 'stills') return STILLS_CATEGORIES.includes(cat);
+    if (dept === 'voiceover') return cat === 'voice_over';
     return false;
   };
 
@@ -423,7 +436,7 @@ export const ProductionPlannerView: React.FC = () => {
                 id: 'voiceover' as DepartmentTab,
                 label: isId ? 'Voice Over & Dialog' : 'Voice Over & Dialogue',
                 icon: Mic,
-                badgeText: isId ? 'Audio' : 'Audio',
+                count: items.filter((i) => i.category === 'voice_over').length,
               },
               {
                 id: 'music' as DepartmentTab,
@@ -484,10 +497,11 @@ export const ProductionPlannerView: React.FC = () => {
           </div>
         </div>
 
-        {/* Tier 2: Category Filter Pills & Quick Add Buttons (when on all, video, or stills) */}
+        {/* Tier 2: Category Filter Pills & Quick Add Buttons */}
         {(activeDepartment === 'all' ||
           activeDepartment === 'video' ||
-          activeDepartment === 'stills') && (
+          activeDepartment === 'stills' ||
+          activeDepartment === 'voiceover') && (
           <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
             {/* Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -506,6 +520,8 @@ export const ProductionPlannerView: React.FC = () => {
                 ? VIDEO_CATEGORIES
                 : activeDepartment === 'stills'
                 ? STILLS_CATEGORIES
+                : activeDepartment === 'voiceover'
+                ? (['voice_over'] as ProcessCategory[])
                 : ALL_CATEGORIES
               ).map((cat) => {
                 const count = items.filter((i) => i.category === cat).length;
@@ -540,6 +556,8 @@ export const ProductionPlannerView: React.FC = () => {
                 ? VIDEO_CATEGORIES
                 : activeDepartment === 'stills'
                 ? STILLS_CATEGORIES
+                : activeDepartment === 'voiceover'
+                ? (['voice_over'] as ProcessCategory[])
                 : ALL_CATEGORIES
               ).map((cat) => (
                 <button
@@ -583,14 +601,29 @@ export const ProductionPlannerView: React.FC = () => {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveDepartment('video')}
-              className="vv-btn-secondary px-3.5 py-2 text-xs shrink-0 self-start sm:self-center"
-            >
-              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>{isId ? 'Kembali ke Adegan Video' : 'Back to Video Scenes'}</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2 self-start sm:self-center shrink-0">
+              <button
+                type="button"
+                onClick={() => handleAddAndOpenModal('voice_over')}
+                className="vv-btn-accent px-4 py-2 text-xs font-semibold"
+              >
+                <Plus className="w-4 h-4" />
+                <span>
+                  {isId
+                    ? 'Tambah Voice Over (ElevenLabs)'
+                    : 'Add Voice Over (ElevenLabs)'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveDepartment('video')}
+                className="vv-btn-secondary px-3.5 py-2 text-xs"
+              >
+                <Film className="w-3.5 h-3.5 text-[#0099ff]" />
+                <span>{isId ? 'Kembali ke Adegan Video' : 'Back to Video Scenes'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Live Voice Pacing Metric */}
@@ -852,34 +885,78 @@ export const ProductionPlannerView: React.FC = () => {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--vv-text-muted)] mt-1">
-                        <strong className="text-[var(--vv-text-strong)]">
+                        <strong className="text-[var(--vv-text-strong)] flex items-center gap-1">
+                          {item.category === 'voice_over' && (
+                            <Mic className="w-3.5 h-3.5 text-sky-400" />
+                          )}
                           {item.model_selection.model_name}
                         </strong>
-                        {paramSummary && (
+
+                        {item.category === 'voice_over' ? (
                           <>
                             <span>&bull;</span>
-                            <span>{paramSummary}</span>
-                          </>
-                        )}
-                        {item.duration_seconds > 0 && (
-                          <>
-                            <span>&bull;</span>
-                            <span>
-                              {item.duration_seconds} {isId ? 'detik' : 'sec'}
+                            <span className="font-mono text-emerald-400 font-semibold">
+                              🔤{' '}
+                              {item.script_text
+                                ? item.script_text.length
+                                : item.character_count ||
+                                  Math.round(
+                                    (item.duration_seconds || 10) * 14.5
+                                  )}{' '}
+                              {isId ? 'karakter' : 'chars'}
                             </span>
-                            {(() => {
-                              const isPrimary =
-                                typeof item.is_primary_shot === 'boolean'
-                                  ? item.is_primary_shot
-                                  : (item.category === 'text_to_video' ||
-                                      item.category === 'image_to_video');
-                              return isPrimary ? (
-                                <span className="text-emerald-400 font-semibold">
-                                  (⏱️ +{item.quantity * item.duration_seconds}s{' '}
-                                  {isId ? 'ke durasi video' : 'to video length'})
+                            <span>&bull;</span>
+                            <span className="text-amber-400 font-medium">
+                              ⏱️ {item.duration_seconds || 10}s (
+                              {item.script_language === 'en'
+                                ? '🇬🇧 EN'
+                                : '🇮🇩 ID'}
+                              )
+                            </span>
+                            {calcRow?.total_credit !== null && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-sky-300 font-semibold">
+                                  🎙️ {calcRow.total_credit.toLocaleString()}{' '}
+                                  ElevenLabs Cr
                                 </span>
-                              ) : null;
-                            })()}
+                              </>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            {paramSummary && (
+                              <>
+                                <span>&bull;</span>
+                                <span>{paramSummary}</span>
+                              </>
+                            )}
+                            {item.duration_seconds > 0 && (
+                              <>
+                                <span>&bull;</span>
+                                <span>
+                                  {item.duration_seconds}{' '}
+                                  {isId ? 'detik' : 'sec'}
+                                </span>
+                                {(() => {
+                                  const isPrimary =
+                                    typeof item.is_primary_shot === 'boolean'
+                                      ? item.is_primary_shot
+                                      : item.category === 'text_to_video' ||
+                                        item.category === 'image_to_video';
+                                  return isPrimary ? (
+                                    <span className="text-emerald-400 font-semibold">
+                                      (⏱️ +
+                                      {item.quantity * item.duration_seconds}s{' '}
+                                      {isId
+                                        ? 'ke durasi video'
+                                        : 'to video length'}
+                                      )
+                                    </span>
+                                  ) : null;
+                                })()}
+                              </>
+                            )}
                           </>
                         )}
                       </div>
@@ -1225,11 +1302,33 @@ export const ProductionPlannerView: React.FC = () => {
               onClose={() => setEditingItemId(null)}
               theme={theme}
               maxWidth="2xl"
-              badgeLabel={`${isId ? 'Tahap Shot / Gambar' : 'Production Stage'} #${String(
-                idx + 1
-              ).padStart(2, '0')}`}
+              badgeLabel={
+                item.category === 'voice_over'
+                  ? `${isId ? 'Voice Over' : 'Voice Over'} #${String(
+                      idx + 1
+                    ).padStart(2, '0')}`
+                  : `${isId ? 'Tahap Shot / Gambar' : 'Production Stage'} #${String(
+                      idx + 1
+                    ).padStart(2, '0')}`
+              }
               title={
-                isId ? (
+                item.category === 'voice_over' ? (
+                  isId ? (
+                    <>
+                      Atur Detail Voice Over &{' '}
+                      <span className="vv-accent text-sky-400">
+                        Model AI ElevenLabs
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Configure Voice Over &{' '}
+                      <span className="vv-accent text-sky-400">
+                        ElevenLabs AI Model
+                      </span>
+                    </>
+                  )
+                ) : isId ? (
                   <>
                     Atur Detail Shot / Gambar &{' '}
                     <span className="vv-accent text-[#0099ff]">
@@ -1390,7 +1489,11 @@ export const ProductionPlannerView: React.FC = () => {
                 <div className="vv-card-quiet p-4 space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--vv-text-strong)] mb-1.5">
-                      {isId
+                      {item.category === 'voice_over'
+                        ? isId
+                          ? '3. Pilih Model Suara Resmi ElevenLabs'
+                          : '3. Select Official ElevenLabs Voice Model'
+                        : isId
                         ? '3. Pilih Model AI Higgsfield'
                         : '3. Select Higgsfield AI Model'}
                     </label>
@@ -1489,32 +1592,373 @@ export const ProductionPlannerView: React.FC = () => {
                   )}
                 </div>
 
-                {/* 3. Kuantitas, Berapa Kali Dibuat Ulang, & Durasi Detik */}
+                {/* 3. Kuantitas, Naskah Voice Over atau Durasi Detik */}
                 {(() => {
-                  const noun = unitNoun(item.quantity_type);
-                  const isPerSecond = item.pricing.pricing_unit === 'per_second';
-                  const showDuration =
-                    !!selectedModel?.supports_duration || isPerSecond;
-                  const fxRate = project.exchange_rate.rate;
-                  const unitUsd = item.pricing.price_value;
-                  const unitCredit = item.pricing.credit_cost;
-                  const unitIdr =
-                    unitUsd !== null && fxRate ? unitUsd * fxRate : null;
-                  const budgeted = calcRow?.budgeted_generations ?? 0;
-                  const unitLabel = PRICING_UNIT_LABELS[item.pricing.pricing_unit][language];
-                  const unitPriceText = [
-                    unitCredit !== null ? `${unitCredit} Credit` : null,
-                    unitIdr !== null
-                      ? formatCurrencyIdr(unitIdr, language)
-                      : unitUsd !== null
-                      ? formatCurrencyUsd(unitUsd, language)
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join(' • ');
+                  if (item.category === 'voice_over') {
+                    return (
+                      <div className="vv-card-quiet p-4 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
+                        <Mic className="w-4 h-4 text-sky-400" />
+                        <span>
+                          {isId
+                            ? '4. Naskah Dialog & Pengaturan Durasi (Dwi-Input Sineas)'
+                            : '4. Dialogue Script & Duration Settings (Dual-Input)'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-semibold border border-sky-500/30">
+                        ElevenLabs Official
+                      </span>
+                    </div>
 
-                  return (
-                    <div className="vv-card-quiet p-4 space-y-4">
+                    {/* Pilihan Bahasa Naskah */}
+                    <div>
+                      <label className="block text-[11px] font-semibold text-[var(--vv-text-muted)] mb-1.5">
+                        {isId ? 'Bahasa Naskah Suara' : 'Voice Script Language'}
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextLang = 'id';
+                            const curDur = item.duration_seconds || 10;
+                            const newChars =
+                              item.script_text && item.script_text.length > 0
+                                ? item.script_text.length
+                                : convertDurationToCharacters(curDur, nextLang);
+                            updateProductionItemField(item.item_id, {
+                              script_language: nextLang,
+                              character_count: newChars,
+                            });
+                          }}
+                          className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                            (item.script_language ?? 'id') === 'id'
+                              ? 'bg-[#0068ad] text-white border-[#7acaff]/40'
+                              : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                          }`}
+                        >
+                          <span>🇮🇩</span>
+                          <span>Bahasa Indonesia (~14.5 char/s)</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const nextLang = 'en';
+                            const curDur = item.duration_seconds || 10;
+                            const newChars =
+                              item.script_text && item.script_text.length > 0
+                                ? item.script_text.length
+                                : convertDurationToCharacters(curDur, nextLang);
+                            updateProductionItemField(item.item_id, {
+                              script_language: nextLang,
+                              character_count: newChars,
+                            });
+                          }}
+                          className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                            item.script_language === 'en'
+                              ? 'bg-[#0068ad] text-white border-[#7acaff]/40'
+                              : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                          }`}
+                        >
+                          <span>🇬🇧</span>
+                          <span>English (~16.5 char/s)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Area Naskah Narasi / Skrip */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                          <span>
+                            {isId
+                              ? 'Teks Naskah Narasi / Dialog'
+                              : 'Narration / Dialogue Script'}
+                          </span>
+                          <InfoTip>
+                            {isId
+                              ? 'Tulis atau tempel teks yang akan disulihsuarakan oleh AI ElevenLabs. Jumlah karakter dan estimasi durasi bicara dihitung secara langsung.'
+                              : 'Type or paste the narration script to be generated by ElevenLabs AI. Characters and speech duration are calculated in real time.'}
+                          </InfoTip>
+                        </label>
+                        <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--vv-text-muted)]">
+                          <span className="text-emerald-400 font-bold">
+                            {item.script_text ? item.script_text.length : 0}{' '}
+                            {isId ? 'Karakter' : 'Characters'}
+                          </span>
+                          <span>&bull;</span>
+                          <span>
+                            {item.script_text
+                              ? item.script_text
+                                  .trim()
+                                  .split(/\s+/)
+                                  .filter(Boolean).length
+                              : 0}{' '}
+                            {isId ? 'Kata' : 'Words'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <textarea
+                        rows={4}
+                        value={item.script_text || ''}
+                        placeholder={
+                          isId
+                            ? 'Tempel atau ketik naskah voice over Anda di sini (contoh: "Selamat datang di masa depan pembuatan video bersama AI...")...'
+                            : 'Paste or type your voice over script here (e.g. "Welcome to the future of AI video production...")...'
+                        }
+                        onChange={(e) => {
+                          const text = e.target.value;
+                          const chars = text.length;
+                          const curLang = item.script_language ?? 'id';
+                          const estimatedDuration =
+                            chars > 0
+                              ? convertCharactersToDuration(chars, curLang)
+                              : item.duration_seconds || 10;
+                          updateProductionItemField(item.item_id, {
+                            script_text: text,
+                            character_count: chars,
+                            duration_seconds: estimatedDuration,
+                          });
+                        }}
+                        className={`${inputClass} w-full p-3 rounded-[10px] text-xs font-mono leading-relaxed resize-y`}
+                      />
+                    </div>
+
+                    {/* Durasi Detik Bicara & Preset Cepat */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                          <span>
+                            {isId
+                              ? 'Durasi Bicara (Detik)'
+                              : 'Spoken Duration (Seconds)'}
+                          </span>
+                          <InfoTip align="right">
+                            {isId
+                              ? 'Jika belum ada naskah jadi, Anda bisa menentukan durasi bicara target terlebih dahulu. Sistem akan menghitung batas karakter yang pas.'
+                              : 'If you do not have a script yet, set the target spoken duration first. The system projects the corresponding character limit.'}
+                          </InfoTip>
+                        </label>
+                        <span className="text-[11px] font-mono font-bold text-sky-400">
+                          ⏱️ {item.duration_seconds || 0}s (
+                          {formatDualDuration(item.duration_seconds || 0, isId)}
+                          )
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="number"
+                          min={1}
+                          max={600}
+                          step={1}
+                          value={item.duration_seconds || 0}
+                          onChange={(e) => {
+                            const secs = Math.max(
+                              0,
+                              Number(e.target.value) || 0
+                            );
+                            const curLang = item.script_language ?? 'id';
+                            const projectedChars =
+                              !item.script_text ||
+                              item.script_text.length === 0
+                                ? convertDurationToCharacters(secs, curLang)
+                                : item.character_count ||
+                                  item.script_text.length;
+                            updateProductionItemField(item.item_id, {
+                              duration_seconds: secs,
+                              character_count: projectedChars,
+                            });
+                          }}
+                          className={`${inputClass} w-28 px-3.5 py-2 rounded-[9px] text-xs font-bold tabular-nums text-right`}
+                        />
+
+                        {/* Preset durasi cepat */}
+                        {[5, 10, 15, 30, 60].map((presetSec) => (
+                          <button
+                            key={presetSec}
+                            type="button"
+                            onClick={() => {
+                              const curLang = item.script_language ?? 'id';
+                              const projectedChars =
+                                !item.script_text ||
+                                item.script_text.length === 0
+                                  ? convertDurationToCharacters(
+                                      presetSec,
+                                      curLang
+                                    )
+                                  : item.character_count ||
+                                    item.script_text.length;
+                              updateProductionItemField(item.item_id, {
+                                duration_seconds: presetSec,
+                                character_count: projectedChars,
+                              });
+                            }}
+                            className={`px-2 py-1 rounded-[7px] text-[11px] font-mono font-semibold transition ${
+                              item.duration_seconds === presetSec
+                                ? 'bg-sky-500/25 text-sky-300 border border-sky-500/40'
+                                : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                            }`}
+                          >
+                            {presetSec}s
+                          </button>
+                        ))}
+
+                        {/* Tombol sinkronisasi dengan durasi video */}
+                        {(cleanDurationSec > 0 || targetDurationSec > 0) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const syncSec =
+                                cleanDurationSec > 0
+                                  ? Math.round(cleanDurationSec)
+                                  : targetDurationSec;
+                              const curLang = item.script_language ?? 'id';
+                              const projectedChars =
+                                !item.script_text ||
+                                item.script_text.length === 0
+                                  ? convertDurationToCharacters(
+                                      syncSec,
+                                      curLang
+                                    )
+                                  : item.character_count ||
+                                    item.script_text.length;
+                              updateProductionItemField(item.item_id, {
+                                duration_seconds: syncSec,
+                                character_count: projectedChars,
+                              });
+                            }}
+                            className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/25 transition flex items-center gap-1"
+                          >
+                            <span>🎯</span>
+                            <span>
+                              {isId
+                                ? `Samakan dgn Video (${Math.round(
+                                    cleanDurationSec || targetDurationSec
+                                  )}s)`
+                                : `Sync with Video (${Math.round(
+                                    cleanDurationSec || targetDurationSec
+                                  )}s)`}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Live ElevenLabs Calculation Summary Card */}
+                    {(() => {
+                      const curChars =
+                        item.script_text && item.script_text.length > 0
+                          ? item.script_text.length
+                          : item.character_count ||
+                            convertDurationToCharacters(
+                              item.duration_seconds || 10,
+                              item.script_language ?? 'id'
+                            );
+                      const modelInfo =
+                        ELEVENLABS_MODELS_CATALOG.find(
+                          (m) => m.model_id === item.model_selection.model_id
+                        ) || ELEVENLABS_MODELS_CATALOG[0];
+                      const multiplier =
+                        modelInfo.credit_multiplier_per_character;
+                      const totalCr = calculateElevenLabsCredits(
+                        curChars,
+                        modelInfo.model_id
+                      );
+                      const activePlan = getElevenLabsPlanById(
+                        (assumptions.elevenlabs_plan_id as any) || 'starter'
+                      );
+                      const costUsd = calculateElevenLabsCostUsd(
+                        totalCr,
+                        activePlan.plan_id
+                      );
+                      const costIdr = project.exchange_rate.rate
+                        ? calculateElevenLabsCostIdr(
+                            totalCr,
+                            activePlan.plan_id,
+                            project.exchange_rate.rate
+                          )
+                        : null;
+
+                      return (
+                        <div className="p-3.5 rounded-[12px] bg-sky-950/20 border border-sky-500/30 space-y-2">
+                          <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
+                            <span>
+                              {isId
+                                ? 'Model Suara ElevenLabs:'
+                                : 'ElevenLabs Voice Model:'}
+                            </span>
+                            <span className="font-semibold text-sky-300">
+                              {modelInfo.model_name} ({multiplier}x Credit •{' '}
+                              {modelInfo.latency_description})
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-sky-500/20">
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId ? 'Panjang Karakter' : 'Character Count'}
+                              </span>
+                              <span className="text-sm font-bold font-mono text-[var(--vv-text-primary)]">
+                                {curChars.toLocaleString()}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId
+                                  ? 'Credit ElevenLabs'
+                                  : 'ElevenLabs Credits'}
+                              </span>
+                              <span className="text-sm font-bold font-mono text-sky-400">
+                                {totalCr.toLocaleString()} Cr
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId
+                                  ? `Estimasi (${activePlan.name_id.split(' ')[1]})`
+                                  : `Estimate (${activePlan.name_en.split(' ')[0]})`}
+                              </span>
+                              <span className="text-sm font-bold tabular-nums text-emerald-400">
+                                {costIdr
+                                  ? formatCurrencyIdr(costIdr, language)
+                                  : formatCurrencyUsd(costUsd, language)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                );
+              }
+
+              const noun = unitNoun(item.quantity_type);
+              const isPerSecond = item.pricing.pricing_unit === 'per_second';
+              const showDuration =
+                !!selectedModel?.supports_duration || isPerSecond;
+              const fxRate = project.exchange_rate.rate;
+              const unitUsd = item.pricing.price_value;
+              const unitCredit = item.pricing.credit_cost;
+              const unitIdr =
+                unitUsd !== null && fxRate ? unitUsd * fxRate : null;
+              const budgeted = calcRow?.budgeted_generations ?? 0;
+              const unitLabel =
+                PRICING_UNIT_LABELS[item.pricing.pricing_unit][language];
+              const unitPriceText = [
+                unitCredit !== null ? `${unitCredit} Credit` : null,
+                unitIdr !== null
+                  ? formatCurrencyIdr(unitIdr, language)
+                  : unitUsd !== null
+                  ? formatCurrencyUsd(unitUsd, language)
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' • ');
+
+              return (
+                <div className="vv-card-quiet p-4 space-y-4">
                       <div className="text-xs font-semibold text-[var(--vv-text-strong)]">
                         {isId
                           ? '4. Berapa Banyak yang Ingin Dibuat?'

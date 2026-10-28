@@ -15,6 +15,7 @@ const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
   text_to_video: { id: 'Text to Video', en: 'Text to Video' },
   upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
   upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
+  voice_over: { id: 'Voice Over', en: 'Voice Over' },
 };
 
 const STATUS_LABELS: Record<VerificationStatus, { id: string; en: string }> = {
@@ -250,6 +251,13 @@ export function generatePdfReportHtml(
           ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
           : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
 
+      const isVO = res.category === 'voice_over';
+      const voChars =
+        sourceItem?.script_text && sourceItem.script_text.length > 0
+          ? sourceItem.script_text.length
+          : sourceItem?.character_count ||
+            Math.round((res.duration_seconds || 10) * 14.5);
+
       return `
         <tr>
           <td style="text-align:center;">${idx + 1}</td>
@@ -257,11 +265,25 @@ export function generatePdfReportHtml(
             <strong>${escapeHtml(res.label)}</strong><br/>
             <span style="font-size:10px;color:#64748b;">${escapeHtml(
               CATEGORY_LABELS[res.category]?.[lang] || res.category
-            )} &bull; <strong>${res.is_primary_shot ? (isId ? '🎬 Shot Utama' : '🎬 Primary Shot') : (isId ? '🛠️ Aset Pendukung' : '🛠️ Supporting Asset')}</strong></span>
+            )} &bull; <strong>${
+        res.is_primary_shot
+          ? isId
+            ? '🎬 Shot Utama'
+            : '🎬 Primary Shot'
+          : isId
+          ? '🛠️ Aset Pendukung'
+          : '🛠️ Supporting Asset'
+      }</strong></span>
           </td>
           <td>
             <strong>${escapeHtml(res.model_name)}</strong><br/>
-            <span style="font-size:10px;color:#64748b;">${escapeHtml(paramSummary)}</span>
+            <span style="font-size:10px;color:#64748b;">${
+              isVO
+                ? `🔤 ${voChars} chars &bull; ⏱️ ${res.duration_seconds}s (${
+                    sourceItem?.script_language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'
+                  })`
+                : escapeHtml(paramSummary)
+            }</span>
           </td>
           <td class="num">${countBreakdown}</td>
           <td>${escapeHtml(unitLabel)}<br/><span class="num" style="font-size:10px;color:#475569;">${formatUsd(
@@ -270,7 +292,13 @@ export function generatePdfReportHtml(
       )}</span></td>
           <td class="num">
             <strong>${res.total_credit !== null ? `${res.total_credit} cr` : '-'}</strong><br/>
-            <span style="font-size:10px;color:#64748b;">${res.unit_credit !== null ? `@${res.unit_credit} cr` : ''}</span>
+            <span style="font-size:10px;color:#64748b;">${
+              isVO
+                ? 'ElevenLabs'
+                : res.unit_credit !== null
+                ? `@${res.unit_credit} cr`
+                : ''
+            }</span>
           </td>
           <td class="num">
             <strong>${formatIdr(res.total_cost_idr, lang)}</strong><br/>
@@ -533,7 +561,19 @@ export function generatePdfReportHtml(
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Total Kali Buat AI' : 'Total AI Generations'}</div>
       <div class="metric-val">${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</div>
-      <div class="metric-sub">${calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : (isId ? 'Bebas Credit' : 'No Credits')}</div>
+      <div class="metric-sub">${
+        calc.total_credit !== null
+          ? `${calc.total_credit.toLocaleString()} Cr (Higgsfield)${
+              calc.total_elevenlabs_credit !== null
+                ? ` + ${calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)`
+                : ''
+            }`
+          : calc.total_elevenlabs_credit !== null
+          ? `${calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)`
+          : isId
+          ? 'Bebas Credit'
+          : 'No Credits'
+      }</div>
     </div>
   </div>
   ` : ''}
@@ -698,9 +738,18 @@ export function generatePdfReportHtml(
         <td class="num" colspan="2"><strong>${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</strong></td>
       </tr>
       <tr>
-        <th>${isId ? 'Total Konsumsi Credit Platform' : 'Total Platform Credits'}</th>
+        <th>${isId ? 'Total Konsumsi Credit Higgsfield (Video/Gambar)' : 'Total Higgsfield Credits (Video/Image)'}</th>
         <td class="num" colspan="2"><strong>${calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : '-'}</strong></td>
       </tr>
+      ${
+        calc.total_elevenlabs_credit !== null
+          ? `
+      <tr>
+        <th>${isId ? 'Total Konsumsi Credit ElevenLabs (Voice Over)' : 'Total ElevenLabs Credits (Voice Over)'}</th>
+        <td class="num" colspan="2"><strong style="color:#0284c7;">${calc.total_elevenlabs_credit.toLocaleString()} Credits ElevenLabs</strong></td>
+      </tr>`
+          : ''
+      }
       ${calc.reserve_cost_usd && calc.reserve_cost_usd > 0 ? `
       <tr>
         <th>${isId ? 'Biaya Dasar' : 'Base Cost'}</th>

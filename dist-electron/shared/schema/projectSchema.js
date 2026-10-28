@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ProjectFileSchema = exports.ExportSettingsSchema = exports.ExchangeRateSchema = exports.BudgetAssumptionsSchema = exports.ProductionItemSchema = exports.ModelSelectionSchema = exports.PricingSchema = exports.ReserveInputModeSchema = exports.PricingUnitSchema = exports.QuantityTypeSchema = exports.EstimationModeSchema = exports.ProcessCategorySchema = exports.VerificationStatusSchema = void 0;
+exports.ProjectFileSchema = exports.ExportSettingsSchema = exports.ExchangeRateSchema = exports.BudgetAssumptionsSchema = exports.ElevenLabsSubscriptionPlanSchema = exports.ProductionItemSchema = exports.ModelSelectionSchema = exports.PricingSchema = exports.ReserveInputModeSchema = exports.PricingUnitSchema = exports.QuantityTypeSchema = exports.EstimationModeSchema = exports.ProcessCategorySchema = exports.VerificationStatusSchema = void 0;
 exports.compareSchemaVersion = compareSchemaVersion;
 exports.validateProjectFileJson = validateProjectFileJson;
 const zod_1 = require("zod");
@@ -12,7 +12,13 @@ exports.VerificationStatusSchema = zod_1.z.enum([
     'unavailable',
     'invalid',
 ]);
-exports.ProcessCategorySchema = zod_1.z.preprocess((val) => (val === 'upscaling' ? 'upscale_video' : val), zod_1.z.enum([
+exports.ProcessCategorySchema = zod_1.z.preprocess((val) => {
+    if (val === 'upscaling')
+        return 'upscale_video';
+    if (val === 'voiceover' || val === 'voice' || val === 'tts')
+        return 'voice_over';
+    return val;
+}, zod_1.z.enum([
     'text_to_image',
     'image_to_image',
     'image_to_video',
@@ -20,6 +26,7 @@ exports.ProcessCategorySchema = zod_1.z.preprocess((val) => (val === 'upscaling'
     'text_to_video',
     'upscale_image',
     'upscale_video',
+    'voice_over',
 ]));
 exports.EstimationModeSchema = zod_1.z.enum(['target_final', 'per_shot']);
 exports.QuantityTypeSchema = zod_1.z.enum(['shot', 'asset', 'output']);
@@ -62,6 +69,24 @@ exports.ProductionItemSchema = zod_1.z.object({
     model_selection: exports.ModelSelectionSchema,
     pricing: exports.PricingSchema,
     notes: zod_1.z.string().optional(),
+    script_text: zod_1.z.string().optional(),
+    script_language: zod_1.z.enum(['id', 'en']).optional(),
+    character_count: zod_1.z.number().int().nonnegative().optional(),
+});
+exports.ElevenLabsSubscriptionPlanSchema = zod_1.z.object({
+    plan_id: zod_1.z.string().min(1),
+    name_id: zod_1.z.string().min(1),
+    name_en: zod_1.z.string().min(1),
+    monthly_price_usd: zod_1.z.number().nonnegative(),
+    monthly_credits: zod_1.z.number().nonnegative(),
+    usd_per_credit: zod_1.z.number().nonnegative(),
+    description_id: zod_1.z.string(),
+    description_en: zod_1.z.string(),
+    plan_category: zod_1.z
+        .enum(['free', 'starter', 'creator', 'pro', 'scale', 'business'])
+        .optional(),
+    billing_cycle: zod_1.z.enum(['monthly', 'annual']).optional(),
+    discount_badge: zod_1.z.string().optional(),
 });
 exports.BudgetAssumptionsSchema = zod_1.z.object({
     estimation_mode: exports.EstimationModeSchema,
@@ -72,6 +97,7 @@ exports.BudgetAssumptionsSchema = zod_1.z.object({
     reserve_input_mode: exports.ReserveInputModeSchema,
     reserve_percent: zod_1.z.number().nonnegative(),
     reserve_generations_override: zod_1.z.number().int().nonnegative(),
+    elevenlabs_plan_id: zod_1.z.string().optional(),
 });
 exports.ExchangeRateSchema = zod_1.z.object({
     base_currency: zod_1.z.literal('USD'),

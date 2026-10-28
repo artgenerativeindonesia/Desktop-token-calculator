@@ -188,4 +188,44 @@ describe('PRD Bab 15 — Full Acceptance Criteria Suite (AC-01 s/d AC-14)', () =
       expect(htmlApp.length).toBeGreaterThan(200);
     }
   });
+
+  it('AC-16 (Tahap 3 - ElevenLabs Voice Over Acceptance & Anti-Black-Screen): Menambahkan Voice Over, mengubah paket langganan, dan merender 6 tab tanpa error', async () => {
+    const React = await import('react');
+    const { renderToString } = await import('react-dom/server');
+    const { App } = await import('../src/renderer/App');
+    const { useProjectStore } = await import('../src/renderer/store/projectStore');
+
+    const tabs = ['dashboard', 'setup', 'planner', 'summary', 'settings', 'pdf'] as const;
+
+    // Muat sampel proyek dan tambahkan Voice Over ElevenLabs
+    useProjectStore.getState().loadCommercialSample();
+    useProjectStore.getState().addProductionItem('voice_over');
+
+    const items = useProjectStore.getState().project.items;
+    const voItem = items.find((i) => i.category === 'voice_over');
+    expect(voItem).toBeDefined();
+
+    if (voItem) {
+      // Simulasikan penulisan naskah (Script)
+      useProjectStore.getState().updateProductionItemField(voItem.item_id, {
+        script_text: 'Halo para pembuat film AI Indonesia! Selamat berkarya.',
+        character_count: 55,
+        duration_seconds: 4,
+      });
+
+      // Uji ganti paket ElevenLabs ke Creator
+      useProjectStore.getState().setSelectedElevenLabsPlanId('creator');
+      const calcCreator = useProjectStore.getState().project.calculation;
+      expect(calcCreator.total_elevenlabs_credit).toBeGreaterThan(0);
+      expect(calcCreator.selected_elevenlabs_plan_id).toBe('creator');
+    }
+
+    // Uji Anti-Black-Screen di seluruh 6 tab dengan Voice Over aktif
+    for (const tab of tabs) {
+      useProjectStore.getState().setActiveTab(tab);
+      const htmlApp = renderToString(React.createElement(App));
+      expect(htmlApp.length).toBeGreaterThan(200);
+      expect(htmlApp).not.toContain('Error:');
+    }
+  });
 });

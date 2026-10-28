@@ -30,6 +30,16 @@ import {
   HIGGSFIELD_SUBSCRIPTION_PLANS,
   resolveModelPricing,
 } from '../../shared/catalog/higgsfieldCatalog';
+import {
+  ELEVENLABS_AS_CATALOG_MODELS,
+  ELEVENLABS_SUBSCRIPTION_PLANS,
+  ElevenLabsSubscriptionTier,
+} from '../../shared/catalog/elevenlabsCatalog';
+
+const DEFAULT_COMBINED_CATALOG: CatalogModelEntry[] = [
+  ...HIGGSFIELD_MODEL_CATALOG,
+  ...ELEVENLABS_AS_CATALOG_MODELS,
+];
 import { validateProjectFileJson } from '../../shared/schema/projectSchema';
 import {
   buildSafePdfFilename,
@@ -61,6 +71,8 @@ interface ProjectStoreState {
   catalog: CatalogModelEntry[];
   selectedCreditPlanId: string;
   usdPerCredit: number;
+  selectedElevenLabsPlanId: ElevenLabsSubscriptionTier;
+  setSelectedElevenLabsPlanId: (planId: ElevenLabsSubscriptionTier) => void;
   recentProjects: RecentProjectEntry[];
   isRefreshingFx: boolean;
   isRefreshingCatalog: boolean;
@@ -116,6 +128,9 @@ interface ProjectStoreState {
         | 'is_primary_shot'
         | 'is_unlimited'
         | 'notes'
+        | 'script_text'
+        | 'script_language'
+        | 'character_count'
       >
     >
   ) => void;
@@ -205,7 +220,9 @@ function recalculateProject(project: ProjectFile): ProjectFile {
   const calculation = calculateProjectBudget(
     items,
     syncedAssumptions,
-    project.exchange_rate
+    project.exchange_rate,
+    undefined,
+    project.assumptions.elevenlabs_plan_id || 'starter'
   );
 
   return {
@@ -224,9 +241,22 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
   activeTab: 'dashboard',
   language: 'id',
   theme: 'dark',
-  catalog: HIGGSFIELD_MODEL_CATALOG,
+  catalog: DEFAULT_COMBINED_CATALOG,
   selectedCreditPlanId: 'api_standard',
   usdPerCredit: DEFAULT_USD_PER_CREDIT,
+  selectedElevenLabsPlanId: 'starter',
+  setSelectedElevenLabsPlanId: (planId) =>
+    set((state) => ({
+      selectedElevenLabsPlanId: planId,
+      hasUnsavedChanges: true,
+      project: recalculateProject({
+        ...state.project,
+        assumptions: {
+          ...state.project.assumptions,
+          elevenlabs_plan_id: planId,
+        },
+      }),
+    })),
   recentProjects: [],
   isRefreshingFx: false,
   isRefreshingCatalog: false,
@@ -654,6 +684,60 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       const models = getModelsByCategory(category, state.catalog);
       const selectedModel = models[0] || state.catalog[0];
       const nextIndex = state.project.items.length + 1;
+
+      if (category === 'voice_over') {
+        const voModel =
+          models[0] ||
+          state.catalog.find((m) =>
+            m.supported_categories.includes('voice_over')
+          ) ||
+          state.catalog[0];
+        const defaultParams = getDefaultParametersForModel(voModel);
+        const pricing = resolveModelPricing(voModel, defaultParams);
+        const voDuration = 10;
+        const voChars = Math.round(voDuration * 14.5);
+
+        const newItem: ProductionItem = {
+          item_id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          category: 'voice_over',
+          label:
+            state.language === 'id'
+              ? `Voice Over ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`
+              : `Voice Over ${String(nextIndex).padStart(2, '0')} (${voModel.model_name})`,
+          quantity: 1,
+          quantity_type: 'shot',
+          duration_seconds: voDuration,
+          attempts_per_item:
+            state.project.assumptions.default_attempts_per_shot || 1,
+          use_project_target_multiplier: false,
+          is_primary_shot: false,
+          is_unlimited: false,
+          script_text: '',
+          script_language: 'id',
+          character_count: voChars,
+          model_selection: {
+            provider: voModel.provider,
+            model_id: voModel.model_id,
+            model_name: voModel.model_name,
+            category: 'voice_over',
+            parameter_values: defaultParams,
+          },
+          pricing,
+          notes:
+            state.language === 'id'
+              ? 'Narasi sulih suara resmi ElevenLabs.'
+              : 'Official ElevenLabs voice over narration.',
+        };
+
+        return {
+          hasUnsavedChanges: true,
+          project: recalculateProject({
+            ...state.project,
+            items: [...state.project.items, newItem],
+          }),
+        };
+      }
+
       const newItem = createProductionItemFromCatalog(
         category,
         selectedModel.model_id,

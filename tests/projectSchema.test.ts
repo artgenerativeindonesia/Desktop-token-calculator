@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   compareSchemaVersion,
   validateProjectFileJson,
+  ProcessCategorySchema,
+  ProductionItemSchema,
+  ElevenLabsSubscriptionPlanSchema,
 } from '../src/shared/schema/projectSchema';
+import { ALL_PROCESS_CATEGORIES } from '../src/shared/types/project';
 import { createPrdSyntheticTestProject } from '../src/shared/engine/calculationEngine';
 
 describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, FR-13', () => {
@@ -55,5 +59,87 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
     const validation = validateProjectFileJson(JSON.stringify(rawData));
     expect(validation.valid).toBe(true);
     expect(validation.data?.assumptions.target_videos).toBe(1);
+  });
+
+  describe('Tahap 3 — Voice Over & ElevenLabs Schema Contract Integrity', () => {
+    it('ALL_PROCESS_CATEGORIES memuat voice_over dan berjumlah 8 kategori', () => {
+      expect(ALL_PROCESS_CATEGORIES).toContain('voice_over');
+      expect(ALL_PROCESS_CATEGORIES.length).toBe(8);
+    });
+
+    it('ProcessCategorySchema memvalidasi voice_over dan alias yang dinormalisasi', () => {
+      expect(ProcessCategorySchema.parse('voice_over')).toBe('voice_over');
+      expect(ProcessCategorySchema.parse('voiceover')).toBe('voice_over');
+      expect(ProcessCategorySchema.parse('voice')).toBe('voice_over');
+      expect(ProcessCategorySchema.parse('tts')).toBe('voice_over');
+      expect(ProcessCategorySchema.parse('upscaling')).toBe('upscale_video');
+    });
+
+    it('ProductionItemSchema mendukung field opsional voiceover secara aman dan backward-compatible', () => {
+      const legacyItem = {
+        item_id: 'item-vo-1',
+        category: 'voice_over',
+        label: 'Narasi Pembuka',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 30,
+        attempts_per_item: 1,
+        model_selection: {
+          provider: 'elevenlabs',
+          model_id: 'eleven_multilingual_v2',
+          model_name: 'Eleven Multilingual v2',
+          category: 'voice_over',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_generation',
+          price_value: null,
+          currency: 'USD',
+          credit_cost: 300,
+          source_name: 'ElevenLabs Catalog',
+          source_url: 'https://elevenlabs.io',
+          retrieved_at: new Date().toISOString(),
+          status: 'verified',
+        },
+      };
+
+      // Parsing item tanpa field baru (backward compatible)
+      const parsedLegacy = ProductionItemSchema.parse(legacyItem);
+      expect(parsedLegacy.category).toBe('voice_over');
+      expect(parsedLegacy.script_text).toBeUndefined();
+      expect(parsedLegacy.character_count).toBeUndefined();
+
+      // Parsing item dengan field baru voiceover
+      const enrichedItem = {
+        ...legacyItem,
+        script_text: 'Selamat datang di masa depan produksi video berbasis AI.',
+        script_language: 'id',
+        character_count: 57,
+      };
+      const parsedEnriched = ProductionItemSchema.parse(enrichedItem);
+      expect(parsedEnriched.script_text).toBe(enrichedItem.script_text);
+      expect(parsedEnriched.script_language).toBe('id');
+      expect(parsedEnriched.character_count).toBe(57);
+    });
+
+    it('ElevenLabsSubscriptionPlanSchema memvalidasi paket langganan ElevenLabs secara ketat', () => {
+      const validPlan = {
+        plan_id: 'creator',
+        name_id: 'Paket Creator ElevenLabs',
+        name_en: 'ElevenLabs Creator Plan',
+        monthly_price_usd: 22,
+        monthly_credits: 100000,
+        usd_per_credit: 0.00022,
+        description_id: '100.000 karakter per bulan untuk kreator konten',
+        description_en: '100,000 characters per month for content creators',
+        plan_category: 'creator',
+        billing_cycle: 'monthly',
+      };
+
+      const parsedPlan = ElevenLabsSubscriptionPlanSchema.parse(validPlan);
+      expect(parsedPlan.plan_id).toBe('creator');
+      expect(parsedPlan.monthly_credits).toBe(100000);
+      expect(parsedPlan.usd_per_credit).toBeCloseTo(0.00022);
+    });
   });
 });

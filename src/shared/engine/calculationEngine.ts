@@ -1,8 +1,10 @@
 import Decimal from 'decimal.js';
 import {
+  ALL_PROCESS_CATEGORIES,
   BudgetAssumptions,
   CalculationResult,
   CalculationWarning,
+  CatalogModelEntry,
   CategorySummary,
   CURRENT_SCHEMA_VERSION,
   ExchangeRate,
@@ -18,19 +20,19 @@ import {
   HIGGSFIELD_MODEL_CATALOG,
   resolveModelPricing,
 } from '../catalog/higgsfieldCatalog';
+import {
+  calculateElevenLabsCostIdr,
+  calculateElevenLabsCostUsd,
+  calculateElevenLabsCredits,
+  convertDurationToCharacters,
+  ElevenLabsSubscriptionTier,
+  getElevenLabsPlanById,
+} from '../catalog/elevenlabsCatalog';
 
 // PRD FR-14: Akurasi internal tinggi sebelum pembulatan tampilan
 Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_UP });
 
-const ALL_CATEGORIES: ProcessCategory[] = [
-  'text_to_image',
-  'image_to_image',
-  'image_to_video',
-  'video_to_video',
-  'text_to_video',
-  'upscale_image',
-  'upscale_video',
-];
+const ALL_CATEGORIES = ALL_PROCESS_CATEGORIES;
 
 export interface BidirectionalReserveResult {
   plannedGenerations: number;
@@ -289,7 +291,9 @@ function allocateReserveAcrossItems(
 export function calculateProjectBudget(
   items: ProductionItem[],
   assumptions: BudgetAssumptions,
-  exchangeRate: ExchangeRate
+  exchangeRate: ExchangeRate,
+  catalog?: CatalogModelEntry[],
+  selectedElevenLabsPlanId?: string
 ): CalculationResult {
   const warnings: CalculationWarning[] = [];
 
@@ -397,6 +401,10 @@ export function calculateProjectBudget(
   let hasCreditItems = false;
   let incompleteItemCount = 0;
 
+  // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
+  let sumOneVideoElevenLabsCredit = new Decimal(0);
+  let hasElevenLabsItems = false;
+
   let oneVideoPrimaryShotCount = 0;
   let oneVideoSupportingAssetCount = 0;
   let sumOneVideoDurationDec = new Decimal(0);
@@ -451,6 +459,168 @@ export function calculateProjectBudget(
       pricing.pricing_unit === 'per_second'
         ? Math.max(0, item.duration_seconds)
         : 1;
+
+    // --- INTEGRASI KHUSUS TAHAP 3: VOICE OVER (ELEVENLABS) ---
+    if (item.category === 'voice_over') {
+      const scriptText = item.script_text?.trim() ?? '';
+      const voLang = item.script_language ?? 'id';
+      let voChars = 0;
+
+      if (scriptText.length > 0) {
+        voChars = scriptText.length;
+      } else if (
+        typeof item.character_count === 'number' &&
+        item.character_count > 0
+      ) {
+        voChars = Math.floor(item.character_count);
+      } else if (item.duration_seconds > 0) {
+        voChars = convertDurationToCharacters(item.duration_seconds, voLang);
+      }
+
+      if (voChars <= 0 && (!item.duration_seconds || item.duration_seconds <= 0)) {
+        incompleteItemCount += 1;
+        categorySummaries[item.category].has_incomplete_items = true;
+        const reasonId = `Item Voice Over "${item.label}" belum memiliki teks naskah atau durasi.`;
+        const reasonEn = `Voice Over item "${item.label}" has no script text or duration.`;
+        itemWarnings.push(reasonId);
+        warnings.push({
+          code: 'INCOMPLETE_VOICE_OVER',
+          severity: 'warning',
+          message_id: reasonId,
+          message_en: reasonEn,
+          item_id: item.item_id,
+        });
+      }
+
+      const activePlanId: ElevenLabsSubscriptionTier =
+        (assumptions.elevenlabs_plan_id as ElevenLabsSubscriptionTier) ||
+        (selectedElevenLabsPlanId as ElevenLabsSubscriptionTier) ||
+        'starter';
+      const activePlan = getElevenLabsPlanById(activePlanId);
+
+      const creditsPerGen = calculateElevenLabsCredits(
+        voChars,
+        item.model_selection.model_id
+      );
+
+      const itemPlannedElevenLabs = new Decimal(gPlanned).times(creditsPerGen);
+      const itemReserveElevenLabs = new Decimal(gReserve).times(creditsPerGen);
+      const itemBudgetedElevenLabs = new Decimal(gBudget).times(creditsPerGen);
+
+      let itemTotalCredit: number | null = null;
+      if (gBudget > 0 && voChars > 0) {
+        sumOneVideoElevenLabsCredit =
+          sumOneVideoElevenLabsCredit.plus(itemBudgetedElevenLabs);
+        hasElevenLabsItems = true;
+        itemTotalCredit = itemBudgetedElevenLabs.toNumber();
+      }
+
+      // Biaya USD & IDR
+      let bBaseDec: Decimal;
+      let bReserveDec: Decimal;
+      let bTotalDec: Decimal;
+
+      if (
+        pricing.status === 'manual' &&
+        pricing.price_value !== null &&
+        pricing.price_value >= 0
+      ) {
+        bBaseDec = new Decimal(gPlanned).times(pricing.price_value);
+        bReserveDec = new Decimal(gReserve).times(pricing.price_value);
+        bTotalDec = bBaseDec.plus(bReserveDec);
+      } else {
+        bBaseDec = new Decimal(itemPlannedElevenLabs).times(
+          activePlan.usd_per_credit
+        );
+        bReserveDec = new Decimal(itemReserveElevenLabs).times(
+          activePlan.usd_per_credit
+        );
+        bTotalDec = new Decimal(itemBudgetedElevenLabs).times(
+          activePlan.usd_per_credit
+        );
+      }
+
+      sumBaseUsd = sumBaseUsd.plus(bBaseDec);
+      sumReserveUsd = sumReserveUsd.plus(bReserveDec);
+      sumTotalUsd = sumTotalUsd.plus(bTotalDec);
+
+      const baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
+      const reserveCostUsd = bReserveDec.toDecimalPlaces(4).toNumber();
+      const totalCostUsd = bTotalDec.toDecimalPlaces(4).toNumber();
+
+      let baseCostIdr: number | null = null;
+      let reserveCostIdr: number | null = null;
+      let totalCostIdr: number | null = null;
+
+      if (fxDecimal) {
+        baseCostIdr = bBaseDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+        reserveCostIdr = bReserveDec
+          .times(fxDecimal)
+          .toDecimalPlaces(2)
+          .toNumber();
+        totalCostIdr = bTotalDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+      }
+
+      const catSum = categorySummaries[item.category];
+      catSum.item_count += 1;
+      catSum.planned_generations += gPlanned;
+      catSum.reserve_generations += gReserve;
+      catSum.budgeted_generations += gBudget;
+      catSum.base_cost_usd = new Decimal(catSum.base_cost_usd)
+        .plus(baseCostUsd)
+        .toDecimalPlaces(4)
+        .toNumber();
+      catSum.reserve_cost_usd = new Decimal(catSum.reserve_cost_usd)
+        .plus(reserveCostUsd)
+        .toDecimalPlaces(4)
+        .toNumber();
+      catSum.total_cost_usd = new Decimal(catSum.total_cost_usd)
+        .plus(totalCostUsd)
+        .toDecimalPlaces(4)
+        .toNumber();
+      if (fxDecimal && catSum.total_cost_idr !== null && totalCostIdr !== null) {
+        catSum.total_cost_idr = new Decimal(catSum.total_cost_idr)
+          .plus(totalCostIdr)
+          .toDecimalPlaces(2)
+          .toNumber();
+      }
+      if (itemTotalCredit !== null) {
+        catSum.total_credit = new Decimal(catSum.total_credit)
+          .plus(itemTotalCredit)
+          .toNumber();
+      }
+
+      itemResults.push({
+        item_id: item.item_id,
+        label: item.label,
+        category: item.category,
+        is_primary_shot: isPrimaryShot,
+        duration_seconds: item.duration_seconds || 0,
+        is_eligible_duration_clip: isEligibleDuration,
+        model_name: item.model_selection.model_name,
+        effective_quantity: effectiveQty,
+        attempts_per_item: attempts,
+        planned_generations: gPlanned,
+        reserve_generations: gReserve,
+        budgeted_generations: gBudget,
+        unit_multiplier: unitMultiplier,
+        pricing_unit: pricing.pricing_unit,
+        unit_price_usd: activePlan.usd_per_credit,
+        base_cost_usd: baseCostUsd,
+        reserve_cost_usd: reserveCostUsd,
+        total_cost_usd: totalCostUsd,
+        base_cost_idr: baseCostIdr,
+        reserve_cost_idr: reserveCostIdr,
+        total_cost_idr: totalCostIdr,
+        unit_credit: creditsPerGen,
+        total_credit: itemTotalCredit,
+        pricing_status: pricing.status === 'manual' ? 'manual' : 'verified',
+        is_item_complete: voChars > 0 || (item.duration_seconds || 0) > 0,
+        warnings: itemWarnings,
+      });
+
+      continue;
+    }
 
     const isUnlimitedActive = item.is_unlimited === true;
 
@@ -879,6 +1049,18 @@ export function calculateProjectBudget(
     total_cost_idr: finalTotalIdr,
     total_credit: finalTotalCredit,
     has_credit_items: hasCreditItems,
+
+    // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
+    total_elevenlabs_credit: hasElevenLabsItems
+      ? sumOneVideoElevenLabsCredit.times(vDec).toNumber()
+      : null,
+    one_video_elevenlabs_credit: hasElevenLabsItems
+      ? sumOneVideoElevenLabsCredit.toNumber()
+      : null,
+    selected_elevenlabs_plan_id:
+      (assumptions.elevenlabs_plan_id as string) ||
+      selectedElevenLabsPlanId ||
+      'starter',
 
     // Proyeksi 1 Video Murni
     target_videos: targetVideosCount,

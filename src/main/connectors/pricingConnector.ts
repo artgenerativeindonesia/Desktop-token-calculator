@@ -8,6 +8,7 @@ import {
   HIGGSFIELD_DOCS_URL,
   HIGGSFIELD_MODEL_CATALOG,
 } from '../../shared/catalog/higgsfieldCatalog';
+import { ELEVENLABS_AS_CATALOG_MODELS } from '../../shared/catalog/elevenlabsCatalog';
 
 export interface CustomModelRateOverride {
   model_id: string;
@@ -46,7 +47,11 @@ export function loadMergedCatalog(
     ? loadCustomUserModels(customModelsPath)
     : [];
 
-  const combinedBase = [...customModels, ...HIGGSFIELD_MODEL_CATALOG];
+  const combinedBase = [
+    ...customModels,
+    ...HIGGSFIELD_MODEL_CATALOG,
+    ...ELEVENLABS_AS_CATALOG_MODELS,
+  ];
 
   return combinedBase.map((model) => {
     const custom = overrides[model.model_id];

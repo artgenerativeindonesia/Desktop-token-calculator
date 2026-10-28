@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.10.1';
+export const APP_VERSION = '1.11.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -26,6 +26,21 @@ export interface HiggsfieldSubscriptionPlan {
   discount_badge?: string;
 }
 
+/** Preset Paket Langganan ElevenLabs (Karakter / Credit Audio AI) untuk konversi Credit <-> USD otomatis */
+export interface ElevenLabsSubscriptionPlan {
+  plan_id: string;
+  name_id: string;
+  name_en: string;
+  monthly_price_usd: number;
+  monthly_credits: number;
+  usd_per_credit: number;
+  description_id: string;
+  description_en: string;
+  plan_category?: 'free' | 'starter' | 'creator' | 'pro' | 'scale' | 'business';
+  billing_cycle?: 'monthly' | 'annual';
+  discount_badge?: string;
+}
+
 /** PRD Bab 9.4: Status verifikasi data */
 export type VerificationStatus =
   | 'verified'
@@ -34,7 +49,7 @@ export type VerificationStatus =
   | 'unavailable'
   | 'invalid';
 
-/** 7 Kategori Proses AI (termasuk Image to Image, Upscale Image, & Upscale Video) */
+/** 8 Kategori Proses AI (termasuk Image to Image, Upscale Image/Video, & Voice Over ElevenLabs) */
 export type ProcessCategory =
   | 'text_to_image'
   | 'image_to_image'
@@ -42,7 +57,8 @@ export type ProcessCategory =
   | 'video_to_video'
   | 'text_to_video'
   | 'upscale_image'
-  | 'upscale_video';
+  | 'upscale_video'
+  | 'voice_over';
 
 export const ALL_PROCESS_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -52,6 +68,7 @@ export const ALL_PROCESS_CATEGORIES: ProcessCategory[] = [
   'text_to_video',
   'upscale_image',
   'upscale_video',
+  'voice_over',
 ];
 
 /** PRD Bab 1.1 & 8.8: Dua mode estimasi */
@@ -152,6 +169,11 @@ export interface ProductionItem {
   model_selection: ModelSelection;
   pricing: Pricing;
   notes?: string;
+
+  // Voice Over / Narasi Audio (Tahap 3 - ElevenLabs)
+  script_text?: string;
+  script_language?: 'id' | 'en';
+  character_count?: number;
 }
 
 /** PRD Bab 8.1, 8.3, 8.8, 10.2: Objek BudgetAssumptions */
@@ -164,6 +186,7 @@ export interface BudgetAssumptions {
   reserve_input_mode: ReserveInputMode; // 'percent' atau 'count' (sinkronisasi 2 arah)
   reserve_percent: number; // R dalam persen, mis. 20 untuk 20%
   reserve_generations_override: number; // Greserve jika diinput langsung oleh user
+  elevenlabs_plan_id?: string; // Paket langganan ElevenLabs aktif (mis. 'free', 'starter', 'creator', 'pro', 'scale', 'business')
 }
 
 /** PRD Bab 9.3 & 10.2: Objek ExchangeRate */
@@ -235,7 +258,8 @@ export interface CalculationWarning {
     | 'MISSING_TARGET_ASSUMPTIONS'
     | 'ZERO_DIVISOR_VIDEO'
     | 'ZERO_DIVISOR_MINUTE'
-    | 'INSUFFICIENT_SHOT_DURATION';
+    | 'INSUFFICIENT_SHOT_DURATION'
+    | 'INCOMPLETE_VOICE_OVER';
   severity: 'error' | 'warning' | 'info';
   message_id: string;
   message_en: string;
@@ -269,6 +293,11 @@ export interface CalculationResult {
   one_video_reserve_cost_idr: number | null;
   one_video_total_cost_idr: number | null;
   one_video_total_credit: number | null;
+
+  // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
+  total_elevenlabs_credit: number | null;
+  one_video_elevenlabs_credit: number | null;
+  selected_elevenlabs_plan_id?: string;
 
   // Klasifikasi Shot / Gambar Utama vs Aset Pendukung (v1.9.0)
   one_video_primary_shot_count: number;
@@ -311,6 +340,9 @@ export interface CalculationResult {
   warnings: CalculationWarning[];
   calculated_at: string;
 }
+
+/** Alias untuk CalculationResult (kontrak data perhitungan proyek) */
+export type ProjectCalculation = CalculationResult;
 
 /** PRD Bab 10.2 & 12.2: Pengaturan ekspor PDF */
 export interface ExportSettings {

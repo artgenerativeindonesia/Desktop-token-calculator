@@ -10,7 +10,11 @@ export const VerificationStatusSchema = z.enum([
 ]);
 
 export const ProcessCategorySchema = z.preprocess(
-  (val) => (val === 'upscaling' ? 'upscale_video' : val),
+  (val) => {
+    if (val === 'upscaling') return 'upscale_video';
+    if (val === 'voiceover' || val === 'voice' || val === 'tts') return 'voice_over';
+    return val;
+  },
   z.enum([
     'text_to_image',
     'image_to_image',
@@ -19,6 +23,7 @@ export const ProcessCategorySchema = z.preprocess(
     'text_to_video',
     'upscale_image',
     'upscale_video',
+    'voice_over',
   ])
 );
 
@@ -69,6 +74,25 @@ export const ProductionItemSchema = z.object({
   model_selection: ModelSelectionSchema,
   pricing: PricingSchema,
   notes: z.string().optional(),
+  script_text: z.string().optional(),
+  script_language: z.enum(['id', 'en']).optional(),
+  character_count: z.number().int().nonnegative().optional(),
+});
+
+export const ElevenLabsSubscriptionPlanSchema = z.object({
+  plan_id: z.string().min(1),
+  name_id: z.string().min(1),
+  name_en: z.string().min(1),
+  monthly_price_usd: z.number().nonnegative(),
+  monthly_credits: z.number().nonnegative(),
+  usd_per_credit: z.number().nonnegative(),
+  description_id: z.string(),
+  description_en: z.string(),
+  plan_category: z
+    .enum(['free', 'starter', 'creator', 'pro', 'scale', 'business'])
+    .optional(),
+  billing_cycle: z.enum(['monthly', 'annual']).optional(),
+  discount_badge: z.string().optional(),
 });
 
 export const BudgetAssumptionsSchema = z.object({
@@ -80,6 +104,7 @@ export const BudgetAssumptionsSchema = z.object({
   reserve_input_mode: ReserveInputModeSchema,
   reserve_percent: z.number().nonnegative(),
   reserve_generations_override: z.number().int().nonnegative(),
+  elevenlabs_plan_id: z.string().optional(),
 });
 
 export const ExchangeRateSchema = z.object({

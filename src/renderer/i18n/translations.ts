@@ -35,6 +35,10 @@ export const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }
     id: 'Upscale Video (Perbesar Resolusi Video)',
     en: 'Upscale Video',
   },
+  voice_over: {
+    id: 'Voice Over (Pengisi Suara / TTS AI)',
+    en: 'Voice Over (AI TTS)',
+  },
 };
 
 export const SHORT_CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
@@ -45,6 +49,7 @@ export const SHORT_CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: st
   text_to_video: { id: 'Text to Video', en: 'Text to Video' },
   upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
   upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
+  voice_over: { id: 'Voice Over', en: 'Voice Over' },
 };
 
 export const STATUS_LABELS: Record<VerificationStatus, { id: string; en: string }> = {

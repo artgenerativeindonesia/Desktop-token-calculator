@@ -12,6 +12,58 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.11.0] - Tahap 3: Integrasi Kategori Resmi ElevenLabs Voice Over & Fitur Dwi-Input Naskah Sineas
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.11.0`
+
+### Ditambahkan (Added)
+1. **Integrasi Data Katalog Resmi ElevenLabs Voice Over (`elevenlabsCatalog.ts`)**:
+   - Menambahkan kategori proses baru `voice_over` yang terhubung langsung dengan sumber data resmi penyedia suara AI **ElevenLabs** (bukan Higgsfield).
+   - Menghadirkan seluruh 5 model AI suara resmi ElevenLabs terupdate:
+     - **Eleven Multilingual v2** (1.0 credit/karakter • 29+ bahasa dunia termasuk Bahasa Indonesia dengan ekspresi emosional tinggi).
+     - **Eleven Flash v2.5** (0.5 credit/karakter • diskon hemat 50% credit, latensi super kilat ~75ms, mendukung 32 bahasa).
+     - **Eleven Turbo v2.5** (0.5 credit/karakter • diskon hemat 50% credit untuk respon percakapan cepat).
+     - **Eleven v3** (1.0 credit/karakter • model generasi ketiga paling alami).
+     - **Eleven Monolingual v1** (1.0 credit/karakter • model standar bahasa Inggris).
+   - Menghadirkan seluruh 6 tingkat paket langganan resmi ElevenLabs:
+     - **Paket Free** ($0/bln • 10.000 credit)
+     - **Paket Starter** ($6/bln • 30.000 credit • IVC 10 suara kloning • Lisensi Komersial)
+     - **Paket Creator** ($22/bln • 121.000 credit • PVC 1 slot • 192kbps)
+     - **Paket Pro** ($99/bln • 600.000 credit • 3 slot PVC • Master WAV 44.1kHz)
+     - **Paket Scale** ($299/bln • 1.800.000 credit • 3 kursi tim)
+     - **Paket Business** ($990/bln • 6.000.000 credit • 10 kursi tim)
+   - Jalur pembaruan katalog offline-first yang aman dan gratis tanpa mewajibkan pengguna awam membeli atau memasukkan API key, plus dukungan opsional input `xi-api-key` bagi pengguna yang memiliki akun personal.
+
+2. **Fitur Dwi-Input Sineas di Langkah 3 (Teks Naskah <-> Durasi Detik Bicara)**:
+   - Sineas dapat menyusun narasi suara melalui dua cara yang saling sinkron otomatis:
+     - **Cara 1 (Ketik/Tempel Teks Naskah)**: Pengguna mengetik atau menempel naskah dialog ke dalam kotak teks; sistem otomatis menghitung jumlah karakter, jumlah kata, dan memperkirakan durasi bicara secara langsung.
+     - **Cara 2 (Input Durasi Detik)**: Pengguna yang belum memiliki naskah lengkap bisa memasukkan target durasi suara (lengkap dengan preset `5s`, `10s`, `15s`, `30s`, `60s`), lalu sistem otomatis menghitung estimasi batas karakter naskah yang ideal.
+   - **Tombol Pintar Sinkronisasi Durasi Video ("🎯 Samakan dgn Video")**: Sineas dapat langsung menyamakan durasi voice over dengan target durasi video jadi dari Langkah 2 hanya dengan satu kali klik.
+   - **Profil Kecepatan Bicara Bilingual**:
+     - 🇮🇩 **Bahasa Indonesia**: ~14.5 karakter/detik (~870 karakter/menit, ~125 WPM).
+     - 🇬🇧 **Bahasa Inggris**: ~16.5 karakter/detik (~990 karakter/menit, ~145 WPM).
+   - Kotak ringkasan instan di dalam modal yang memperlihatkan model suara ElevenLabs, pengali credit (0.5x atau 1.0x), total karakter, total credit, dan estimasi biaya Rupiah & USD.
+
+3. **Pemisahan Bersih Saldo Credit Higgsfield vs ElevenLabs di Langkah 4 & PDF**:
+   - Memastikan credit ElevenLabs (berbasis karakter teks) dipisahkan secara tegas dan transparan dari credit Higgsfield (berbasis frame gambar/video).
+   - Menampilkan kartu ringkasan khusus **"Ringkasan Voice Over Resmi ElevenLabs"** di Langkah 4 (Budget Summary) dengan rincian: jumlah baris narasi, total karakter naskah, total durasi bicara, kredit ElevenLabs, dan total biaya Rupiah/USD.
+   - Memperbarui dokumen cetak PDF agar menampilkan baris Voice Over dengan jumlah karakter, durasi bicara, model ElevenLabs, dan kotak konsumsi credit terpisah untuk Higgsfield dan ElevenLabs.
+
+4. **Pengaturan Paket Langganan & Konektor ElevenLabs di Langkah 6 (`DataSettingsView.tsx`)**:
+   - Menyediakan kartu interaktif pilihan paket langganan ElevenLabs aktif (Free, Starter, Creator, Pro, Scale, Business) lengkap dengan informasi alokasi credit bulanan dan tarif per credit.
+   - Menyediakan formulir opsional untuk mengecek kuota akun langsung menggunakan ElevenLabs API key.
+
+### Diubah (Changed)
+1. **Mesin Kalkulasi (`calculationEngine.ts`)**:
+   - Memperbarui `calculateProjectBudget` untuk mengenali kategori `voice_over`, menghitung credit ElevenLabs, menerapkan tarif paket aktif ElevenLabs, dan mengalikan kebutuhan multi-video secara proporsional.
+   - Mengintegrasikan kode peringatan `INCOMPLETE_VOICE_OVER` jika item voice over belum memiliki naskah atau durasi.
+
+### Diperbaiki (Fixed)
+1. **Ketahanan Anti-Black-Screen (AC-15 & AC-16)**:
+   - Memastikan seluruh 6 tab aplikasi dapat merender proyek dengan baris voice over tanpa kendala layar hitam (black screen).
+
+---
+
 ## Versi [1.10.1] - Input Target Durasi per Video di Langkah 2 dengan Preset Campuran Detik & Menit
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.10.1`

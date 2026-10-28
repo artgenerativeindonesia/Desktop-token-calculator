@@ -648,5 +648,248 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
     expect(calc.editing_buffer_seconds).toBe(-1.2);
     expect(calc.editing_buffer_formatted.id).toBe('-1.2 Detik (1.2s / 00:01)');
   });
+
+  describe('Integrasi Voice Over Resmi ElevenLabs (Tahap 3 - v2.0.0)', () => {
+    const voScript = 'Halo sineas Indonesia! Ini adalah narasi resmi ElevenLabs.';
+    // Panjang: 57 karakter
+
+    it('menghitung credit ElevenLabs secara akurat untuk model Multilingual v2 (1.0x)', () => {
+      const voItem: ProductionItem = {
+        item_id: 'vo-1',
+        category: 'voice_over',
+        label: 'Narasi Pembuka',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 4,
+        attempts_per_item: 1,
+        script_text: voScript,
+        script_language: 'id',
+        model_selection: {
+          provider: 'elevenlabs',
+          model_id: 'eleven_multilingual_v2',
+          model_name: 'Eleven Multilingual v2',
+          category: 'voice_over',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_asset',
+          price_value: 0,
+          currency: 'USD',
+          credit_cost: null,
+          credit_unit: undefined,
+          source_name: 'ElevenLabs Official',
+          source_url: 'https://elevenlabs.io',
+          retrieved_at: '2026-10-28T00:00:00.000Z',
+          status: 'verified',
+        },
+      };
+
+      const assumptions: BudgetAssumptions = {
+        estimation_mode: 'target_final',
+        target_videos: 1,
+        final_duration_minutes: 1,
+        default_shots_per_video: 1,
+        default_attempts_per_shot: 1,
+        reserve_input_mode: 'percent',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
+        elevenlabs_plan_id: 'starter',
+      };
+
+      const calc = calculateProjectBudget([voItem], assumptions, validExchangeRate);
+
+      // Karakter = 58, Multilingual v2 = 1.0x -> 58 credit
+      expect(calc.one_video_elevenlabs_credit).toBe(58);
+      expect(calc.total_elevenlabs_credit).toBe(58);
+      expect(calc.selected_elevenlabs_plan_id).toBe('starter');
+      // Total credit Higgsfield harus tetap null karena tidak ada item video/image Higgsfield
+      expect(calc.total_credit).toBeNull();
+
+      // Biaya Starter tier: $0.000200 / credit -> 58 * 0.0002 = 0.0116 USD
+      expect(calc.total_cost_usd).toBe(0.0116);
+      expect(calc.total_cost_idr).toBe(185.6);
+    });
+
+    it('menerapkan diskon 50% untuk Eleven Flash v2.5 (0.5x credit multiplier)', () => {
+      const voItem: ProductionItem = {
+        item_id: 'vo-flash',
+        category: 'voice_over',
+        label: 'Narasi Flash Cepat',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 4,
+        attempts_per_item: 1,
+        script_text: '1234567890', // 10 karakter
+        script_language: 'id',
+        model_selection: {
+          provider: 'elevenlabs',
+          model_id: 'eleven_flash_v2_5',
+          model_name: 'Eleven Flash v2.5',
+          category: 'voice_over',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_asset',
+          price_value: 0,
+          currency: 'USD',
+          credit_cost: null,
+          credit_unit: undefined,
+          source_name: 'ElevenLabs Official',
+          source_url: 'https://elevenlabs.io',
+          retrieved_at: '2026-10-28T00:00:00.000Z',
+          status: 'verified',
+        },
+      };
+
+      const assumptions: BudgetAssumptions = {
+        estimation_mode: 'target_final',
+        target_videos: 1,
+        final_duration_minutes: 1,
+        default_shots_per_video: 1,
+        default_attempts_per_shot: 1,
+        reserve_input_mode: 'percent',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
+        elevenlabs_plan_id: 'starter',
+      };
+
+      const calc = calculateProjectBudget([voItem], assumptions, validExchangeRate);
+
+      // 10 karakter * 0.5 = 5 credit
+      expect(calc.one_video_elevenlabs_credit).toBe(5);
+      expect(calc.total_elevenlabs_credit).toBe(5);
+    });
+
+    it('memproyeksikan karakter otomatis jika user memasukkan durasi dalam detik (Dwi-Input)', () => {
+      const voItem: ProductionItem = {
+        item_id: 'vo-sec',
+        category: 'voice_over',
+        label: 'Narasi Berdasarkan Durasi 10 Detik',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 10, // 10 detik
+        attempts_per_item: 1,
+        script_language: 'id', // ID: 14.5 char/s -> 145 karakter
+        model_selection: {
+          provider: 'elevenlabs',
+          model_id: 'eleven_multilingual_v2',
+          model_name: 'Eleven Multilingual v2',
+          category: 'voice_over',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_second',
+          price_value: 0,
+          currency: 'USD',
+          credit_cost: null,
+          credit_unit: undefined,
+          source_name: 'ElevenLabs Official',
+          source_url: 'https://elevenlabs.io',
+          retrieved_at: '2026-10-28T00:00:00.000Z',
+          status: 'verified',
+        },
+      };
+
+      const assumptions: BudgetAssumptions = {
+        estimation_mode: 'target_final',
+        target_videos: 1,
+        final_duration_minutes: 1,
+        default_shots_per_video: 1,
+        default_attempts_per_shot: 1,
+        reserve_input_mode: 'percent',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
+      };
+
+      const calc = calculateProjectBudget([voItem], assumptions, validExchangeRate);
+
+      // 10s * 14.5 char/s = 145 karakter -> 145 credit
+      expect(calc.one_video_elevenlabs_credit).toBe(145);
+    });
+
+    it('memisahkan credit ElevenLabs dari credit Higgsfield secara bersih dan penskalaan multi-video', () => {
+      const videoItem: ProductionItem = {
+        item_id: 'vid-1',
+        category: 'text_to_video',
+        label: 'Opening Shot',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 5,
+        attempts_per_item: 1,
+        model_selection: {
+          provider: 'higgsfield',
+          model_id: 'higgsfield/text-to-video',
+          model_name: 'Higgsfield Video',
+          category: 'text_to_video',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_generation',
+          price_value: 0.5,
+          currency: 'USD',
+          credit_cost: 20, // 20 Higgsfield credits
+          credit_unit: 'per_generation',
+          source_name: 'Higgsfield Official',
+          source_url: 'https://higgsfield.ai',
+          retrieved_at: '2026-10-28T00:00:00.000Z',
+          status: 'verified',
+        },
+      };
+
+      const voItem: ProductionItem = {
+        item_id: 'vo-1',
+        category: 'voice_over',
+        label: 'Narasi Utama',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 5,
+        attempts_per_item: 1,
+        script_text: 'Halo kawan-kawan semua!', // 23 karakter
+        script_language: 'id',
+        model_selection: {
+          provider: 'elevenlabs',
+          model_id: 'eleven_multilingual_v2',
+          model_name: 'Eleven Multilingual v2',
+          category: 'voice_over',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_asset',
+          price_value: 0,
+          currency: 'USD',
+          credit_cost: null,
+          credit_unit: undefined,
+          source_name: 'ElevenLabs Official',
+          source_url: 'https://elevenlabs.io',
+          retrieved_at: '2026-10-28T00:00:00.000Z',
+          status: 'verified',
+        },
+      };
+
+      const assumptionsV3: BudgetAssumptions = {
+        estimation_mode: 'target_final',
+        target_videos: 3, // 3 video
+        final_duration_minutes: 1,
+        default_shots_per_video: 1,
+        default_attempts_per_shot: 1,
+        reserve_input_mode: 'percent',
+        reserve_percent: 0,
+        reserve_generations_override: 0,
+        elevenlabs_plan_id: 'starter',
+      };
+
+      const calc = calculateProjectBudget([videoItem, voItem], assumptionsV3, validExchangeRate);
+
+      // Higgsfield credit: 20 per video * 3 = 60
+      expect(calc.total_credit).toBe(60);
+
+      // ElevenLabs credit: 23 per video, total untuk 3 video = 69
+      expect(calc.one_video_elevenlabs_credit).toBe(23);
+      expect(calc.total_elevenlabs_credit).toBe(69);
+
+      // Total USD gabungan: (0.5 + 23 * 0.0002) * 3 = (0.5 + 0.0046) * 3 = 0.5046 * 3 = 1.5138 USD
+      expect(calc.total_cost_usd).toBe(1.5138);
+    });
+  });
 });
 
