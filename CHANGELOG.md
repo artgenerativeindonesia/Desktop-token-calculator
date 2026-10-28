@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.8.1] - Hasil Audit Sinergi 6 Sub-Agent: Penguatan Skema Data, Hardening PDF, dan Kartu Running Total Langkah 3
+- **Tanggal Perubahan**: 28 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.8.1`
+
+### Ditambahkan (Added)
+1. **Kartu Running Total & Rekapitulasi Berjalan di Bawah Tabel Langkah 3 (`ProductionPlannerView.tsx`)**:
+   - Menambahkan kartu ringkasan interaktif tepat di bawah daftar pekerjaan sebelum tombol navigasi, sehingga pengguna tidak perlu menggulir ke atas untuk melihat total anggaran.
+   - Menambahkan lencana eksplisit `per 1 video` pada subtotal setiap baris adegan jika target video lebih dari 1.
+2. **Penyempurnaan Teks Badge Video Tunggal**:
+   - Menampilkan `Proyeksi Video Tunggal (1 Video)` jika target video bernilai 1.
+
+### Diperbaiki (Fixed)
+1. **Penguatan Skema Data & Kompatibilitas Mundur (`projectSchema.ts`)**:
+   - Menambahkan fallback default `.default(1)` pada validasi Zod `target_videos` agar file proyek warisan (lama) dapat dibuka tanpa kendala validasi.
+2. **Hardening Template Laporan PDF (`pdfReportBuilder.ts`)**:
+   - Menambahkan aturan `@media print { page-break-inside: avoid; }` agar kotak disclaimer resmi tidak terpotong di tengah halaman cetak.
+   - Menambahkan pengaman nilai null/undefined pada pemetaan parameter model dan status verifikasi.
+3. **Ekspansi Suite Pengujian Otomatis (`tests/`)**:
+   - Menambah cakupan pengujian multi-video, edge-case proyek kosong, dan pembagian nol menjadi total 33 test case yang lolos 100%.
+
+---
+
 ## Versi [1.8.0] - Tahap 1 Menuju v2.0.0: Alur Multi-Video Workflow & Transparansi Rumus Proyeksi PDF
 - **Tanggal Perubahan**: 28 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.8.0`

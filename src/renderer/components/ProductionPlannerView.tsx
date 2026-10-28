@@ -156,9 +156,13 @@ export const ProductionPlannerView: React.FC = () => {
             </span>
             <span className="vv-badge-pill bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
               <span>
-                {isId
-                  ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video`
-                  : `1 Video Plan • Total ${calculation.target_videos} Videos`}
+                {calculation.target_videos > 1
+                  ? (isId
+                      ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video`
+                      : `1 Video Plan • Total ${calculation.target_videos} Videos`)
+                  : (isId
+                      ? 'Proyeksi Video Tunggal (1 Video)'
+                      : 'Single Video Plan (1 Video)')}
               </span>
             </span>
           </div>
@@ -480,6 +484,11 @@ export const ProductionPlannerView: React.FC = () => {
                         {calcRow?.total_credit !== null
                           ? ` • ${calcRow?.total_credit} Credit`
                           : ''}
+                        {calculation.target_videos > 1 && (
+                          <span className="text-emerald-400 font-semibold">
+                            {' '}• {isId ? 'per 1 video' : 'per 1 video'}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -521,6 +530,50 @@ export const ProductionPlannerView: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Rekapitulasi Anggaran Berjalan (Running Total Breakdown) */}
+      {items.length > 0 && (
+        <div className="vv-card p-4 sm:p-5 border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-md rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-2">
+                <span>{isId ? 'Rekapitulasi Anggaran Berjalan' : 'Running Total Breakdown'}</span>
+                {calculation.target_videos > 1 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">
+                    {calculation.target_videos} {isId ? 'Video' : 'Videos'}
+                  </span>
+                )}
+              </div>
+              <div className="text-sm text-[var(--vv-text-primary)] font-medium mt-0.5">
+                {calculation.target_videos > 1 ? (
+                  <span>
+                    {isId ? 'Subtotal 1 Video' : '1 Video Subtotal'} (<strong>{formatCurrencyIdr(calculation.one_video_total_cost_idr, language)}</strong> / {formatCurrencyUsd(calculation.one_video_total_cost_usd, language)}) &times; <strong>{calculation.target_videos} Video</strong>
+                  </span>
+                ) : (
+                  <span>{isId ? 'Total Anggaran 1 Video Penuh' : 'Total 1 Video Budget'}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="text-left md:text-right shrink-0">
+            <div className="text-xs text-[var(--vv-text-muted)]">
+              {isId ? 'Total Anggaran Seluruh Video' : 'Grand Total Budget'}
+            </div>
+            <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-400">
+              {formatCurrencyIdr(calculation.total_cost_idr, language)}
+            </div>
+            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums">
+              {formatCurrencyUsd(calculation.total_cost_usd, language)}
+              {calculation.total_credit !== null ? ` • ${calculation.total_credit.toLocaleString()} Credits` : ''}
+              {' '}&bull; {calculation.budgeted_generations} {isId ? 'kali coba' : 'runs'}
+            </div>
+          </div>
         </div>
       )}
 

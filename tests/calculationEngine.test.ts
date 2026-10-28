@@ -217,4 +217,139 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
     expect(sample.calculation.is_complete).toBe(true);
     expect(sample.calculation.total_cost_usd).toBeGreaterThan(0);
   });
+
+  it('Edge Case: Daftar item kosong (items: []) menghasilkan status aman dan biaya 0 tanpa crash', () => {
+    const assumptions: BudgetAssumptions = {
+      estimation_mode: 'per_shot',
+      target_videos: 3,
+      final_duration_minutes: 2,
+      default_shots_per_video: 5,
+      default_attempts_per_shot: 2,
+      reserve_input_mode: 'percent',
+      reserve_percent: 20,
+      reserve_generations_override: 0,
+    };
+
+    const calc = calculateProjectBudget([], assumptions, validExchangeRate);
+
+    expect(calc.is_complete).toBe(false);
+    expect(calc.planned_generations).toBe(0);
+    expect(calc.reserve_generations).toBe(0);
+    expect(calc.budgeted_generations).toBe(0);
+    expect(calc.base_cost_usd).toBe(0);
+    expect(calc.total_cost_usd).toBe(0);
+    expect(calc.total_cost_idr).toBe(0);
+    expect(calc.item_results).toHaveLength(0);
+    expect(calc.cost_per_video_usd).toBe(0);
+    expect(calc.cost_per_minute_usd).toBe(0);
+  });
+
+  it('Edge Case: Durasi klip bernilai ganjil dan desimal (3.5s & 7s) dengan tarif per_second dihitung presisi', () => {
+    const decimalClipItem = createProductionItemFromCatalog(
+      'text_to_video',
+      'kling-video/v3.0',
+      'Shot Desimal 3.5s',
+      2, // 2 shot
+      1, // 1 attempt -> Gplanned = 2
+      3.5 // 3.5 detik per shot
+    );
+
+    const oddClipItem = createProductionItemFromCatalog(
+      'text_to_video',
+      'kling-video/v3.0',
+      'Shot Ganjil 7s',
+      1, // 1 shot
+      2, // 2 attempt -> Gplanned = 2
+      7 // 7 detik per shot
+    );
+
+    const assumptions: BudgetAssumptions = {
+      estimation_mode: 'per_shot',
+      target_videos: 1,
+      final_duration_minutes: 0.5,
+      default_shots_per_video: 3,
+      default_attempts_per_shot: 1,
+      reserve_input_mode: 'percent',
+      reserve_percent: 0,
+      reserve_generations_override: 0,
+    };
+
+    const calc = calculateProjectBudget(
+      [decimalClipItem, oddClipItem],
+      assumptions,
+      validExchangeRate
+    );
+
+    // Kling 3.0: $0.07/detik, 1.4 credit/detik
+    // decimalClipItem: 2 gen * 3.5s * $0.07 = $0.49; Credit = 2 * 3.5 * 1.4 = 9.8 credits
+    // oddClipItem: 2 gen * 7s * $0.07 = $0.98; Credit = 2 * 7 * 1.4 = 19.6 credits
+    // Total USD = 0.49 + 0.98 = 1.47 USD
+    // Total Credit = 9.8 + 19.6 = 29.4 credits
+    expect(calc.item_results[0].base_cost_usd).toBe(0.49);
+    expect(calc.item_results[0].total_cost_usd).toBe(0.49);
+    expect(calc.item_results[0].total_credit).toBe(9.8);
+
+    expect(calc.item_results[1].base_cost_usd).toBe(0.98);
+    expect(calc.item_results[1].total_cost_usd).toBe(0.98);
+    expect(calc.item_results[1].total_credit).toBe(19.6);
+
+    expect(calc.total_cost_usd).toBe(1.47);
+    expect(calc.total_cost_idr).toBe(1.47 * 16000); // 23520
+    expect(calc.total_credit).toBe(29.4);
+    expect(calc.is_complete).toBe(true);
+  });
+
+  it('Soliditas Multi-Video: Skala perkalian V=3 dan V=10 konsisten secara proporsional antara 1 Video dan Grand Total', () => {
+    const project = createPrdSyntheticTestProject(validExchangeRate);
+
+    // Kasus 1: V = 3 video
+    const assumptionsV3: BudgetAssumptions = {
+      ...project.assumptions,
+      target_videos: 3,
+    };
+    const calcV3 = calculateProjectBudget(
+      project.items,
+      assumptionsV3,
+      validExchangeRate
+    );
+
+    // 1 video: base = $20, reserve = $4, total = $24
+    expect(calcV3.target_videos).toBe(3);
+    expect(calcV3.one_video_planned_generations).toBe(10);
+    expect(calcV3.one_video_reserve_generations).toBe(2);
+    expect(calcV3.one_video_budgeted_generations).toBe(12);
+    expect(calcV3.one_video_base_cost_usd).toBe(20);
+    expect(calcV3.one_video_reserve_cost_usd).toBe(4);
+    expect(calcV3.one_video_total_cost_usd).toBe(24);
+    expect(calcV3.one_video_total_cost_idr).toBe(384000);
+
+    // Grand total untuk 3 video:
+    expect(calcV3.planned_generations).toBe(30);
+    expect(calcV3.reserve_generations).toBe(6);
+    expect(calcV3.budgeted_generations).toBe(36);
+    expect(calcV3.base_cost_usd).toBe(60);
+    expect(calcV3.reserve_cost_usd).toBe(12);
+    expect(calcV3.total_cost_usd).toBe(72);
+    expect(calcV3.total_cost_idr).toBe(1152000);
+    expect(calcV3.cost_per_video_usd).toBe(24);
+    expect(calcV3.cost_per_video_idr).toBe(384000);
+
+    // Kasus 2: V = 10 video
+    const assumptionsV10: BudgetAssumptions = {
+      ...project.assumptions,
+      target_videos: 10,
+    };
+    const calcV10 = calculateProjectBudget(
+      project.items,
+      assumptionsV10,
+      validExchangeRate
+    );
+
+    expect(calcV10.target_videos).toBe(10);
+    expect(calcV10.planned_generations).toBe(100);
+    expect(calcV10.reserve_generations).toBe(20);
+    expect(calcV10.budgeted_generations).toBe(120);
+    expect(calcV10.total_cost_usd).toBe(240);
+    expect(calcV10.total_cost_idr).toBe(3840000);
+  });
 });

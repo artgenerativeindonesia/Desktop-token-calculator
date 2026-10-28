@@ -46,4 +46,14 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
     expect(compareSchemaVersion('2.0.0', '1.0.0')).toBe(1);
     expect(compareSchemaVersion('1.0.0', '1.2.0')).toBe(-1);
   });
+
+  it('Backward Compatibility: File lama tanpa target_videos tetap valid dan otomatis bernilai 1', () => {
+    const project = createPrdSyntheticTestProject();
+    const rawData = JSON.parse(JSON.stringify(project));
+    delete rawData.assumptions.target_videos;
+
+    const validation = validateProjectFileJson(JSON.stringify(rawData));
+    expect(validation.valid).toBe(true);
+    expect(validation.data?.assumptions.target_videos).toBe(1);
+  });
 });

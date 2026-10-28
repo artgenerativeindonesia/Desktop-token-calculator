@@ -111,7 +111,7 @@ function generatePdfReportHtml(project, overrideLang) {
         .map((res, idx) => {
         const sourceItem = project.items[idx];
         const paramSummary = sourceItem
-            ? Object.entries(sourceItem.model_selection.parameter_values)
+            ? Object.entries(sourceItem.model_selection?.parameter_values || {})
                 .map(([k, v]) => `${k}: ${v}`)
                 .join(', ')
             : '-';
@@ -135,7 +135,7 @@ function generatePdfReportHtml(project, overrideLang) {
           <td style="text-align:center;">${idx + 1}</td>
           <td>
             <strong>${escapeHtml(res.label)}</strong><br/>
-            <span style="font-size:10px;color:#64748b;">${escapeHtml(CATEGORY_LABELS[res.category][lang])}</span>
+            <span style="font-size:10px;color:#64748b;">${escapeHtml(CATEGORY_LABELS[res.category]?.[lang] || res.category)}</span>
           </td>
           <td>
             <strong>${escapeHtml(res.model_name)}</strong><br/>
@@ -153,7 +153,7 @@ function generatePdfReportHtml(project, overrideLang) {
           </td>
           <td>
             <span class="status-pill status-${res.pricing_status}">
-              ${escapeHtml(STATUS_LABELS[res.pricing_status][lang])}
+              ${escapeHtml(STATUS_LABELS[res.pricing_status]?.[lang] || res.pricing_status)}
             </span>
           </td>
         </tr>
@@ -303,6 +303,15 @@ function generatePdfReportHtml(project, overrideLang) {
     .status-manual { background: #e0f2fe; color: #075985; }
     .status-stale { background: #fef3c7; color: #92400e; }
     .status-unavailable, .status-invalid { background: #ffe4e6; color: #9f1239; }
+    .disclaimer-box {
+      margin-top: 10px;
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 10px;
+      page-break-inside: avoid;
+    }
     .footer {
       margin-top: 24px;
       padding-top: 10px;
@@ -311,6 +320,14 @@ function generatePdfReportHtml(project, overrideLang) {
       color: #64748b;
       display: flex;
       justify-content: space-between;
+    }
+    @media print {
+      body {
+        padding: 10mm 12mm;
+      }
+      tr, .metric-card, .header-box, .disclaimer-box {
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
@@ -385,6 +402,16 @@ function generatePdfReportHtml(project, overrideLang) {
         <th>${isId ? 'Patokan Kurs Dolar' : 'USD Exchange Rate'}</th>
         <td class="num">${project.exchange_rate.rate ? '1 USD = ' + formatIdr(project.exchange_rate.rate, lang) : '-'}</td>
       </tr>
+      <tr>
+        <th>${isId ? 'Target Durasi Bersih Video' : 'Target Net Video Duration'}</th>
+        <td class="num"><strong>${calc.one_video_duration_formatted
+        ? (isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en)
+        : project.assumptions.final_duration_minutes > 0
+            ? `${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${Math.round(project.assumptions.final_duration_minutes * 60)}s)`
+            : (isId ? 'Belum Diatur' : 'Not set')}</strong></td>
+        <th>${isId ? 'Target Jumlah Video' : 'Target Video Count'}</th>
+        <td class="num"><strong>${calc.target_videos} ${isId ? 'Video' : calc.target_videos > 1 ? 'Videos' : 'Video'}</strong></td>
+      </tr>
     </tbody>
   </table>
   ` : ''}
@@ -409,7 +436,7 @@ function generatePdfReportHtml(project, overrideLang) {
       ${itemRowsHtml}
     </tbody>
   </table>
-  <div style="margin-top:10px;margin-bottom:14px;padding:12px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+  <div class="disclaimer-box">
     <div style="font-weight:700;color:#166534;font-size:11.5px;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
       <span>📌</span>
       <span>${isId ? 'CATATAN PENTING & RUMUS PROYEKSI MULTI-VIDEO:' : 'IMPORTANT NOTICE & MULTI-VIDEO PROJECTION FORMULA:'}</span>
@@ -419,7 +446,7 @@ function generatePdfReportHtml(project, overrideLang) {
         ? `Seluruh rincian pekerjaan dan adegan pada tabel di atas adalah proyeksi teknis kebutuhan untuk <strong>1 (satu) video</strong> utuh.<br/>
            <strong>Perhitungan Total Anggaran Akhir:</strong> Biaya 1 Video (<strong>${formatIdr(calc.one_video_total_cost_idr, lang)}</strong> / ${formatUsd(calc.one_video_total_cost_usd, lang)}) &times; <strong>${calc.target_videos} Video</strong> = <strong>${formatIdr(calc.total_cost_idr, lang)}</strong> (${formatUsd(calc.total_cost_usd, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`
         : `All stage requirements and scenes in the table above project technical needs for <strong>1 (one) single video</strong>.<br/>
-           <strong>Final Grand Total Calculation:</strong> 1 Video Cost (<strong>${formatUsd(calc.one_video_total_cost_usd, lang)}</strong> / ${formatIdr(calc.one_video_total_cost_idr, lang)}) &times; <strong>${calc.target_videos} Videos</strong> = <strong>${formatUsd(calc.total_cost_usd, lang)}</strong> (${formatIdr(calc.total_cost_idr, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`}
+           <strong>Final Grand Total Calculation:</strong> 1 Video Cost (<strong>${formatUsd(calc.one_video_total_cost_usd, lang)}</strong> / ${formatIdr(calc.one_video_total_cost_idr, lang)}) &times; <strong>${calc.target_videos} ${calc.target_videos > 1 ? 'Videos' : 'Video'}</strong> = <strong>${formatUsd(calc.total_cost_usd, lang)}</strong> (${formatIdr(calc.total_cost_idr, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`}
     </div>
   </div>
   ` : ''}
@@ -469,8 +496,8 @@ function generatePdfReportHtml(project, overrideLang) {
         <td>${escapeHtml(project.exchange_rate.rate_type)} &mdash; ${escapeHtml(project.exchange_rate.source_name)}</td>
         <th>${isId ? 'Waktu Diperbarui & Status' : 'Last Updated & Status'}</th>
         <td>
-          ${escapeHtml(project.exchange_rate.retrieved_at.slice(0, 19).replace('T', ' '))}
-          (<span class="status-pill status-${project.exchange_rate.status}">${escapeHtml(STATUS_LABELS[project.exchange_rate.status][lang])}</span>)
+          ${escapeHtml((project.exchange_rate.retrieved_at || '').slice(0, 19).replace('T', ' '))}
+          (<span class="status-pill status-${project.exchange_rate.status}">${escapeHtml(STATUS_LABELS[project.exchange_rate.status]?.[lang] || project.exchange_rate.status)}</span>)
         </td>
       </tr>
     </tbody>
@@ -519,8 +546,16 @@ function generatePdfReportHtml(project, overrideLang) {
       </tr>
       <tr>
         <th>${isId ? 'Jumlah Video yang Diproduksi' : 'Total Videos Produced'}</th>
-        <td class="num" colspan="2"><strong>&times; ${calc.target_videos} ${isId ? 'Video' : 'Videos'}</strong></td>
+        <td class="num" colspan="2"><strong>&times; ${calc.target_videos} ${isId ? 'Video' : calc.target_videos > 1 ? 'Videos' : 'Video'}</strong></td>
       </tr>
+      ${(calc.one_video_duration_formatted || project.assumptions.final_duration_minutes > 0) ? `
+      <tr>
+        <th>${isId ? 'Target Durasi Bersih per Video' : 'Target Net Duration per Video'}</th>
+        <td class="num" colspan="2"><strong>${calc.one_video_duration_formatted
+        ? (isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en)
+        : `${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${Math.round(project.assumptions.final_duration_minutes * 60)}s)`}</strong></td>
+      </tr>
+      ` : ''}
       ${calc.cost_per_minute_usd !== null ? `
       <tr>
         <th>${isId ? 'Rata-rata Biaya per 1 Menit Video Jadi' : 'Average Cost per Final Video Minute'}</th>

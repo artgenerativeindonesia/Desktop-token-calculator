@@ -72,7 +72,7 @@ export const ProductionItemSchema = z.object({
 
 export const BudgetAssumptionsSchema = z.object({
   estimation_mode: EstimationModeSchema,
-  target_videos: z.number().int().nonnegative(),
+  target_videos: z.number().int().nonnegative().default(1),
   final_duration_minutes: z.number().nonnegative(),
   default_shots_per_video: z.number().int().nonnegative(),
   default_attempts_per_shot: z.number().int().nonnegative(),

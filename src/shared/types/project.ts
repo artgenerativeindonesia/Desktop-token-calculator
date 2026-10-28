@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.8.0';
+export const APP_VERSION = '1.8.1';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -264,6 +264,13 @@ export interface CalculationResult {
   one_video_reserve_cost_idr: number | null;
   one_video_total_cost_idr: number | null;
   one_video_total_credit: number | null;
+
+  // Durasi Bersih 1 Video (Fitur 2 - v2.0.0)
+  one_video_duration_seconds?: number;
+  one_video_duration_formatted?: {
+    id: string;
+    en: string;
+  };
   cost_per_video_usd: number | null; // Bvideo (USD)
   cost_per_video_idr: number | null; // Bvideo (IDR)
   cost_per_minute_usd: number | null; // Bminute (USD)

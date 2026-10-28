@@ -385,13 +385,13 @@ export const BudgetSummaryView: React.FC = () => {
                 </span>
               </div>
             )}
-            {calc.one_video_duration_seconds > 0 && (
+            {Boolean(calc.one_video_duration_seconds && calc.one_video_duration_seconds > 0 && calc.one_video_duration_formatted) && (
               <div className="vv-card-quiet p-3 flex items-center justify-between text-xs">
                 <span className="text-[var(--vv-text-muted)]">
                   {isId ? 'Panjang 1 Video (Durasi Bersih):' : '1 Video Clean Duration:'}
                 </span>
                 <span className="font-bold tabular-nums text-[#0099ff]">
-                  ⏱️ {isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en}
+                  ⏱️ {isId ? calc.one_video_duration_formatted?.id : calc.one_video_duration_formatted?.en}
                 </span>
               </div>
             )}

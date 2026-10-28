@@ -64,7 +64,7 @@ exports.ProductionItemSchema = zod_1.z.object({
 });
 exports.BudgetAssumptionsSchema = zod_1.z.object({
     estimation_mode: exports.EstimationModeSchema,
-    target_videos: zod_1.z.number().int().nonnegative(),
+    target_videos: zod_1.z.number().int().nonnegative().default(1),
     final_duration_minutes: zod_1.z.number().nonnegative(),
     default_shots_per_video: zod_1.z.number().int().nonnegative(),
     default_attempts_per_shot: zod_1.z.number().int().nonnegative(),
