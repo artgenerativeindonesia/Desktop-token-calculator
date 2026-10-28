@@ -18,15 +18,52 @@ import { InfoTip } from './InfoTip';
 import {
   ChevronDown,
   ChevronUp,
+  Clock,
   Copy,
+  Film,
   Info,
   Layers,
+  Mic,
+  Music,
   Plus,
   RotateCcw,
+  Scissors,
   Sliders,
   Sparkles,
   Trash2,
+  Volume2,
 } from 'lucide-react';
+
+export type DepartmentTab = 'all' | 'video' | 'stills' | 'voiceover' | 'music';
+
+const VIDEO_CATEGORIES: ProcessCategory[] = [
+  'text_to_video',
+  'image_to_video',
+  'video_to_video',
+];
+
+const STILLS_CATEGORIES: ProcessCategory[] = [
+  'text_to_image',
+  'image_to_image',
+  'upscale_image',
+  'upscale_video',
+];
+
+/** Format durasi ganda: contoh "1m 30s (90s)" atau "45s (45s)" */
+export function formatDualDuration(seconds: number, isId: boolean = true): string {
+  if (!seconds || seconds <= 0) {
+    return isId ? '0 detik (0s)' : '0 sec (0s)';
+  }
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+
+  if (mins === 0) {
+    return `${secs}s (${secs}s)`;
+  }
+  const minPart = `${mins}m`;
+  const secPart = secs > 0 ? ` ${secs}s` : '';
+  return `${minPart}${secPart} (${seconds}s)`;
+}
 
 const ALL_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -83,6 +120,7 @@ export const ProductionPlannerView: React.FC = () => {
     return '';
   };
 
+  const [activeDepartment, setActiveDepartment] = useState<DepartmentTab>('all');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<
     ProcessCategory | 'all'
   >('all');
@@ -98,13 +136,55 @@ export const ProductionPlannerView: React.FC = () => {
     theme === 'dark' ? 'glass-input-dark' : 'glass-input-light';
   const { items, calculation, assumptions } = project;
 
+  const isItemPrimaryShot = (item: {
+    is_primary_shot?: boolean;
+    category: ProcessCategory;
+  }): boolean =>
+    typeof item.is_primary_shot === 'boolean'
+      ? item.is_primary_shot
+      : item.category === 'text_to_video' || item.category === 'image_to_video';
+
+  // Durasi bersih footage AI untuk 1 video (hanya menghitung Shot Utama yang memiliki durasi detik)
+  const cleanDurationSec: number =
+    typeof calculation.one_video_duration_seconds === 'number' && calculation.one_video_duration_seconds > 0
+      ? calculation.one_video_duration_seconds
+      : items.reduce((sum, item) => {
+          if (isItemPrimaryShot(item) && item.duration_seconds > 0) {
+            return sum + (Number(item.quantity) || 0) * (Number(item.duration_seconds) || 0);
+          }
+          return sum;
+        }, 0);
+
+  // Total durasi untuk multi-video
+  const targetVideosCount = Math.max(
+    1,
+    calculation.target_videos || assumptions.target_videos || 1
+  );
+  const totalCleanDurationSec = cleanDurationSec * targetVideosCount;
+
+  // Target durasi rencana dari Langkah 2 (dalam detik)
+  const targetDurationSec = Math.round(
+    (assumptions.final_duration_minutes || 0) * 60
+  );
+  const durationDiff = cleanDurationSec - targetDurationSec;
+
+  const isCategoryInDepartment = (cat: ProcessCategory, dept: DepartmentTab) => {
+    if (dept === 'all') return true;
+    if (dept === 'video') return VIDEO_CATEGORIES.includes(cat);
+    if (dept === 'stills') return STILLS_CATEGORIES.includes(cat);
+    return false;
+  };
+
   const filteredItems = items
     .map((item, idx) => ({ item, idx, calcRow: calculation.item_results[idx] }))
-    .filter(
-      ({ item }) =>
+    .filter(({ item }) => {
+      const matchDept = isCategoryInDepartment(item.category, activeDepartment);
+      if (!matchDept) return false;
+      return (
         selectedCategoryFilter === 'all' ||
         item.category === selectedCategoryFilter
-    );
+      );
+    });
 
   const activeEditEntry =
     editingItemId !== null
@@ -136,162 +216,531 @@ export const ProductionPlannerView: React.FC = () => {
        * TIER 1: DOMINANT FOCAL POINT — PLANNER HERO & LIVE RUNNING TOTAL
        * ===================================================================== */}
       <div
-        className={`${heroCardClass} rounded-[18px] p-6 md:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-6`}
+        className={`${heroCardClass} rounded-[18px] p-6 md:p-7 flex flex-col gap-5`}
       >
-        <div className="space-y-2 max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="vv-badge-pill">
-              <Layers className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>
-                {isId
-                  ? 'Langkah 03 • Susun Daftar Shot & Gambar AI'
-                  : 'Step 03 • AI Shot & Image Planner'}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="vv-badge-pill">
+                <Layers className="w-3.5 h-3.5 text-[#0099ff]" />
+                <span>
+                  {isId
+                    ? 'Langkah 03 • Susun Daftar Shot & Gambar AI'
+                    : 'Step 03 • AI Shot & Image Planner'}
+                </span>
               </span>
-            </span>
-            <span className="vv-badge-pill">
-              <span className="vv-blue-dot" />
-              <span>
-                {calculation.one_video_primary_shot_count} {isId ? 'Shot Utama' : 'Primary Shots'} &bull;{' '}
-                {calculation.one_video_supporting_asset_count} {isId ? 'Aset Pendukung' : 'Supporting Assets'}
+              <span className="vv-badge-pill">
+                <span className="vv-blue-dot" />
+                <span>
+                  {calculation.one_video_primary_shot_count} {isId ? 'Shot Utama' : 'Primary Shots'} &bull;{' '}
+                  {calculation.one_video_supporting_asset_count} {isId ? 'Aset Pendukung' : 'Supporting Assets'}
+                </span>
               </span>
-            </span>
-            <span className="vv-badge-pill bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
-              <span>
-                {calculation.target_videos > 1
-                  ? (isId
-                      ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video (${calculation.total_primary_shots} Shot Total)`
-                      : `1 Video Plan • Total ${calculation.target_videos} Videos (${calculation.total_primary_shots} Total Shots)`)
-                  : (isId
-                      ? 'Proyeksi Video Tunggal (1 Video)'
-                      : 'Single Video Plan (1 Video)')}
+              <span className="vv-badge-pill bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
+                <span>
+                  {calculation.target_videos > 1
+                    ? (isId
+                        ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video (${calculation.total_primary_shots} Shot Total)`
+                        : `1 Video Plan • Total ${calculation.target_videos} Videos (${calculation.total_primary_shots} Total Shots)`)
+                    : (isId
+                        ? 'Proyeksi Video Tunggal (1 Video)'
+                        : 'Single Video Plan (1 Video)')}
+                </span>
               </span>
-            </span>
+              <span className="vv-badge-pill bg-sky-500/10 border-sky-500/30 text-sky-400 font-semibold flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-sky-400" />
+                <span>
+                  ⏱️ {isId ? 'Durasi Bersih:' : 'Clean Duration:'}{' '}
+                  <strong>{formatDualDuration(cleanDurationSec, isId)}</strong>
+                </span>
+              </span>
+            </div>
+
+            <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.035em]">
+              {isId ? (
+                <>
+                  Daftar Pekerjaan &{' '}
+                  <span className="vv-accent text-[#0099ff]">
+                    Tahap Pembuatan AI
+                  </span>
+                </>
+              ) : (
+                <>
+                  AI Production{' '}
+                  <span className="vv-accent text-[#0099ff]">
+                    Stages & Planner
+                  </span>
+                </>
+              )}
+            </h1>
+
+            <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? `Daftar di bawah memproyeksikan kebutuhan shot / gambar untuk 1 (satu) video. Hasilnya otomatis dikalikan ${calculation.target_videos} video (sesuai input Langkah 2) untuk total anggaran akhir.`
+                : `The list below projects requirements for 1 (one) video. Results are automatically multiplied by ${calculation.target_videos} videos (from Step 2) for the grand total.`}
+            </p>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.035em]">
-            {isId ? (
-              <>
-                Daftar Pekerjaan &{' '}
-                <span className="vv-accent text-[#0099ff]">
-                  Tahap Pembuatan AI
-                </span>
-              </>
-            ) : (
-              <>
-                AI Production{' '}
-                <span className="vv-accent text-[#0099ff]">
-                  Stages & Planner
-                </span>
-              </>
-            )}
-          </h1>
+          {/* Right: Live Total Readout + Primary Add Stage CTA */}
+          <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3 shrink-0">
+            <div className="text-left sm:text-right">
+              <div className="text-[11px] uppercase tracking-wider text-[#7acaff] font-semibold">
+                {calculation.target_videos > 1
+                  ? isId
+                    ? `Total Anggaran (${calculation.target_videos} Video)`
+                    : `Total Budget (${calculation.target_videos} Videos)`
+                  : t.totalBudget}
+              </div>
+              <div className="text-2xl font-bold tabular-nums text-[var(--vv-text-primary)]">
+                {formatCurrencyIdr(calculation.total_cost_idr, language)}
+              </div>
+              {calculation.target_videos > 1 && (
+                <div className="text-[11px] text-[#7acaff] font-medium tabular-nums">
+                  {isId
+                    ? `(Proyeksi: ${formatCurrencyIdr(calculation.one_video_total_cost_idr, language)} / 1 video × ${calculation.target_videos} video)`
+                    : `(Projection: ${formatCurrencyUsd(calculation.one_video_total_cost_usd, language)} / 1 video × ${calculation.target_videos} videos)`}
+                </div>
+              )}
+              <div className="text-xs font-semibold tabular-nums text-[#0099ff]">
+                {formatCurrencyUsd(calculation.total_cost_usd, language)} &bull;{' '}
+                {calculation.total_credit !== null
+                  ? `${calculation.total_credit.toLocaleString()} Credits`
+                  : ''}
+              </div>
+            </div>
 
-          <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
-            {isId
-              ? `Daftar di bawah memproyeksikan kebutuhan shot / gambar untuk 1 (satu) video. Hasilnya otomatis dikalikan ${calculation.target_videos} video (sesuai input Langkah 2) untuk total anggaran akhir.`
-              : `The list below projects requirements for 1 (one) video. Results are automatically multiplied by ${calculation.target_videos} videos (from Step 2) for the grand total.`}
-          </p>
+            <button
+              type="button"
+              onClick={() => handleAddAndOpenModal('text_to_video')}
+              className="vv-btn-accent px-5 py-2.5 text-xs font-semibold"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t.addStageBtn}</span>
+            </button>
+          </div>
         </div>
 
-        {/* Right: Live Total Readout + Primary Add Stage CTA */}
-        <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3 shrink-0">
-          <div className="text-left sm:text-right">
-            <div className="text-[11px] uppercase tracking-wider text-[#7acaff] font-semibold">
-              {calculation.target_videos > 1
-                ? isId
-                  ? `Total Anggaran (${calculation.target_videos} Video)`
-                  : `Total Budget (${calculation.target_videos} Videos)`
-                : t.totalBudget}
+        {/* Metrik Durasi Bersih & Komparasi Cerdas Target Langkah 2 */}
+        <div className="pt-4 border-t border-[var(--vv-border)] flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[var(--vv-tint-weak)]/60 rounded-[14px] p-3.5 border border-[var(--vv-border)]">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/20 border border-sky-500/35 flex items-center justify-center text-sky-400 shrink-0">
+              <Scissors className="w-4 h-4" />
             </div>
-            <div className="text-2xl font-bold tabular-nums text-[var(--vv-text-primary)]">
-              {formatCurrencyIdr(calculation.total_cost_idr, language)}
-            </div>
-            {calculation.target_videos > 1 && (
-              <div className="text-[11px] text-[#7acaff] font-medium tabular-nums">
-                {isId
-                  ? `(Proyeksi: ${formatCurrencyIdr(calculation.one_video_total_cost_idr, language)} / 1 video × ${calculation.target_videos} video)`
-                  : `(Projection: ${formatCurrencyUsd(calculation.one_video_total_cost_usd, language)} / 1 video × ${calculation.target_videos} videos)`}
+            <div className="space-y-1">
+              <div className="text-xs font-bold text-[var(--vv-text-primary)] flex flex-wrap items-center gap-2">
+                <span>
+                  {isId
+                    ? 'Durasi Bersih 1 Video:'
+                    : '1 Video Net Duration:'}
+                </span>
+                <span className="font-mono px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30 text-[11px] font-bold">
+                  ⏱️ {formatDualDuration(cleanDurationSec, isId)}
+                </span>
+                {targetDurationSec > 0 && (
+                  <span className="font-mono px-2 py-0.5 rounded-full bg-[var(--vv-field)] text-[var(--vv-text-strong)] border border-[var(--vv-border-strong)] text-[11px] font-semibold">
+                    {isId
+                      ? `Target: ${targetDurationSec}s • Footage AI: ${cleanDurationSec}s [${
+                          durationDiff >= 0
+                            ? `+${durationDiff}s buffer editing`
+                            : `-${Math.abs(durationDiff)}s perlu tambahan`
+                        }]`
+                      : `Target: ${targetDurationSec}s • AI Footage: ${cleanDurationSec}s [${
+                          durationDiff >= 0
+                            ? `+${durationDiff}s editing buffer`
+                            : `-${Math.abs(durationDiff)}s needed`
+                        }]`}
+                  </span>
+                )}
+                {calculation.target_videos > 1 && (
+                  <span className="font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 text-[11px] font-semibold">
+                    {isId
+                      ? `Total ${calculation.target_videos} Video: ${formatDualDuration(totalCleanDurationSec, isId)}`
+                      : `Total ${calculation.target_videos} Videos: ${formatDualDuration(totalCleanDurationSec, isId)}`}
+                  </span>
+                )}
               </div>
-            )}
-            <div className="text-xs font-semibold tabular-nums text-[#0099ff]">
-              {formatCurrencyUsd(calculation.total_cost_usd, language)} &bull;{' '}
-              {calculation.total_credit !== null
-                ? `${calculation.total_credit.toLocaleString()} Credits`
-                : ''}
+
+              <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>
+                  {targetDurationSec > 0
+                    ? durationDiff > 0
+                      ? isId
+                        ? `Catatan Sineas AI: Kelebihan durasi (+${durationDiff}s) adalah hal wajar karena akan dipotong oleh editor di post-produksi agar setiap potongan adegan tepat tempo.`
+                        : `AI Filmmaker Note: Excess duration (+${durationDiff}s) is expected and ideal as it will be trimmed by the editor in post-production for optimal scene rhythm.`
+                      : durationDiff === 0
+                      ? isId
+                        ? 'Durasi footage AI tepat memenuhi target durasi rencana video Anda.'
+                        : 'AI footage duration exactly matches your target video plan.'
+                      : isId
+                      ? `Footage AI saat ini masih kurang ${Math.abs(durationDiff)}s dari target rencana. Anda dapat menambah adegan atau memperpanjang durasi shot.`
+                      : `AI footage is currently ${Math.abs(durationDiff)}s below target. You can add more shots or extend durations.`
+                    : isId
+                    ? `Daftar shot di bawah memproyeksikan durasi bersih 1 video. Anda dapat menentukan target durasi di Langkah 2 untuk melihat perbandingan buffer editing.`
+                    : `The shot list below projects clean duration for 1 video. Set a target in Step 2 to view editing buffer comparison.`}
+                </span>
+              </p>
             </div>
           </div>
 
           <button
             type="button"
-            onClick={() => handleAddAndOpenModal('text_to_video')}
-            className="vv-btn-accent px-5 py-2.5 text-xs font-semibold"
+            onClick={() => setActiveTab('setup')}
+            className="text-[11px] font-medium text-[#0099ff] hover:underline shrink-0 whitespace-nowrap self-start md:self-center"
           >
-            <Plus className="w-4 h-4" />
-            <span>{t.addStageBtn}</span>
+            {isId ? 'Atur target di Langkah 2 →' : 'Edit target in Step 2 →'}
           </button>
         </div>
       </div>
 
-      {/* Quick Category Filter & Quick Add Bar */}
-      <div
-        className={`${cardClass} rounded-[14px] p-3.5 flex flex-wrap items-center justify-between gap-3`}
-      >
-        {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setSelectedCategoryFilter('all')}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-              selectedCategoryFilter === 'all'
-                ? 'bg-[#0068ad] text-white'
-                : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
-            }`}
-          >
-            {isId ? `Semua (${items.length})` : `All (${items.length})`}
-          </button>
-          {ALL_CATEGORIES.map((cat) => {
-            const count = items.filter((i) => i.category === cat).length;
-            return (
+      {/* =====================================================================
+       * WORKFLOW DEPARTMENTS: Video, Gambar, Voice Over, Musik, & Semua
+       * ===================================================================== */}
+      <div className={`${cardClass} rounded-[16px] p-3.5 space-y-3`}>
+        {/* Tier 1: Sineas Department Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--vv-border)] pb-2.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              {
+                id: 'all' as DepartmentTab,
+                label: isId ? 'Semua Tahapan' : 'All Stages',
+                icon: Layers,
+                count: items.length,
+              },
+              {
+                id: 'video' as DepartmentTab,
+                label: isId ? 'Video & Animasi AI' : 'AI Video & Animation',
+                icon: Film,
+                count: items.filter((i) => VIDEO_CATEGORIES.includes(i.category)).length,
+              },
+              {
+                id: 'stills' as DepartmentTab,
+                label: isId ? 'Gambar & Konsep Visual' : 'Images & Visual Stills',
+                icon: Sparkles,
+                count: items.filter((i) => STILLS_CATEGORIES.includes(i.category)).length,
+              },
+              {
+                id: 'voiceover' as DepartmentTab,
+                label: isId ? 'Voice Over & Dialog' : 'Voice Over & Dialogue',
+                icon: Mic,
+                badgeText: isId ? 'Audio' : 'Audio',
+              },
+              {
+                id: 'music' as DepartmentTab,
+                label: isId ? 'Musik & Soundtrack' : 'Music & Soundtrack',
+                icon: Music,
+                badgeText: isId ? 'BGM' : 'BGM',
+              },
+            ].map((dept) => {
+              const Icon = dept.icon;
+              const isActive = activeDepartment === dept.id;
+              return (
+                <button
+                  key={dept.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveDepartment(dept.id);
+                    setSelectedCategoryFilter('all');
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-[#0068ad] text-white shadow-sm'
+                      : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)] hover:bg-[var(--vv-tint)]'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{dept.label}</span>
+                  {typeof dept.count === 'number' ? (
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-[var(--vv-field)] text-[var(--vv-text-subtle)]'
+                      }`}
+                    >
+                      {dept.count}
+                    </span>
+                  ) : dept.badgeText ? (
+                    <span
+                      className={`text-[9px] px-1.5 py-0.2 rounded-full uppercase tracking-wider font-bold ${
+                        isActive
+                          ? 'bg-white/20 text-white'
+                          : 'bg-sky-500/15 text-sky-400'
+                      }`}
+                    >
+                      {dept.badgeText}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="text-[11px] text-[var(--vv-text-subtle)] hidden lg:flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span>
+              {isId ? 'Tersinkronisasi 1 Video' : 'Synced for 1 Video'}
+            </span>
+          </div>
+        </div>
+
+        {/* Tier 2: Category Filter Pills & Quick Add Buttons (when on all, video, or stills) */}
+        {(activeDepartment === 'all' ||
+          activeDepartment === 'video' ||
+          activeDepartment === 'stills') && (
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
+            {/* Filter Pills */}
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
-                key={cat}
                 type="button"
-                onClick={() => setSelectedCategoryFilter(cat)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition flex items-center gap-1.5 ${
-                  selectedCategoryFilter === cat
+                onClick={() => setSelectedCategoryFilter('all')}
+                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
+                  selectedCategoryFilter === 'all'
                     ? 'bg-[#0068ad] text-white'
                     : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
                 }`}
               >
-                <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
-                {count > 0 && (
-                  <span className="font-mono text-[10px] opacity-80">
-                    ({count})
-                  </span>
-                )}
+                {isId ? 'Semua Subkategori' : 'All Subcategories'}
               </button>
-            );
-          })}
-        </div>
+              {(activeDepartment === 'video'
+                ? VIDEO_CATEGORIES
+                : activeDepartment === 'stills'
+                ? STILLS_CATEGORIES
+                : ALL_CATEGORIES
+              ).map((cat) => {
+                const count = items.filter((i) => i.category === cat).length;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter(cat)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${
+                      selectedCategoryFilter === cat
+                        ? 'bg-[#0068ad] text-white'
+                        : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
+                    }`}
+                  >
+                    <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
+                    {count > 0 && (
+                      <span className="font-mono text-[10px] opacity-80">
+                        ({count})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
-        {/* Quick Add by Category */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-[11px] text-[var(--vv-text-subtle)] mr-1 hidden xl:inline">
-            {isId ? 'Tambah Cepat:' : 'Quick Add:'}
-          </span>
-          {ALL_CATEGORIES.map((cat) => (
-            <button
-              key={`add_${cat}`}
-              type="button"
-              onClick={() => handleAddAndOpenModal(cat)}
-              className="vv-btn-secondary px-2.5 py-1 text-[11px]"
-              title={`${isId ? 'Tambah' : 'Add'} ${CATEGORY_LABELS[cat][language]}`}
-            >
-              <Plus className="w-3 h-3 text-[#0099ff]" />
-              <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
-            </button>
-          ))}
-        </div>
+            {/* Quick Add by Category */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] text-[var(--vv-text-subtle)] mr-1 hidden xl:inline">
+                {isId ? 'Tambah Cepat:' : 'Quick Add:'}
+              </span>
+              {(activeDepartment === 'video'
+                ? VIDEO_CATEGORIES
+                : activeDepartment === 'stills'
+                ? STILLS_CATEGORIES
+                : ALL_CATEGORIES
+              ).map((cat) => (
+                <button
+                  key={`add_${cat}`}
+                  type="button"
+                  onClick={() => handleAddAndOpenModal(cat)}
+                  className="vv-btn-secondary px-2.5 py-1 text-[11px]"
+                  title={`${isId ? 'Tambah' : 'Add'} ${CATEGORY_LABELS[cat][language]}`}
+                >
+                  <Plus className="w-3 h-3 text-[#0099ff]" />
+                  <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Voice Over AI Department Guide Panel */}
+      {activeDepartment === 'voiceover' && (
+        <div className={`${cardClass} rounded-[16px] p-6 space-y-5 border border-sky-500/30 bg-sky-950/10`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-sky-500/20 border border-sky-500/35 flex items-center justify-center text-sky-400 shrink-0">
+                <Mic className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[var(--vv-text-primary)]">
+                    {isId ? 'Departemen Voice Over & Sulih Suara AI' : 'AI Voice Over & Narration Department'}
+                  </h2>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">
+                    {isId ? 'Sinkronisasi Audio' : 'Audio Sync'}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--vv-text-muted)] mt-0.5">
+                  {isId
+                    ? 'Selaraskan naskah narasi & dialog karakter AI Anda langsung dengan durasi bersih video.'
+                    : 'Synchronize your narration scripts & AI character dialogues directly with the clean video duration.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveDepartment('video')}
+              className="vv-btn-secondary px-3.5 py-2 text-xs shrink-0 self-start sm:self-center"
+            >
+              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>{isId ? 'Kembali ke Adegan Video' : 'Back to Video Scenes'}</span>
+            </button>
+          </div>
+
+          {/* Live Voice Pacing Metric */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-sky-400" />
+                <span>{isId ? 'Durasi Bersih Video' : 'Clean Video Duration'}</span>
+              </span>
+              <div className="text-lg font-bold text-sky-400 tabular-nums">
+                {formatDualDuration(cleanDurationSec, isId)}
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? 'Patokan total panjang timeline visual' : 'Visual timeline length reference'}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Volume2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{isId ? 'Estimasi Panjang Naskah' : 'Estimated Script Length'}</span>
+              </span>
+              <div className="text-lg font-bold text-emerald-400 tabular-nums">
+                &plusmn; {cleanDurationSec > 0 ? Math.round((cleanDurationSec / 60) * 135) : 0} {isId ? 'Kata' : 'Words'}
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? 'Kecepatan normal sineas (~130-150 kata/menit)' : 'Standard pacing (~130-150 words/min)'}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Scissors className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isId ? 'Buffer Waktu Jeda / Hening' : 'Pause & Breath Buffer'}</span>
+              </span>
+              <div className="text-lg font-bold text-amber-400 tabular-nums">
+                &plusmn; {cleanDurationSec > 0 ? Math.max(2, Math.round(cleanDurationSec * 0.15)) : 0}s
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? 'Ruang jeda antar dialog agar tidak terburu-buru' : 'Breathing room between dialog lines'}
+              </div>
+            </div>
+          </div>
+
+          {/* Tips Sineas AI & Tools Rekomendasi */}
+          <div className="p-4 rounded-[12px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] space-y-2 text-xs">
+            <div className="flex items-center gap-2 font-semibold text-[var(--vv-text-strong)]">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>{isId ? 'Panduan Sineas AI: Alur Kerja Voice Over & Lipsync' : 'AI Filmmaker Guide: Voice Over & Lipsync Workflow'}</span>
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Higgsfield mengoptimalkan proses visual dan gerakan video. Untuk suara narator atau karakter, generate suara melalui tool TTS AI (seperti ElevenLabs, Cartesia, atau OpenAI TTS) sebelum atau sesudah video dibuat. Pastikan total durasi audio tidak melebihi Durasi Bersih video di atas agar ritme adegan selaras.'
+                : 'Higgsfield excels at visual generation. For character speech or voiceovers, generate speech using AI TTS tools (such as ElevenLabs, Cartesia, or OpenAI TTS) matching the Clean Duration above so your audio pacing aligns seamlessly.'}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Music & Soundtrack AI Department Guide Panel */}
+      {activeDepartment === 'music' && (
+        <div className={`${cardClass} rounded-[16px] p-6 space-y-5 border border-purple-500/30 bg-purple-950/10`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-purple-500/20 border border-purple-500/35 flex items-center justify-center text-purple-400 shrink-0">
+                <Music className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-[var(--vv-text-primary)]">
+                    {isId ? 'Departemen Musik & Audio Latar (BGM)' : 'Music & Background Audio (BGM) Department'}
+                  </h2>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
+                    {isId ? 'Desain Suara' : 'Sound Design'}
+                  </span>
+                </div>
+                <p className="text-xs text-[var(--vv-text-muted)] mt-0.5">
+                  {isId
+                    ? 'Atur ritme musik pengiring agar selaras dengan pergantian adegan video AI Anda.'
+                    : 'Pace your background soundtrack to match the rhythm of your AI video scene cuts.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setActiveDepartment('video')}
+              className="vv-btn-secondary px-3.5 py-2 text-xs shrink-0 self-start sm:self-center"
+            >
+              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
+              <span>{isId ? 'Kembali ke Adegan Video' : 'Back to Video Scenes'}</span>
+            </button>
+          </div>
+
+          {/* Live Music Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-purple-400" />
+                <span>{isId ? 'Durasi Bersih Video' : 'Clean Video Duration'}</span>
+              </span>
+              <div className="text-lg font-bold text-purple-400 tabular-nums">
+                {formatDualDuration(cleanDurationSec, isId)}
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? 'Panjang adegan visual pokok' : 'Core visual scenes length'}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-pink-400" />
+                <span>{isId ? 'Durasi Musik Rekomendasi' : 'Recommended Music Track'}</span>
+              </span>
+              <div className="text-lg font-bold text-pink-400 tabular-nums">
+                {cleanDurationSec > 0 ? formatDualDuration(cleanDurationSec + 8, isId) : (isId ? '0 detik' : '0 sec')}
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? '+8s buffer untuk fade-out halus' : '+8s buffer for smooth fade-out'}
+              </div>
+            </div>
+
+            <div className="vv-card-quiet p-3.5 rounded-[12px] space-y-1">
+              <span className="text-[11px] text-[var(--vv-text-muted)] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isId ? 'Tempo / Mood Ketukan' : 'Recommended Beat Tempo'}</span>
+              </span>
+              <div className="text-lg font-bold text-amber-400 tabular-nums">
+                95 - 120 BPM
+              </div>
+              <div className="text-[10px] text-[var(--vv-text-subtle)]">
+                {isId ? 'Ritme ideal untuk pergantian shot 3-5 detik' : 'Ideal tempo for 3-5s shot cuts'}
+              </div>
+            </div>
+          </div>
+
+          {/* Tips Musik Sineas AI */}
+          <div className="p-4 rounded-[12px] bg-[var(--vv-tint-weak)] border border-[var(--vv-border)] space-y-2 text-xs">
+            <div className="flex items-center gap-2 font-semibold text-[var(--vv-text-strong)]">
+              <Sparkles className="w-4 h-4 text-purple-400" />
+              <span>{isId ? 'Panduan Sineas AI: Sinkronisasi Beat Musik & Shot Cut' : 'AI Filmmaker Guide: Music Beat & Shot Cut Sync'}</span>
+            </div>
+            <p className="text-[var(--vv-text-muted)] leading-relaxed">
+              {isId
+                ? 'Buat musik latar menggunakan generator musik AI (seperti Suno AI, Udio, atau Soundraw) berdurasi sekitar ' + formatDualDuration(cleanDurationSec + 8, isId) + '. Potong setiap shot video pada ketukan downbeat musik untuk transisi visual yang dinamis dan berenergi tinggi.'
+                : 'Create background music using AI music generators (e.g. Suno AI, Udio, Soundraw) lasting around ' + formatDualDuration(cleanDurationSec + 8, isId) + '. Cut each video shot on music downbeats for high-energy visual flow.'}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* =====================================================================
        * TIER 2: CLEAN, SCANNABLE SCENE ROW CARDS (No 11-Field Form Overload!)
@@ -418,6 +867,19 @@ export const ProductionPlannerView: React.FC = () => {
                             <span>
                               {item.duration_seconds} {isId ? 'detik' : 'sec'}
                             </span>
+                            {(() => {
+                              const isPrimary =
+                                typeof item.is_primary_shot === 'boolean'
+                                  ? item.is_primary_shot
+                                  : (item.category === 'text_to_video' ||
+                                      item.category === 'image_to_video');
+                              return isPrimary ? (
+                                <span className="text-emerald-400 font-semibold">
+                                  (⏱️ +{item.quantity * item.duration_seconds}s{' '}
+                                  {isId ? 'ke durasi video' : 'to video length'})
+                                </span>
+                              ) : null;
+                            })()}
                           </>
                         )}
                       </div>
@@ -454,7 +916,11 @@ export const ProductionPlannerView: React.FC = () => {
                           >
                             <div className="text-xs text-[var(--vv-text-strong)] tabular-nums">
                               <strong>{item.quantity}</strong>{' '}
-                              {unitNoun(item.quantity_type)} &bull;{' '}
+                              {unitNoun(item.quantity_type)}{' '}
+                              <span className="text-[10px] text-emerald-400 font-medium">
+                                ({isId ? '1 video' : '1 video'})
+                              </span>{' '}
+                              &bull;{' '}
                               <span className="text-[#0099ff] font-semibold">
                                 {isId ? 'Total Buat:' : 'Total Tries:'}{' '}
                                 {itemTotalGenerations}x
@@ -464,6 +930,15 @@ export const ProductionPlannerView: React.FC = () => {
                               {isId
                                 ? `(dikalikan ${cadanganCount} cadangan Langkah 2)`
                                 : `(multiplied by ${cadanganCount} Step 2 reserve)`}
+                              {calculation.target_videos > 1 && (
+                                <span className="text-sky-400 font-semibold block mt-0.5">
+                                  &bull; {item.quantity * calculation.target_videos}{' '}
+                                  {unitNoun(item.quantity_type)}{' '}
+                                  {isId
+                                    ? `total (${calculation.target_videos} video)`
+                                    : `total (${calculation.target_videos} videos)`}
+                                </span>
+                              )}
                             </div>
                           </button>
                           <InfoTip align="right" width={270}>
@@ -471,7 +946,7 @@ export const ProductionPlannerView: React.FC = () => {
                               <>
                                 <strong>Dari mana angka ini?</strong>
                                 <br />
-                                Kebutuhan: {item.quantity} {unitNoun(item.quantity_type)}.
+                                Kebutuhan: {item.quantity} {unitNoun(item.quantity_type)} (untuk 1 video).
                                 <br />
                                 Dikalikan Cadangan Langkah 2 ({cadanganCount} cadangan) ={' '}
                                 {itemTotalGenerations} kali buat.
@@ -484,7 +959,7 @@ export const ProductionPlannerView: React.FC = () => {
                               <>
                                 <strong>Where does this count come from?</strong>
                                 <br />
-                                Requirement: {item.quantity} {unitNoun(item.quantity_type)}.
+                                Requirement: {item.quantity} {unitNoun(item.quantity_type)} (for 1 video).
                                 <br />
                                 Multiplied by Step 2 Reserve ({cadanganCount} reserve) ={' '}
                                 {itemTotalGenerations} generations.
@@ -518,8 +993,10 @@ export const ProductionPlannerView: React.FC = () => {
                           ? ` • ${calcRow?.total_credit} Credit`
                           : ''}
                         {calculation.target_videos > 1 && (
-                          <span className="text-emerald-400 font-semibold">
-                            {' '}• {isId ? 'per 1 video' : 'per 1 video'}
+                          <span className="text-emerald-400 font-semibold block text-[10px]">
+                            {isId
+                              ? `per 1 video (×${calculation.target_videos} total)`
+                              : `per 1 video (×${calculation.target_videos} total)`}
                           </span>
                         )}
                       </div>
@@ -566,46 +1043,147 @@ export const ProductionPlannerView: React.FC = () => {
         </div>
       )}
 
-      {/* Rekapitulasi Anggaran Berjalan (Running Total Breakdown) */}
+      {/* Rekapitulasi Anggaran & Durasi Berjalan (Running Total Breakdown) */}
       {items.length > 0 && (
-        <div className="vv-card p-4 sm:p-5 border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-md rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xs uppercase tracking-wider text-emerald-400 font-bold flex items-center gap-2">
-                <span>{isId ? 'Rekapitulasi Anggaran Berjalan' : 'Running Total Breakdown'}</span>
-                {calculation.target_videos > 1 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">
-                    {calculation.target_videos} {isId ? 'Video' : 'Videos'}
-                  </span>
-                )}
+        <div className="vv-card p-4 sm:p-5 border border-emerald-500/30 bg-emerald-950/20 backdrop-blur-md rounded-2xl space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center shrink-0 text-emerald-400">
+                <Sparkles className="w-5 h-5" />
               </div>
-              <div className="text-sm text-[var(--vv-text-primary)] font-medium mt-0.5">
-                {calculation.target_videos > 1 ? (
+              <div>
+                <div className="text-xs uppercase tracking-wider text-emerald-400 font-bold flex flex-wrap items-center gap-2">
                   <span>
-                    {isId ? 'Subtotal 1 Video' : '1 Video Subtotal'} (<strong>{formatCurrencyIdr(calculation.one_video_total_cost_idr, language)}</strong> / {formatCurrencyUsd(calculation.one_video_total_cost_usd, language)}) &times; <strong>{calculation.target_videos} Video</strong>
+                    {isId
+                      ? 'Rekapitulasi Anggaran & Durasi Berjalan'
+                      : 'Running Budget & Duration Breakdown'}
                   </span>
-                ) : (
-                  <span>{isId ? 'Total Anggaran 1 Video Penuh' : 'Total 1 Video Budget'}</span>
-                )}
+                  {calculation.target_videos > 1 && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-medium">
+                      {calculation.target_videos} {isId ? 'Video' : 'Videos'}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm text-[var(--vv-text-primary)] font-medium mt-0.5">
+                  {calculation.target_videos > 1 ? (
+                    <span>
+                      {isId ? 'Subtotal 1 Video' : '1 Video Subtotal'} (
+                      <strong>
+                        {formatCurrencyIdr(
+                          calculation.one_video_total_cost_idr,
+                          language
+                        )}
+                      </strong>{' '}
+                      /{' '}
+                      {formatCurrencyUsd(
+                        calculation.one_video_total_cost_usd,
+                        language
+                      )}
+                      ) &times;{' '}
+                      <strong>{calculation.target_videos} Video</strong>
+                    </span>
+                  ) : (
+                    <span>
+                      {isId
+                        ? 'Total Anggaran 1 Video Penuh'
+                        : 'Total 1 Video Budget'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Duration & Shot Chips */}
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-sky-400" />
+                    <span>
+                      {isId ? 'Durasi Bersih 1 Video:' : 'Clean Duration (1 Video):'}{' '}
+                      <strong className="text-sky-200">
+                        {formatDualDuration(cleanDurationSec, isId)}
+                      </strong>
+                    </span>
+                  </span>
+
+                  {calculation.target_videos > 1 && (
+                    <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 flex items-center gap-1.5">
+                      <Film className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>
+                        {isId
+                          ? `Total Durasi ${calculation.target_videos} Video:`
+                          : `Total Duration (${calculation.target_videos} Videos):`}{' '}
+                        <strong className="text-indigo-200">
+                          {formatDualDuration(totalCleanDurationSec, isId)}
+                        </strong>
+                      </span>
+                    </span>
+                  )}
+
+                  <span className="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] flex items-center gap-1">
+                    <span>🎬</span>
+                    <span>
+                      {calculation.one_video_primary_shot_count}{' '}
+                      {isId ? 'Shot Utama' : 'Primary Shots'}
+                      {calculation.target_videos > 1 &&
+                        ` (${calculation.total_primary_shots} total)`}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-left md:text-right shrink-0">
+              <div className="text-xs text-[var(--vv-text-muted)]">
+                {calculation.target_videos > 1
+                  ? isId
+                    ? `Total Anggaran (${calculation.target_videos} Video)`
+                    : `Grand Total Budget (${calculation.target_videos} Videos)`
+                  : isId
+                  ? 'Total Anggaran Seluruh Video'
+                  : 'Grand Total Budget'}
+              </div>
+              <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-400">
+                {formatCurrencyIdr(calculation.total_cost_idr, language)}
+              </div>
+              <div className="text-xs text-[var(--vv-text-muted)] tabular-nums">
+                {formatCurrencyUsd(calculation.total_cost_usd, language)}
+                {calculation.total_credit !== null
+                  ? ` • ${calculation.total_credit.toLocaleString()} Credits`
+                  : ''}
+                {' '}&bull; {calculation.budgeted_generations}{' '}
+                {isId ? 'kali coba' : 'runs'}
               </div>
             </div>
           </div>
 
-          <div className="text-left md:text-right shrink-0">
-            <div className="text-xs text-[var(--vv-text-muted)]">
-              {isId ? 'Total Anggaran Seluruh Video' : 'Grand Total Budget'}
+          {/* Sineas UX Message: Buffer Editing & Potongan Post-Produksi */}
+          <div className="pt-3 border-t border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-start sm:items-center gap-2 text-[var(--vv-text-muted)] leading-relaxed">
+              <Scissors className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5 sm:mt-0" />
+              <span>
+                {targetDurationSec > 0
+                  ? isId
+                    ? `Komparasi Sineas: Footage AI (${cleanDurationSec}s) vs Target Rencana (${targetDurationSec}s). Kelebihan durasi ${
+                        durationDiff > 0 ? `(+${durationDiff}s)` : '(0s)'
+                      } adalah hal wajar karena akan dipotong & diselaraskan oleh editor di post-produksi agar ritme video pas.`
+                    : `Filmmaker Comparison: AI Footage (${cleanDurationSec}s) vs Target (${targetDurationSec}s). Excess duration ${
+                        durationDiff > 0 ? `(+${durationDiff}s)` : '(0s)'
+                      } is normal and intended to be trimmed by editors in post-production for optimal pacing.`
+                  : isId
+                  ? `Footage AI memproyeksikan ${formatDualDuration(
+                      cleanDurationSec,
+                      isId
+                    )} per video. Seluruh klip dapat dipotong dan disesuaikan oleh editor pada tahap pasca-produksi.`
+                  : `AI footage projects ${formatDualDuration(
+                      cleanDurationSec,
+                      isId
+                    )} per video. Clips can be trimmed and adjusted by editors in post-production.`}
+              </span>
             </div>
-            <div className="text-xl sm:text-2xl font-black tabular-nums text-emerald-400">
-              {formatCurrencyIdr(calculation.total_cost_idr, language)}
-            </div>
-            <div className="text-xs text-[var(--vv-text-muted)] tabular-nums">
-              {formatCurrencyUsd(calculation.total_cost_usd, language)}
-              {calculation.total_credit !== null ? ` • ${calculation.total_credit.toLocaleString()} Credits` : ''}
-              {' '}&bull; {calculation.budgeted_generations} {isId ? 'kali coba' : 'runs'}
-            </div>
+
+            {targetDurationSec > 0 && durationDiff > 0 && (
+              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold shrink-0 self-start sm:self-center">
+                +{durationDiff}s buffer editing
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -1020,6 +1598,28 @@ export const ProductionPlannerView: React.FC = () => {
                                 ? `Ditagih per kali buat${unitPriceText ? ` • ${unitPriceText}` : ''}`
                                 : `Charged per generation${unitPriceText ? ` • ${unitPriceText}` : ''}`}
                             </span>
+                            {(() => {
+                              const isPrimary =
+                                typeof item.is_primary_shot === 'boolean'
+                                  ? item.is_primary_shot
+                                  : (item.category === 'text_to_video' ||
+                                      item.category === 'image_to_video');
+                              return isPrimary ? (
+                                <span className="block text-[10px] text-emerald-400 font-semibold mt-1 text-right">
+                                  ⏱️{' '}
+                                  {isId
+                                    ? `Berkontribusi +${item.quantity * item.duration_seconds}s ke Durasi Bersih 1 video`
+                                    : `Contributes +${item.quantity * item.duration_seconds}s to 1-video Clean Duration`}
+                                </span>
+                              ) : (
+                                <span className="block text-[10px] text-indigo-300 font-medium mt-1 text-right">
+                                  🛠️{' '}
+                                  {isId
+                                    ? 'Aset Pendukung tidak menambah Durasi Bersih'
+                                    : 'Supporting asset does not add to Clean Duration'}
+                                </span>
+                              );
+                            })()}
                           </div>
                         ) : (
                           <div className="flex flex-col justify-center gap-1.5 pt-1 sm:pt-4">

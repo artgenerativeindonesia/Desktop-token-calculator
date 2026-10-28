@@ -12,6 +12,46 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.10.0] - Tahap 2: Kalkulator Durasi Bersih Video (Clean Duration) & Komparasi Buffer Editing Post-Produksi
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.10.0`
+
+### Ditambahkan (Added)
+1. **Mesin Kalkulasi Durasi Bersih 1 Video Murni (`calculationEngine.ts`)**:
+   - Menghitung akumulasi durasi detik murni video dari seluruh baris pekerjaan **Shot Utama** (`is_primary_shot: true` pada kategori video `text_to_video`, `image_to_video`, `video_to_video`).
+   - **Pengecualian Mutlak (Strict Exclusion)**:
+     - Mutlak **mengecualikan Upscale Video** dan Upscale Image agar tidak menduplikasi panjang durasi video asli.
+     - Mutlak **mengecualikan jatah cadangan percobaan** (*attempts / reserve multiplier*). Durasi hanya menghitung kebutuhan dasar storyboard (`quantity × duration_seconds`).
+2. **Format Durasi Sinematik Ganda (`formatDurationDual`)**:
+   - Menyajikan format menit-detik beserta total detik dan timecode digital (contoh: `1 Menit 30 Detik (90s / 01:30)` atau `45 Detik (45s / 00:45)`).
+   - Menghitung durasi proporsional multi-video (`total_duration_seconds` & `total_duration_formatted`) jika target video lebih dari 1 (misal 5 video × 90s = 7m 30s).
+3. **Logika Perfilman: Komparasi Target Rencana vs Durasi Mentah Shot AI & Buffer Editing**:
+   - Membandingkan **Target Rencana Video Jadi** (Langkah 2) dengan **Durasi Mentah Shot AI** (Langkah 3).
+   - Menghitung **Buffer Editing Post-Produksi** (`editing_buffer_seconds`):
+     - Durasi Shot AI wajar dan dianjurkan lebih panjang dari Target Rencana karena klip mentah AI disiapkan dengan *handles* (ruang potong awal/akhir) untuk dipotong, ditata ritmenya, dan disinkronkan dengan musik oleh video editor.
+     - **Status Aman (Hijau Emerald)**: `✅ Aman (+Xs buffer editing untuk editor video)`.
+     - **Status Kurang (Kuning Amber)**: `⚠️ Kurang (-Xs dari target rencana)` dengan notifikasi informatif `INSUFFICIENT_SHOT_DURATION` yang menyarankan penambahan shot.
+4. **Kartu Komparasi Durasi & Visual Trimming Ratio di Langkah 4 (`BudgetSummaryView.tsx`)**:
+   - Menampilkan kartu visual berdampingan antara target video jadi vs durasi mentah shot AI lengkap dengan visual progress gauge ratio.
+   - Menyajikan akumulasi durasi seluruh proyek untuk multi-video.
+5. **Badge Durasi & Navigasi Departemen Sineas di Langkah 3 (`ProductionPlannerView.tsx`)**:
+   - Badge durasi bersih di Hero Header Langkah 3.
+   - Bilah komparasi interaktif Target vs Footage AI beserta running total breakdown chip.
+   - Navigasi departemen produksi (Video & Animasi, Gambar & Konsep, Voice Over, Musik Latar).
+6. **Integrasi Transparan pada Lembar Cetak PDF (`pdfReportBuilder.ts`)**:
+   - Tabel Asumsi memuat perbandingan Target Durasi Video Jadi vs Total Durasi Mentah Shot AI vs Total Durasi Seluruh Proyek.
+   - Kotak catatan resmi menyertakan klausul durasi bersih dan penjelasan buffer editing bagi editor video.
+   - Optimasi CSS cetak (`page-break-inside: avoid`, repeat header table).
+
+### Diperbaiki (Fixed)
+1. **Presisi Matematika Biaya per Menit Multi-Video (`calculationEngine.ts`)**:
+   - Memperbaiki rumus biaya per menit agar tidak berlipat ganda pada multi-video:
+     $$B_{\text{minute}} = \frac{B_{\text{one\_video}}}{M}$$
+     sehingga biaya per menit tetap adil dan konsisten baik memproduksi 1 video maupun 10 video.
+   - Menambahkan metrik presisi *Biaya per Menit Rekaman Mentah AI* (`cost_per_raw_minute_usd` & `cost_per_raw_minute_idr`) berbasis `Decimal.js`.
+
+---
+
 ## Versi [1.9.0] - Pembaruan Terminologi Sineas AI ("Shot / Gambar") & Fitur Klasifikasi Shot Utama vs Aset Pendukung
 - **Tanggal Perubahan**: 28 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.9.0`

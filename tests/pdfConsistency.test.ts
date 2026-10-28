@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSafePdfFilename,
+  formatDurationMmSs,
   formatIdr,
   formatUsd,
   generatePdfReportHtml,
@@ -139,5 +140,138 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
 
     expect(htmlEn).toContain('Primary Shot');
     expect(htmlEn).toContain('Supporting Asset');
+  });
+
+  it('v2.0.0 Tahap 2: Helper formatDurationMmSs memformat detik ke mm:ss secara presisi', () => {
+    expect(formatDurationMmSs(0)).toBe('00:00');
+    expect(formatDurationMmSs(60)).toBe('01:00');
+    expect(formatDurationMmSs(90)).toBe('01:30');
+    expect(formatDurationMmSs(150)).toBe('02:30');
+    expect(formatDurationMmSs(450)).toBe('07:30');
+    expect(formatDurationMmSs(3600)).toBe('60:00');
+  });
+
+  it('v2.0.0 Tahap 2: Laporan PDF menyajikan Target Durasi Video Jadi, Durasi Mentah Shot, Multi-Video Total, dan Disclaimer Ruang Potong', () => {
+    const project = createPrdSyntheticTestProject();
+    project.assumptions.target_videos = 5;
+    project.assumptions.final_duration_minutes = 1.0; // 60 detik target post-produksi
+
+    // 1 Video: 18 shots @ 5s = 90s mentah
+    project.items = [
+      {
+        item_id: 'shot_18x5s',
+        category: 'text_to_video',
+        label: '18 Shot Utama Video Murni',
+        quantity: 18,
+        quantity_type: 'shot',
+        duration_seconds: 5,
+        attempts_per_item: 2,
+        is_primary_shot: true,
+        model_selection: {
+          provider: 'Higgsfield',
+          model_id: 'kling-video/v3.0',
+          model_name: 'Kling Video v3.0',
+          category: 'text_to_video',
+          parameter_values: { resolution: '720p_std' },
+        },
+        pricing: {
+          pricing_unit: 'per_second',
+          price_value: 0.07,
+          currency: 'USD',
+          credit_cost: 1.4,
+          credit_unit: 'per_second',
+          source_name: 'Higgsfield Pricing',
+          source_url: 'https://higgsfield.ai',
+          retrieved_at: '2026-10-28T00:00:00Z',
+          status: 'verified',
+        },
+      },
+      // Item pendukung Upscale Video (TIDAK boleh dihitung ke durasi bersih/mentah video)
+      {
+        item_id: 'upscale_video_item',
+        category: 'upscale_video',
+        label: 'Upscale 4K Master Video',
+        quantity: 1,
+        quantity_type: 'shot',
+        duration_seconds: 60,
+        attempts_per_item: 1,
+        is_primary_shot: false,
+        model_selection: {
+          provider: 'Higgsfield',
+          model_id: 'topaz/video-ai-pro',
+          model_name: 'Topaz Video AI Pro',
+          category: 'upscale_video',
+          parameter_values: { scale: '4k' },
+        },
+        pricing: {
+          pricing_unit: 'per_second',
+          price_value: 0.1,
+          currency: 'USD',
+          credit_cost: 2.0,
+          credit_unit: 'per_second',
+          source_name: 'Higgsfield Pricing',
+          source_url: 'https://higgsfield.ai',
+          retrieved_at: '2026-10-28T00:00:00Z',
+          status: 'verified',
+        },
+      },
+    ];
+
+    const { html: htmlId } = generatePdfReportHtml(project, 'id');
+    const { html: htmlEn } = generatePdfReportHtml(project, 'en');
+
+    // 1. Target Durasi Video Jadi (Post-Produksi): "60 Detik (01:00)"
+    expect(htmlId).toContain('Target Durasi Bersih Video Jadi (Post-Produksi)');
+    expect(htmlId).toContain('60 Detik');
+    expect(htmlId).toContain('(01:00)');
+
+    expect(htmlEn).toContain('Target Net Video Duration (Post-Production)');
+    expect(htmlEn).toContain('60 Seconds');
+    expect(htmlEn).toContain('(01:00)');
+
+    // 2. Total Durasi Mentah Shot AI: "90 Detik (01:30 / 90s) • Tersedia +30s buffer post-produksi"
+    // (Upscale 60s TIDAK dihitung, attempts 2x TIDAK dihitung)
+    expect(htmlId).toContain('Total Durasi Mentah Shot AI');
+    expect(htmlId).toContain('90 Detik');
+    expect(htmlId).toContain('(01:30 / 90s)');
+    expect(htmlId).toContain('Tersedia +30s buffer post-produksi');
+
+    expect(htmlEn).toContain('Total Raw AI Shot Duration');
+    expect(htmlEn).toContain('90 Seconds');
+    expect(htmlEn).toContain('(01:30 / 90s)');
+    expect(htmlEn).toContain('+30s post-production buffer available');
+
+    // 3. Total Durasi Seluruh Proyek (multi-video = 5): "450 Detik (07:30 untuk 5 Video)"
+    expect(htmlId).toContain('Total Durasi Seluruh Proyek');
+    expect(htmlId).toContain('450 Detik');
+    expect(htmlId).toContain('(07:30 untuk 5 Video)');
+
+    expect(htmlEn).toContain('Total Project Duration');
+    expect(htmlEn).toContain('450 Seconds');
+    expect(htmlEn).toContain('(07:30 for 5 Videos)');
+
+    // 4. Kotak Disclaimer & Catatan Resmi memuat penegasan Upscale & Jatah Cadangan & Ruang Potong
+    expect(htmlId).toContain('Ketentuan Durasi Bersih &amp; Ruang Potong Video Editor:');
+    expect(htmlId).toContain('Upscale Video');
+    expect(htmlId).toContain('Jatah Cadangan');
+    expect(htmlId).toContain('TIDAK dihitung');
+    expect(htmlId).toContain('ruang potong (safety buffer)');
+    expect(htmlId).toContain('video editor');
+
+    expect(htmlEn).toContain('Clean Video Duration &amp; Post-Production Trimming Notice:');
+    expect(htmlEn).toContain('Upscale Video');
+    expect(htmlEn).toContain('Reserve Generations');
+    expect(htmlEn).toContain('NOT counted');
+    expect(htmlEn).toContain('cutting room (safety buffer)');
+    expect(htmlEn).toContain('video editors');
+
+    // 5. CSS Tahan Cetak & Page-break
+    expect(htmlId).toContain('@page {');
+    expect(htmlId).toContain('size: A4 portrait;');
+    expect(htmlId).toContain('break-after: avoid;');
+    expect(htmlId).toContain('thead {');
+    expect(htmlId).toContain('display: table-header-group;');
+    expect(htmlId).toContain('-webkit-print-color-adjust: exact;');
+    expect(htmlId).toContain('break-inside: avoid;');
   });
 });

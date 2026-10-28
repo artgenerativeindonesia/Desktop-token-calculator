@@ -4,6 +4,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.isDefaultPrimaryShot = isDefaultPrimaryShot;
+exports.formatDurationDual = formatDurationDual;
+exports.formatDurationDualPair = formatDurationDualPair;
+exports.formatEditingBuffer = formatEditingBuffer;
+exports.formatEditingBufferPair = formatEditingBufferPair;
+exports.isEligibleDurationClip = isEligibleDurationClip;
 exports.calculateBidirectionalReserve = calculateBidirectionalReserve;
 exports.calculateProjectBudget = calculateProjectBudget;
 exports.createProductionItemFromCatalog = createProductionItemFromCatalog;
@@ -30,6 +35,110 @@ const ALL_CATEGORIES = [
  */
 function isDefaultPrimaryShot(category) {
     return category === 'text_to_video' || category === 'image_to_video';
+}
+/**
+ * Format durasi ganda dalam bahasa Indonesia atau Inggris:
+ * Contoh: "1 Menit 30 Detik (90s / 01:30)" atau "45 Detik (45s / 00:45)"
+ */
+function formatDurationDual(seconds, lang = 'id') {
+    const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
+    const isId = lang === 'id';
+    // Pembulatan/tampilan desimal untuk total detik jika ada pecahan
+    const displaySecTotal = Number.isInteger(safeSeconds)
+        ? safeSeconds.toString()
+        : safeSeconds.toFixed(1).replace(/\.0$/, '');
+    const totalWholeSecs = Math.floor(safeSeconds);
+    const hours = Math.floor(totalWholeSecs / 3600);
+    const minutes = Math.floor((totalWholeSecs % 3600) / 60);
+    const remainingSecs = safeSeconds - hours * 3600 - minutes * 60;
+    const remSecInt = Math.floor(remainingSecs);
+    const remSecStr = Number.isInteger(remainingSecs)
+        ? remainingSecs.toString()
+        : remainingSecs.toFixed(1).replace(/\.0$/, '');
+    // Digital timecode format (mm:ss or hh:mm:ss)
+    const mm = String(minutes).padStart(2, '0');
+    const ss = String(remSecInt).padStart(2, '0');
+    const timecode = hours > 0 ? `${String(hours).padStart(2, '0')}:${mm}:${ss}` : `${mm}:${ss}`;
+    let naturalText = '';
+    if (hours > 0) {
+        const hrWord = isId ? 'Jam' : hours > 1 ? 'Hours' : 'Hour';
+        const minWord = isId ? 'Menit' : minutes > 1 ? 'Minutes' : 'Minute';
+        const secWord = isId ? 'Detik' : remainingSecs > 1 ? 'Seconds' : 'Second';
+        if (minutes > 0 && remainingSecs > 0) {
+            naturalText = `${hours} ${hrWord} ${minutes} ${minWord} ${remSecStr} ${secWord}`;
+        }
+        else if (minutes > 0) {
+            naturalText = `${hours} ${hrWord} ${minutes} ${minWord}`;
+        }
+        else if (remainingSecs > 0) {
+            naturalText = `${hours} ${hrWord} ${remSecStr} ${secWord}`;
+        }
+        else {
+            naturalText = `${hours} ${hrWord}`;
+        }
+    }
+    else if (minutes > 0) {
+        const minWord = isId ? 'Menit' : minutes > 1 ? 'Minutes' : 'Minute';
+        const secWord = isId ? 'Detik' : remainingSecs > 1 ? 'Seconds' : 'Second';
+        if (remainingSecs > 0) {
+            naturalText = `${minutes} ${minWord} ${remSecStr} ${secWord}`;
+        }
+        else {
+            naturalText = `${minutes} ${minWord}`;
+        }
+    }
+    else {
+        const secWord = isId ? 'Detik' : remainingSecs === 1 ? 'Second' : 'Seconds';
+        naturalText = `${remSecStr} ${secWord}`;
+    }
+    return `${naturalText} (${displaySecTotal}s / ${timecode})`;
+}
+/**
+ * Mengembalikan pasangan teks terformat untuk ID dan EN secara simultan.
+ */
+function formatDurationDualPair(seconds) {
+    return {
+        id: formatDurationDual(seconds, 'id'),
+        en: formatDurationDual(seconds, 'en'),
+    };
+}
+/**
+ * Format editing buffer (selisih durasi terhadap target):
+ * Positif (+): Surplus footage untuk dipotong oleh video editor (handles/trim)
+ * Negatif (-): Kekurangan footage dari target rencana
+ */
+function formatEditingBuffer(bufferSeconds, lang = 'id') {
+    if (bufferSeconds === 0) {
+        return formatDurationDual(0, lang);
+    }
+    const isPositive = bufferSeconds > 0;
+    const absFormatted = formatDurationDual(Math.abs(bufferSeconds), lang);
+    return isPositive ? `+${absFormatted}` : `-${absFormatted}`;
+}
+function formatEditingBufferPair(bufferSeconds) {
+    return {
+        id: formatEditingBuffer(bufferSeconds, 'id'),
+        en: formatEditingBuffer(bufferSeconds, 'en'),
+    };
+}
+/**
+ * Menentukan apakah suatu baris pekerjaan dihitung ke dalam Durasi Bersih Video.
+ * Aturan Ketat:
+ * 1. Kategori HANYA klip video pokok: text_to_video, image_to_video, atau video_to_video.
+ * 2. Status pekerjaan WAJIB Shot Utama (is_primary_shot === true).
+ * 3. MUTLAK MENGECUALIKAN upscale_video, upscale_image, text_to_image, dan image_to_image.
+ */
+function isEligibleDurationClip(item) {
+    const isVideoCategory = item.category === 'text_to_video' ||
+        item.category === 'image_to_video' ||
+        item.category === 'video_to_video';
+    if (!isVideoCategory) {
+        return false;
+    }
+    const isPrimary = typeof item.is_primary_shot === 'boolean'
+        ? item.is_primary_shot
+        : isDefaultPrimaryShot(item.category);
+    return isPrimary === true;
 }
 /**
  * Sinkronisasi 2 Arah (Bidirectional) antara Persentase Cadangan (R)
@@ -206,6 +315,8 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     let incompleteItemCount = 0;
     let oneVideoPrimaryShotCount = 0;
     let oneVideoSupportingAssetCount = 0;
+    let sumOneVideoDurationDec = new decimal_js_1.default(0);
+    let sumOneVideoRawDurationDec = new decimal_js_1.default(0);
     const itemResults = [];
     for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -223,6 +334,16 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         const gPlanned = itemPlannedGenerations[i];
         const gReserve = itemReserveGenerations[i];
         const gBudget = gPlanned + gReserve;
+        const isEligibleDuration = isEligibleDurationClip(item);
+        if (isEligibleDuration) {
+            // PRD & Aturan Durasi Bersih:
+            // Kebutuhan bersih pada timeline storyboard: effectiveQty * duration_seconds.
+            const itemDurationDec = new decimal_js_1.default(effectiveQty).times(Math.max(0, item.duration_seconds || 0));
+            sumOneVideoDurationDec = sumOneVideoDurationDec.plus(itemDurationDec);
+            // Total durasi rekaman mentah AI yang digenerate (termasuk percobaan & cadangan):
+            const itemRawDurationDec = new decimal_js_1.default(gBudget).times(Math.max(0, item.duration_seconds || 0));
+            sumOneVideoRawDurationDec = sumOneVideoRawDurationDec.plus(itemRawDurationDec);
+        }
         totalPlannedGen += gPlanned;
         totalReserveGen += gReserve;
         totalBudgetedGen += gBudget;
@@ -377,6 +498,8 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
             label: item.label,
             category: item.category,
             is_primary_shot: isPrimaryShot,
+            duration_seconds: item.duration_seconds || 0,
+            is_eligible_duration_clip: isEligibleDuration,
             model_name: item.model_selection.model_name,
             effective_quantity: effectiveQty,
             attempts_per_item: attempts,
@@ -505,16 +628,19 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     }
     let costPerMinuteUsd = null;
     let costPerMinuteIdr = null;
-    if (Number.isFinite(assumptions.final_duration_minutes) &&
+    if (items.length === 0) {
+        costPerMinuteUsd = 0;
+        costPerMinuteIdr = 0;
+    }
+    else if (Number.isFinite(assumptions.final_duration_minutes) &&
         assumptions.final_duration_minutes > 0) {
         const mDec = new decimal_js_1.default(assumptions.final_duration_minutes);
-        const totalUsdDec = sumTotalUsd.times(vDec);
-        costPerMinuteUsd = totalUsdDec
+        costPerMinuteUsd = sumTotalUsd
             .dividedBy(mDec)
             .toDecimalPlaces(4)
             .toNumber();
         if (fxDecimal) {
-            costPerMinuteIdr = totalUsdDec
+            costPerMinuteIdr = sumTotalUsd
                 .times(fxDecimal)
                 .dividedBy(mDec)
                 .toDecimalPlaces(2)
@@ -529,6 +655,74 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
             message_en: 'Average cost per final minute is not calculated because the final video duration is 0.',
         });
     }
+    // --- METRIK DURASI BERSIH 1 VIDEO & BUFFER EDITING (FITUR 2 - v2.0.0) ---
+    const oneVideoDurationSeconds = sumOneVideoDurationDec.toDecimalPlaces(2).toNumber();
+    const oneVideoRawDurationSeconds = oneVideoDurationSeconds;
+    const oneVideoDurationFormatted = formatDurationDualPair(oneVideoDurationSeconds);
+    // Biaya per 1 menit rekaman mentah AI (cost_per_raw_minute_usd & idr)
+    let costPerRawMinuteUsd = null;
+    let costPerRawMinuteIdr = null;
+    if (items.length === 0) {
+        costPerRawMinuteUsd = 0;
+        costPerRawMinuteIdr = 0;
+    }
+    else if (oneVideoDurationSeconds > 0) {
+        const rawMinutesDec = new decimal_js_1.default(oneVideoDurationSeconds).dividedBy(60);
+        costPerRawMinuteUsd = sumTotalUsd
+            .dividedBy(rawMinutesDec)
+            .toDecimalPlaces(4)
+            .toNumber();
+        if (fxDecimal) {
+            costPerRawMinuteIdr = sumTotalUsd
+                .times(fxDecimal)
+                .dividedBy(rawMinutesDec)
+                .toDecimalPlaces(2)
+                .toNumber();
+        }
+    }
+    // Target Rencana Durasi Video di Langkah 2 (final_duration_minutes * 60 detik)
+    const targetDurationSeconds = Number.isFinite(assumptions.final_duration_minutes) &&
+        assumptions.final_duration_minutes > 0
+        ? new decimal_js_1.default(assumptions.final_duration_minutes)
+            .times(60)
+            .toDecimalPlaces(2)
+            .toNumber()
+        : 0;
+    const targetDurationFormatted = formatDurationDualPair(targetDurationSeconds);
+    // Logika Perfilman:
+    // Editing buffer = one_video_duration_seconds - target_duration_seconds.
+    // Durasi shot mentah terhitung boleh dan wajar lebih besar dari target rencana
+    // karena akan dipotong dan disesuaikan (handles/trimming) oleh video editor pada post-produksi.
+    const editingBufferSeconds = targetDurationSeconds > 0
+        ? new decimal_js_1.default(oneVideoDurationSeconds)
+            .minus(targetDurationSeconds)
+            .toDecimalPlaces(2)
+            .toNumber()
+        : 0;
+    const editingBufferFormatted = targetDurationSeconds > 0
+        ? formatEditingBufferPair(editingBufferSeconds)
+        : { id: 'Target Belum Diatur', en: 'Target Not Set' };
+    // Jika durasi shot lebih kecil dari target rencana, berikan peringatan informatif
+    if (targetDurationSeconds > 0 && oneVideoDurationSeconds > 0 && oneVideoDurationSeconds < targetDurationSeconds) {
+        const shortfallSec = new decimal_js_1.default(targetDurationSeconds)
+            .minus(oneVideoDurationSeconds)
+            .toDecimalPlaces(2)
+            .toNumber();
+        warnings.push({
+            code: 'INSUFFICIENT_SHOT_DURATION',
+            severity: 'info',
+            message_id: `Total durasi shot utama (${oneVideoDurationFormatted.id}) belum mencukupi target rencana durasi video (${targetDurationFormatted.id}). Selisih kurang: ${formatDurationDual(shortfallSec, 'id')}. Dalam perfilman, durasi shot mentah dianjurkan sama atau melebihi target agar editor leluasa memotong video.`,
+            message_en: `Total primary shot duration (${oneVideoDurationFormatted.en}) is less than the planned target video duration (${targetDurationFormatted.en}). Shortfall: ${formatDurationDual(shortfallSec, 'en')}. In film production, raw shot footage typically matches or exceeds the target duration for editing flexibility.`,
+        });
+    }
+    // Durasi Total Proyek untuk seluruh target_videos jika target_videos > 1
+    const totalDurationSeconds = targetVideosCount > 1
+        ? new decimal_js_1.default(oneVideoDurationSeconds)
+            .times(targetVideosCount)
+            .toDecimalPlaces(2)
+            .toNumber()
+        : oneVideoDurationSeconds;
+    const totalDurationFormatted = formatDurationDualPair(totalDurationSeconds);
     const isComplete = items.length > 0 && incompleteItemCount === 0 && hasValidExchangeRate;
     return {
         planned_generations: finalPlannedGen,
@@ -560,10 +754,22 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         one_video_supporting_asset_count: oneVideoSupportingAssetCount,
         total_primary_shots: new decimal_js_1.default(oneVideoPrimaryShotCount).times(vDec).toNumber(),
         total_supporting_assets: new decimal_js_1.default(oneVideoSupportingAssetCount).times(vDec).toNumber(),
+        // Durasi Bersih Video & Editing Buffer (Fitur 2 - v2.0.0)
+        one_video_duration_seconds: oneVideoDurationSeconds,
+        one_video_raw_duration_seconds: oneVideoRawDurationSeconds,
+        one_video_duration_formatted: oneVideoDurationFormatted,
+        target_duration_seconds: targetDurationSeconds,
+        target_duration_formatted: targetDurationFormatted,
+        editing_buffer_seconds: editingBufferSeconds,
+        editing_buffer_formatted: editingBufferFormatted,
+        total_duration_seconds: totalDurationSeconds,
+        total_duration_formatted: totalDurationFormatted,
         cost_per_video_usd: costPerVideoUsd,
         cost_per_video_idr: costPerVideoIdr,
         cost_per_minute_usd: costPerMinuteUsd,
         cost_per_minute_idr: costPerMinuteIdr,
+        cost_per_raw_minute_usd: costPerRawMinuteUsd,
+        cost_per_raw_minute_idr: costPerRawMinuteIdr,
         is_complete: isComplete,
         incomplete_item_count: incompleteItemCount,
         item_results: itemResults,

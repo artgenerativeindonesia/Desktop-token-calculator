@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildSafePdfFilename = buildSafePdfFilename;
 exports.formatUsd = formatUsd;
 exports.formatIdr = formatIdr;
+exports.formatDurationMmSs = formatDurationMmSs;
 exports.generatePdfReportHtml = generatePdfReportHtml;
 const project_1 = require("../types/project");
 const calculationEngine_1 = require("../engine/calculationEngine");
@@ -59,6 +60,15 @@ function formatIdr(value, lang = 'id') {
         maximumFractionDigits: 0,
     }).format(value);
 }
+/**
+ * Format detik ke format standar mm:ss (contoh: 60 -> "01:00", 90 -> "01:30", 450 -> "07:30")
+ */
+function formatDurationMmSs(seconds) {
+    const s = Math.max(0, Math.round(seconds));
+    const mins = Math.floor(s / 60);
+    const remSec = s % 60;
+    return `${String(mins).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
+}
 function escapeHtml(text) {
     return String(text)
         .replace(/&/g, '&amp;')
@@ -87,6 +97,66 @@ function generatePdfReportHtml(project, overrideLang) {
         project.assumptions.reserve_generations_override ||
         1;
     const totalSceneQuantity = project.items.reduce((sum, item) => sum + Math.max(0, Math.floor(item.quantity)), 0);
+    // PRD Bab 8 & Tahap 2: Durasi video jadi (post-produksi) vs durasi mentah shot AI
+    const isVideoCategory = (cat) => cat === 'text_to_video' || cat === 'image_to_video' || cat === 'video_to_video';
+    const targetDurationSeconds = calc.target_duration_seconds !== undefined && calc.target_duration_seconds > 0
+        ? calc.target_duration_seconds
+        : Math.max(0, Math.round((project.assumptions.final_duration_minutes || 0) * 60));
+    // Durasi mentah shot AI untuk 1 video (hanya shot utama video; Upscale Video dan Jatah Cadangan TIDAK dihitung)
+    const rawShotDurationSecondsOneVideo = calc.one_video_duration_seconds !== undefined
+        ? calc.one_video_duration_seconds
+        : project.items
+            .filter((item) => {
+            // Upscale Video TIDAK dihitung ke dalam durasi bersih
+            if (item.category === 'upscale_video' || item.category === 'upscale_image') {
+                return false;
+            }
+            const isPrimary = item.is_primary_shot !== false;
+            return isPrimary && isVideoCategory(item.category) && item.duration_seconds > 0;
+        })
+            .reduce((sum, item) => {
+            const qty = Math.max(0, Math.floor(item.quantity));
+            const dur = Math.max(0, item.duration_seconds);
+            return sum + qty * dur;
+        }, 0);
+    const durationDiffSeconds = rawShotDurationSecondsOneVideo - targetDurationSeconds;
+    const targetMmSs = formatDurationMmSs(targetDurationSeconds);
+    const rawMmSs = formatDurationMmSs(rawShotDurationSecondsOneVideo);
+    const totalProjectSec = calc.total_duration_seconds !== undefined && calc.total_duration_seconds > 0
+        ? calc.total_duration_seconds
+        : rawShotDurationSecondsOneVideo * calc.target_videos;
+    const totalProjectMmSs = formatDurationMmSs(totalProjectSec);
+    // Format teks durasi video jadi (Post-Produksi)
+    const targetDurationHtml = targetDurationSeconds > 0
+        ? `<strong>${targetDurationSeconds} ${isId ? 'Detik' : 'Seconds'}</strong> (${targetMmSs})${project.assumptions.final_duration_minutes > 0
+            ? ` &bull; <span style="font-size:10px;color:#64748b;">${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${targetDurationSeconds}s)</span>`
+            : ''}`
+        : `<strong>${isId ? 'Belum Diatur' : 'Not set'}</strong>`;
+    // Format teks durasi mentah shot AI beserta buffer post-produksi
+    let rawDurationHtml = '';
+    if (rawShotDurationSecondsOneVideo > 0) {
+        if (targetDurationSeconds > 0) {
+            if (durationDiffSeconds > 0) {
+                rawDurationHtml = `<strong>${rawShotDurationSecondsOneVideo} ${isId ? 'Detik' : 'Seconds'}</strong> (${rawMmSs} / ${rawShotDurationSecondsOneVideo}s) &bull; <span style="color:#059669;font-weight:600;">${isId
+                    ? `Tersedia +${durationDiffSeconds}s buffer post-produksi`
+                    : `+${durationDiffSeconds}s post-production buffer available`}</span>`;
+            }
+            else if (durationDiffSeconds === 0) {
+                rawDurationHtml = `<strong>${rawShotDurationSecondsOneVideo} ${isId ? 'Detik' : 'Seconds'}</strong> (${rawMmSs} / ${rawShotDurationSecondsOneVideo}s) &bull; <span style="color:#0284c7;font-weight:600;">${isId ? 'Pas sesuai target post-produksi' : 'Matches post-production target'}</span>`;
+            }
+            else {
+                rawDurationHtml = `<strong>${rawShotDurationSecondsOneVideo} ${isId ? 'Detik' : 'Seconds'}</strong> (${rawMmSs} / ${rawShotDurationSecondsOneVideo}s) &bull; <span style="color:#d97706;font-weight:600;">${isId
+                    ? `Defisit durasi (-${Math.abs(durationDiffSeconds)}s dari target)`
+                    : `Duration deficit (-${Math.abs(durationDiffSeconds)}s below target)`}</span>`;
+            }
+        }
+        else {
+            rawDurationHtml = `<strong>${rawShotDurationSecondsOneVideo} ${isId ? 'Detik' : 'Seconds'}</strong> (${rawMmSs} / ${rawShotDurationSecondsOneVideo}s)`;
+        }
+    }
+    else {
+        rawDurationHtml = `0 ${isId ? 'Detik (00:00)' : 'Seconds (00:00)'}`;
+    }
     const sections = project.export_settings?.included_sections || {
         executive_summary: true,
         production_assumptions: true,
@@ -322,11 +392,27 @@ function generatePdfReportHtml(project, overrideLang) {
       justify-content: space-between;
     }
     @media print {
+      @page {
+        size: A4 portrait;
+        margin: 10mm 12mm;
+      }
       body {
-        padding: 10mm 12mm;
+        padding: 0;
+        background: #ffffff;
+        color: #0f172a;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      h2 {
+        page-break-after: avoid;
+        break-after: avoid;
+      }
+      thead {
+        display: table-header-group;
       }
       tr, .metric-card, .header-box, .disclaimer-box {
         page-break-inside: avoid;
+        break-inside: avoid;
       }
     }
   </style>
@@ -403,14 +489,18 @@ function generatePdfReportHtml(project, overrideLang) {
         <td class="num">${project.exchange_rate.rate ? '1 USD = ' + formatIdr(project.exchange_rate.rate, lang) : '-'}</td>
       </tr>
       <tr>
-        <th>${isId ? 'Target Durasi Bersih Video' : 'Target Net Video Duration'}</th>
-        <td class="num"><strong>${calc.one_video_duration_formatted
-        ? (isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en)
-        : project.assumptions.final_duration_minutes > 0
-            ? `${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${Math.round(project.assumptions.final_duration_minutes * 60)}s)`
-            : (isId ? 'Belum Diatur' : 'Not set')}</strong></td>
+        <th>${isId ? 'Target Durasi Bersih Video Jadi (Post-Produksi)' : 'Target Net Video Duration (Post-Production)'}</th>
+        <td class="num">${targetDurationHtml}</td>
         <th>${isId ? 'Target Jumlah Video' : 'Target Video Count'}</th>
         <td class="num"><strong>${calc.target_videos} ${isId ? 'Video' : calc.target_videos > 1 ? 'Videos' : 'Video'}</strong></td>
+      </tr>
+      <tr>
+        <th>${isId ? 'Total Durasi Mentah Shot AI' : 'Total Raw AI Shot Duration'}</th>
+        <td class="num"${calc.target_videos > 1 ? '' : ' colspan="3"'}>${rawDurationHtml}</td>
+        ${calc.target_videos > 1 ? `
+        <th>${isId ? 'Total Durasi Seluruh Proyek' : 'Total Project Duration'}</th>
+        <td class="num"><strong>${totalProjectSec} ${isId ? 'Detik' : 'Seconds'}</strong> (${totalProjectMmSs} ${isId ? `untuk ${calc.target_videos} Video` : `for ${calc.target_videos} Videos`})</td>
+        ` : ''}
       </tr>
     </tbody>
   </table>
@@ -437,7 +527,7 @@ function generatePdfReportHtml(project, overrideLang) {
     </tbody>
   </table>
   <div class="disclaimer-box">
-    <div style="font-weight:700;color:#166534;font-size:11.5px;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+    <div style="font-weight:700;color:#166534;font-size:11.5px;margin-bottom:6px;display:flex;align-items:center;gap:6px;">
       <span>📌</span>
       <span>${isId ? 'CATATAN PENTING & RUMUS PROYEKSI MULTI-VIDEO:' : 'IMPORTANT NOTICE & MULTI-VIDEO PROJECTION FORMULA:'}</span>
     </div>
@@ -447,6 +537,12 @@ function generatePdfReportHtml(project, overrideLang) {
            <strong>Perhitungan Total Anggaran Akhir:</strong> Biaya 1 Video (<strong>${formatIdr(calc.one_video_total_cost_idr, lang)}</strong> / ${formatUsd(calc.one_video_total_cost_usd, lang)}) &times; <strong>${calc.target_videos} Video</strong> = <strong>${formatIdr(calc.total_cost_idr, lang)}</strong> (${formatUsd(calc.total_cost_usd, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`
         : `All stage requirements and shots/images in the table above project technical needs for <strong>1 (one) single video</strong> (${calc.one_video_primary_shot_count} Primary Shots + ${calc.one_video_supporting_asset_count} Supporting Assets).<br/>
            <strong>Final Grand Total Calculation:</strong> 1 Video Cost (<strong>${formatUsd(calc.one_video_total_cost_usd, lang)}</strong> / ${formatIdr(calc.one_video_total_cost_idr, lang)}) &times; <strong>${calc.target_videos} ${calc.target_videos > 1 ? 'Videos' : 'Video'}</strong> = <strong>${formatUsd(calc.total_cost_usd, lang)}</strong> (${formatIdr(calc.total_cost_idr, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`}
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #86efac;font-size:10.5px;color:#1e3a8a;line-height:1.5;">
+      <strong>🎬 ${isId ? 'Ketentuan Durasi Bersih &amp; Ruang Potong Video Editor:' : 'Clean Video Duration &amp; Post-Production Trimming Notice:'}</strong><br/>
+      ${isId
+        ? `Proses <strong>Upscale Video</strong> dan <strong>Jatah Cadangan</strong> (percobaan ulang) <strong>TIDAK dihitung</strong> ke dalam durasi bersih video final. Total durasi mentah shot AI sengaja menyediakan ruang potong (safety buffer) yang leluasa bagi video editor untuk proses pemotongan (trimming), penataan transisi, dan sinkronisasi audio di tahap post-produksi.`
+        : `<strong>Upscale Video</strong> processes and <strong>Reserve Generations</strong> (retry attempts) are <strong>NOT counted</strong> toward the final clean video duration. The total raw AI shot duration intentionally provides extra cutting room (safety buffer) for video editors during trimming, transitions, and audio sync in post-production.`}
     </div>
   </div>
   ` : ''}
@@ -548,12 +644,26 @@ function generatePdfReportHtml(project, overrideLang) {
         <th>${isId ? 'Jumlah Video yang Diproduksi' : 'Total Videos Produced'}</th>
         <td class="num" colspan="2"><strong>&times; ${calc.target_videos} ${isId ? 'Video' : calc.target_videos > 1 ? 'Videos' : 'Video'}</strong></td>
       </tr>
-      ${(calc.one_video_duration_formatted || project.assumptions.final_duration_minutes > 0) ? `
+      ${(calc.target_duration_formatted || targetDurationSeconds > 0) ? `
       <tr>
         <th>${isId ? 'Target Durasi Bersih per Video' : 'Target Net Duration per Video'}</th>
-        <td class="num" colspan="2"><strong>${calc.one_video_duration_formatted
-        ? (isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en)
-        : `${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${Math.round(project.assumptions.final_duration_minutes * 60)}s)`}</strong></td>
+        <td class="num" colspan="2"><strong>${calc.target_duration_formatted
+        ? (isId ? calc.target_duration_formatted.id : calc.target_duration_formatted.en)
+        : `${targetDurationSeconds} ${isId ? 'Detik' : 'Seconds'} (${targetMmSs}) &bull; ${project.assumptions.final_duration_minutes} ${isId ? 'Menit' : 'Minutes'} (${targetDurationSeconds}s)`}</strong></td>
+      </tr>
+      ` : ''}
+      ${rawShotDurationSecondsOneVideo > 0 ? `
+      <tr>
+        <th>${isId ? 'Total Durasi Mentah Shot AI (1 Video)' : 'Total Raw AI Shot Duration (1 Video)'}</th>
+        <td class="num" colspan="2"><strong>${rawShotDurationSecondsOneVideo} ${isId ? 'Detik' : 'Seconds'}</strong> (${rawMmSs} / ${rawShotDurationSecondsOneVideo}s)${targetDurationSeconds > 0 && durationDiffSeconds > 0
+        ? ` &bull; <span style="color:#059669;font-weight:600;">+${durationDiffSeconds}s buffer</span>`
+        : ''}</td>
+      </tr>
+      ` : ''}
+      ${(calc.target_videos > 1 && rawShotDurationSecondsOneVideo > 0) ? `
+      <tr>
+        <th>${isId ? 'Total Durasi Seluruh Proyek' : 'Total Project Duration'}</th>
+        <td class="num" colspan="2"><strong>${totalProjectSec} ${isId ? 'Detik' : 'Seconds'}</strong> (${totalProjectMmSs} ${isId ? `untuk ${calc.target_videos} Video` : `for ${calc.target_videos} Videos`})</td>
       </tr>
       ` : ''}
       ${calc.cost_per_minute_usd !== null ? `

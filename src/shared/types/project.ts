@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.9.0';
+export const APP_VERSION = '1.10.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -184,6 +184,8 @@ export interface ItemCalculationResult {
   label: string;
   category: ProcessCategory;
   is_primary_shot: boolean;
+  duration_seconds: number;
+  is_eligible_duration_clip?: boolean;
   model_name: string;
   effective_quantity: number; // S_i efektif
   attempts_per_item: number; // A_i
@@ -232,7 +234,8 @@ export interface CalculationWarning {
     | 'STALE_FX'
     | 'MISSING_TARGET_ASSUMPTIONS'
     | 'ZERO_DIVISOR_VIDEO'
-    | 'ZERO_DIVISOR_MINUTE';
+    | 'ZERO_DIVISOR_MINUTE'
+    | 'INSUFFICIENT_SHOT_DURATION';
   severity: 'error' | 'warning' | 'info';
   message_id: string;
   message_en: string;
@@ -273,9 +276,25 @@ export interface CalculationResult {
   total_primary_shots: number;
   total_supporting_assets: number;
 
-  // Durasi Bersih 1 Video (Fitur 2 - v2.0.0)
-  one_video_duration_seconds?: number;
-  one_video_duration_formatted?: {
+  // Durasi Bersih 1 Video & Buffer Editing (Fitur 2 - v2.0.0)
+  one_video_duration_seconds: number;
+  one_video_raw_duration_seconds: number;
+  one_video_duration_formatted: {
+    id: string;
+    en: string;
+  };
+  target_duration_seconds: number;
+  target_duration_formatted: {
+    id: string;
+    en: string;
+  };
+  editing_buffer_seconds: number;
+  editing_buffer_formatted: {
+    id: string;
+    en: string;
+  };
+  total_duration_seconds: number;
+  total_duration_formatted: {
     id: string;
     en: string;
   };
@@ -283,6 +302,8 @@ export interface CalculationResult {
   cost_per_video_idr: number | null; // Bvideo (IDR)
   cost_per_minute_usd: number | null; // Bminute (USD)
   cost_per_minute_idr: number | null; // Bminute (IDR)
+  cost_per_raw_minute_usd?: number | null; // Biaya per 1 menit rekaman mentah AI (USD)
+  cost_per_raw_minute_idr?: number | null; // Biaya per 1 menit rekaman mentah AI (IDR)
   is_complete: boolean; // False jika ada item yang wajib dihitung tetapi tarif/kurs Unavailable
   incomplete_item_count: number;
   item_results: ItemCalculationResult[];
