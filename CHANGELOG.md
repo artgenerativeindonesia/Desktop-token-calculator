@@ -12,6 +12,33 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.8.0] - Tahap 1 Menuju v2.0.0: Alur Multi-Video Workflow & Transparansi Rumus Proyeksi PDF
+- **Tanggal Perubahan**: 28 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.8.0`
+
+### Ditambahkan (Added)
+1. **Input Target Jumlah Video Jadi pada Langkah 2 (Project Setup)**:
+   - Menambahkan kotak input numerik dan slider interaktif target jumlah video (`target_videos`) pada Langkah 2.
+   - Dilengkapi tombol cepat pilihan umum (*quick presets*): **1 Video** (Single), **3 Video**, **5 Video**, dan **10 Video**.
+   - Menyertakan kotak ringkasan interaktif yang menjelaskan bahwa biaya akan dikalikan sesuai target jumlah video yang diinput.
+2. **Badge Penanda Proyeksi 1 Video Murni pada Langkah 3 (Production Planner)**:
+   - Menambahkan lencana hijau terpadu di bagian atas perencana produksi yang menegaskan bahwa seluruh adegan/shot yang disusun di Langkah 3 diproyeksikan khusus untuk **1 video utuh**.
+   - Menambahkan bilah informasi berjalan (*running total banner*) yang memperlihatkan: `Subtotal 1 Video × [N] Video = Total Anggaran Proyek`.
+3. **Disclaimer Resmi & Transparansi Rumus Perkalian pada Ekspor Laporan PDF**:
+   - Menambahkan kotak hijau *Catatan Penting & Rumus Proyeksi Multi-Video* tepat di bawah tabel adegan produksi pada dokumen PDF.
+   - Menampilkan rumus transparan: `Biaya 1 Video (Rp X / $Y) × [N] Video = Total Anggaran Akhir (Rp X' / $Y')` agar siapapun yang membaca PDF memahami perhitungannya secara jernih tanpa ambigu.
+   - Menambahkan metrik terpisah pada Kartu Eksekutif PDF untuk *Proyeksi 1 Video Jadi* dan *Target Jumlah Video*.
+
+### Diubah (Changed)
+1. **Mesin Kalkulasi Keuangan (`calculationEngine.ts`)**:
+   - Mengisolasi perhitungan adegan produksi di Langkah 3 sebagai unit 1 video (`one_video_...`), lalu mengalikannya dengan `target_videos` secara aman dan presisi menggunakan `Decimal.js`.
+   - Mengalikan total kali percobaan (*budgeted generations*) dan konsumsi credit sesuai jumlah video secara akurat.
+   - Menangani pembagian angka nol (*zero divisor protection*) secara aman dengan menerbitkan peringatan informatif jika target video diatur ke 0.
+2. **Penyelarasan Tampilan Ringkasan Anggaran (Langkah 4 & Header Aplikasi)**:
+   - Memperbarui Kartu Anggaran Utama (*Hero Card*), panel samping (*sidebar*), dan tabel metrik unit untuk menampilkan komparasi cerdas antara biaya per 1 video jadi vs total biaya proyek multi-video.
+
+---
+
 ## Versi [1.7.0] - Dukungan Installer 1-Klik untuk Mac (macOS) & Buku Panduan Lengkap (Windows + Mac)
 - **Tanggal Perubahan**: 27 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.7.0`

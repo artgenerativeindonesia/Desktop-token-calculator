@@ -154,6 +154,13 @@ export const ProductionPlannerView: React.FC = () => {
                 {isId ? 'Kali Buat' : 'Total Tries'}
               </span>
             </span>
+            <span className="vv-badge-pill bg-emerald-500/10 border-emerald-500/30 text-emerald-400 font-semibold">
+              <span>
+                {isId
+                  ? `Proyeksi 1 Video • Total ${calculation.target_videos} Video`
+                  : `1 Video Plan • Total ${calculation.target_videos} Videos`}
+              </span>
+            </span>
           </div>
 
           <h1 className="text-2xl md:text-3xl font-medium tracking-[-0.035em]">
@@ -176,8 +183,8 @@ export const ProductionPlannerView: React.FC = () => {
 
           <p className="text-xs text-[var(--vv-text-muted)] leading-relaxed">
             {isId
-              ? 'Daftar di bawah menampilkan ringkasan rapi setiap adegan. Klik tombol "Atur Detail" pada baris mana saja untuk membuka jendela pengaturan lengkap.'
-              : 'The list below shows a clean summary of each stage. Click "Edit Details" on any row to open its full configuration popup.'}
+              ? `Daftar di bawah memproyeksikan kebutuhan adegan untuk 1 (satu) video. Hasilnya otomatis dikalikan ${calculation.target_videos} video (sesuai input Langkah 2) untuk total anggaran akhir.`
+              : `The list below projects requirements for 1 (one) video. Results are automatically multiplied by ${calculation.target_videos} videos (from Step 2) for the grand total.`}
           </p>
         </div>
 
@@ -185,11 +192,22 @@ export const ProductionPlannerView: React.FC = () => {
         <div className="flex flex-col sm:flex-row lg:flex-col items-stretch sm:items-center lg:items-end justify-between gap-3 shrink-0">
           <div className="text-left sm:text-right">
             <div className="text-[11px] uppercase tracking-wider text-[#7acaff] font-semibold">
-              {t.totalBudget}
+              {calculation.target_videos > 1
+                ? isId
+                  ? `Total Anggaran (${calculation.target_videos} Video)`
+                  : `Total Budget (${calculation.target_videos} Videos)`
+                : t.totalBudget}
             </div>
             <div className="text-2xl font-bold tabular-nums text-[var(--vv-text-primary)]">
               {formatCurrencyIdr(calculation.total_cost_idr, language)}
             </div>
+            {calculation.target_videos > 1 && (
+              <div className="text-[11px] text-[#7acaff] font-medium tabular-nums">
+                {isId
+                  ? `(Proyeksi: ${formatCurrencyIdr(calculation.one_video_total_cost_idr, language)} / 1 video × ${calculation.target_videos} video)`
+                  : `(Projection: ${formatCurrencyUsd(calculation.one_video_total_cost_usd, language)} / 1 video × ${calculation.target_videos} videos)`}
+              </div>
+            )}
             <div className="text-xs font-semibold tabular-nums text-[#0099ff]">
               {formatCurrencyUsd(calculation.total_cost_usd, language)} &bull;{' '}
               {calculation.total_credit !== null

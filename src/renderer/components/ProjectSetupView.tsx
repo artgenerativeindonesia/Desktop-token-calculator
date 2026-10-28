@@ -24,6 +24,7 @@ export const ProjectSetupView: React.FC = () => {
     language,
     theme,
     setProjectName,
+    setTargetVideos,
     setReserveByPercent,
     setReserveByCount,
     setCadanganMultiplier,
@@ -137,6 +138,77 @@ export const ProjectSetupView: React.FC = () => {
                     : 'Project name cannot be empty before saving or exporting.'}
                 </p>
               )}
+            </div>
+
+            {/* Input Jumlah Video (Fitur 1 Multi-Video) */}
+            <div className="p-4 rounded-[14px] bg-[#0099ff]/10 border border-[#0099ff]/40 space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
+                  <Film className="w-3.5 h-3.5 text-[#0099ff]" />
+                  <span>
+                    {isId
+                      ? 'Jumlah Video yang Ingin Dibuat'
+                      : 'Target Number of Videos to Produce'}
+                  </span>
+                </label>
+                <span className="text-xs font-mono font-bold text-[#0099ff]">
+                  {assumptions.target_videos || 1} {isId ? 'video' : 'videos'}
+                </span>
+              </div>
+
+              {/* Pilihan Cepat Preset Video */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {[
+                  { count: 1, label: isId ? '1 Video (Tunggal)' : '1 Video (Single)' },
+                  { count: 3, label: isId ? '3 Video' : '3 Videos' },
+                  { count: 5, label: isId ? '5 Video' : '5 Videos' },
+                  { count: 10, label: isId ? '10 Video' : '10 Videos' },
+                ].map((preset) => (
+                  <button
+                    key={preset.count}
+                    type="button"
+                    onClick={() => setTargetVideos(preset.count)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+                      (assumptions.target_videos || 1) === preset.count
+                        ? 'bg-[#0099ff]/20 text-[#0099ff] border-[#0099ff]/50 font-bold'
+                        : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative">
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  step={1}
+                  value={assumptions.target_videos || 1}
+                  onChange={(e) =>
+                    setTargetVideos(Math.max(1, Number(e.target.value) || 1))
+                  }
+                  className={`${inputClass} w-full pr-20 pl-3.5 py-2.5 rounded-[10px] text-xl font-bold tabular-nums text-right`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-[var(--vv-text-muted)] pointer-events-none">
+                  {isId ? 'video' : 'videos'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={20}
+                step={1}
+                value={Math.min(20, Math.max(1, assumptions.target_videos || 1))}
+                onChange={(e) => setTargetVideos(Number(e.target.value))}
+                className="w-full accent-[#0099ff] cursor-pointer"
+              />
+              <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed">
+                {isId
+                  ? `💡 Langkah 3 memproyeksikan kebutuhan untuk 1 video. Hasil perhitungan di Langkah 3 akan otomatis dikalikan ${assumptions.target_videos || 1} video untuk total anggaran akhir.`
+                  : `💡 Step 3 projects requirements for 1 video. Step 3 calculation will be automatically multiplied by ${assumptions.target_videos || 1} videos for the grand total.`}
+              </p>
             </div>
 
             {/* Penjelasan Alur Kerja Terpusat */}
@@ -297,12 +369,29 @@ export const ProjectSetupView: React.FC = () => {
                     &times; {cadanganCount} cadangan
                   </span>
                 </div>
+                {calculation.target_videos > 1 && (
+                  <div className="flex justify-between items-center text-emerald-400">
+                    <span>
+                      {isId ? 'Dikalikan Jumlah Video:' : 'Multiplied by Target Videos:'}
+                    </span>
+                    <span className="font-semibold tabular-nums">
+                      &times; {calculation.target_videos} video
+                    </span>
+                  </div>
+                )}
                 <div className="pt-2.5 border-t border-[var(--vv-border)] flex justify-between items-baseline">
                   <span className="font-bold text-sm">{t.totalBudget}:</span>
                   <div className="text-right">
                     <div className="text-xl font-bold tabular-nums text-[#0099ff]">
                       {formatCurrencyIdr(calculation.total_cost_idr, language)}
                     </div>
+                    {calculation.target_videos > 1 && (
+                      <div className="text-[11px] text-[#7acaff] font-medium">
+                        {isId
+                          ? `(Proyeksi: ${formatCurrencyIdr(calculation.one_video_total_cost_idr, language)} / 1 video × ${calculation.target_videos} video)`
+                          : `(Projection: ${formatCurrencyUsd(calculation.one_video_total_cost_usd, language)} / 1 video × ${calculation.target_videos} videos)`}
+                      </div>
+                    )}
                     <div className="text-xs font-semibold tabular-nums text-[var(--vv-text-strong)]">
                       {formatCurrencyUsd(calculation.total_cost_usd, language)} &bull;{' '}
                       {calculation.budgeted_generations}{' '}

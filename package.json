@@ -1,6 +1,6 @@
 {
   "name": "ai-video-budget-calculator",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "Aplikasi desktop budgeting produksi video AI berbasis katalog model Higgsfield (PRD v1.0)",
   "main": "dist-electron/main/main.js",
   "author": "AI Video Production Team",

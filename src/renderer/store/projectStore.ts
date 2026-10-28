@@ -185,8 +185,14 @@ function recalculateProject(project: ProjectFile): ProjectFile {
 
   // Sesuai model perkalian cadangan: Total = Kebutuhan x Cadangan Langkah 2.
   // Cadangan tidak lagi ditambahkan ganda di atas hasil perkalian (reserve override = 0, reserve percent = 0).
+  const targetVideos = Math.max(
+    1,
+    Math.floor(project.assumptions.target_videos || 1)
+  );
+
   const syncedAssumptions: BudgetAssumptions = {
     ...project.assumptions,
+    target_videos: targetVideos,
     default_attempts_per_shot: cadanganMultiplier,
     reserve_percent: 0,
     reserve_generations_override: 0,
@@ -531,7 +537,7 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         ...state.project,
         assumptions: {
           ...state.project.assumptions,
-          target_videos: Math.max(0, Math.floor(count || 0)),
+          target_videos: Math.max(1, Math.floor(count || 1)),
         },
       }),
     })),

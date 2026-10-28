@@ -161,11 +161,8 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     for (const item of items) {
         const rawQty = Math.max(0, Math.floor(item.quantity));
         const attempts = Math.max(0, Math.floor(item.attempts_per_item));
-        // Pada mode target_final, jika baris menggunakan multiplier target_videos:
-        const effectiveQty = assumptions.estimation_mode === 'target_final' &&
-            item.use_project_target_multiplier
-            ? rawQty * Math.max(1, Math.floor(assumptions.target_videos))
-            : rawQty;
+        // Di v2.0.0, seluruh baris pekerjaan di Langkah 3 memproyeksikan kebutuhan untuk 1 video utuh
+        const effectiveQty = rawQty;
         const gPlanned = effectiveQty * attempts;
         itemEffectiveQuantities.push(effectiveQty);
         itemPlannedGenerations.push(gPlanned);
@@ -393,33 +390,89 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
                 .toDecimalPlaces(2)
                 .toNumber()
             : 0;
-    // Konversi agregat penuh (FR-14: pembulatan hanya setelah agregasi penuh)
-    const finalBaseUsd = sumBaseUsd.toDecimalPlaces(4).toNumber();
-    const finalReserveUsd = sumReserveUsd.toDecimalPlaces(4).toNumber();
-    const finalTotalUsd = sumTotalUsd.toDecimalPlaces(4).toNumber();
-    const finalBaseIdr = fxDecimal
+    // --- SUB-TOTAL PROYEKSI 1 VIDEO (Item di Langkah 3 memproyeksikan 1 video) ---
+    const oneVideoPlannedGen = totalPlannedGen;
+    const oneVideoReserveGen = totalReserveGen;
+    const oneVideoBudgetedGen = totalBudgetedGen;
+    const oneVideoBaseUsd = sumBaseUsd.toDecimalPlaces(4).toNumber();
+    const oneVideoReserveUsd = sumReserveUsd.toDecimalPlaces(4).toNumber();
+    const oneVideoTotalUsd = sumTotalUsd.toDecimalPlaces(4).toNumber();
+    const oneVideoBaseIdr = fxDecimal
         ? sumBaseUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
         : null;
-    const finalReserveIdr = fxDecimal
+    const oneVideoReserveIdr = fxDecimal
         ? sumReserveUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
         : null;
-    const finalTotalIdr = fxDecimal
+    const oneVideoTotalIdr = fxDecimal
         ? sumTotalUsd.times(fxDecimal).toDecimalPlaces(2).toNumber()
         : null;
-    // Biaya per video final (Bvideo = Btotal / V) & per menit final (Bminute = Btotal / M) (PRD Bab 8.7)
+    const oneVideoTotalCredit = hasCreditItems
+        ? sumTotalCredit.toDecimalPlaces(2).toNumber()
+        : null;
+    // --- MULTI-VIDEO MULTIPLIER (LANGKAH 2) ---
+    const hasTargetVideosInput = Number.isFinite(assumptions.target_videos) && assumptions.target_videos > 0;
+    const targetVideosCount = hasTargetVideosInput
+        ? Math.floor(assumptions.target_videos)
+        : 1;
+    const vDec = new decimal_js_1.default(targetVideosCount);
+    // Grand totals across all target_videos
+    const finalPlannedGen = oneVideoPlannedGen * targetVideosCount;
+    const finalReserveGen = oneVideoReserveGen * targetVideosCount;
+    const finalBudgetedGen = oneVideoBudgetedGen * targetVideosCount;
+    const finalBaseUsd = sumBaseUsd.times(vDec).toDecimalPlaces(4).toNumber();
+    const finalReserveUsd = sumReserveUsd.times(vDec).toDecimalPlaces(4).toNumber();
+    const finalTotalUsd = sumTotalUsd.times(vDec).toDecimalPlaces(4).toNumber();
+    const finalBaseIdr = fxDecimal
+        ? sumBaseUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+        : null;
+    const finalReserveIdr = fxDecimal
+        ? sumReserveUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+        : null;
+    const finalTotalIdr = fxDecimal
+        ? sumTotalUsd.times(fxDecimal).times(vDec).toDecimalPlaces(2).toNumber()
+        : null;
+    const finalTotalCredit = hasCreditItems
+        ? sumTotalCredit.times(vDec).toDecimalPlaces(2).toNumber()
+        : null;
+    // Multi-video Category Summaries
+    const multiVideoCategorySummaries = {};
+    for (const cat of ALL_CATEGORIES) {
+        const s = categorySummaries[cat];
+        multiVideoCategorySummaries[cat] = {
+            ...s,
+            planned_generations: s.planned_generations * targetVideosCount,
+            reserve_generations: s.reserve_generations * targetVideosCount,
+            budgeted_generations: s.budgeted_generations * targetVideosCount,
+            base_cost_usd: new decimal_js_1.default(s.base_cost_usd)
+                .times(vDec)
+                .toDecimalPlaces(4)
+                .toNumber(),
+            reserve_cost_usd: new decimal_js_1.default(s.reserve_cost_usd)
+                .times(vDec)
+                .toDecimalPlaces(4)
+                .toNumber(),
+            total_cost_usd: new decimal_js_1.default(s.total_cost_usd)
+                .times(vDec)
+                .toDecimalPlaces(4)
+                .toNumber(),
+            total_cost_idr: s.total_cost_idr !== null
+                ? new decimal_js_1.default(s.total_cost_idr)
+                    .times(vDec)
+                    .toDecimalPlaces(2)
+                    .toNumber()
+                : null,
+            total_credit: new decimal_js_1.default(s.total_credit)
+                .times(vDec)
+                .toDecimalPlaces(2)
+                .toNumber(),
+        };
+    }
+    // Biaya per video final (Bvideo = oneVideoTotalUsd) & per menit final (Bminute = Btotal / M) (PRD Bab 8.7)
     let costPerVideoUsd = null;
     let costPerVideoIdr = null;
-    if (Number.isFinite(assumptions.target_videos) &&
-        assumptions.target_videos > 0) {
-        const vDec = new decimal_js_1.default(assumptions.target_videos);
-        costPerVideoUsd = sumTotalUsd.dividedBy(vDec).toDecimalPlaces(4).toNumber();
-        if (fxDecimal) {
-            costPerVideoIdr = sumTotalUsd
-                .times(fxDecimal)
-                .dividedBy(vDec)
-                .toDecimalPlaces(2)
-                .toNumber();
-        }
+    if (hasTargetVideosInput) {
+        costPerVideoUsd = oneVideoTotalUsd;
+        costPerVideoIdr = oneVideoTotalIdr;
     }
     else {
         warnings.push({
@@ -434,12 +487,13 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     if (Number.isFinite(assumptions.final_duration_minutes) &&
         assumptions.final_duration_minutes > 0) {
         const mDec = new decimal_js_1.default(assumptions.final_duration_minutes);
-        costPerMinuteUsd = sumTotalUsd
+        const totalUsdDec = sumTotalUsd.times(vDec);
+        costPerMinuteUsd = totalUsdDec
             .dividedBy(mDec)
             .toDecimalPlaces(4)
             .toNumber();
         if (fxDecimal) {
-            costPerMinuteIdr = sumTotalUsd
+            costPerMinuteIdr = totalUsdDec
                 .times(fxDecimal)
                 .dividedBy(mDec)
                 .toDecimalPlaces(2)
@@ -456,9 +510,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
     }
     const isComplete = items.length > 0 && incompleteItemCount === 0 && hasValidExchangeRate;
     return {
-        planned_generations: totalPlannedGen,
-        reserve_generations: totalReserveGen,
-        budgeted_generations: totalBudgetedGen,
+        planned_generations: finalPlannedGen,
+        reserve_generations: finalReserveGen,
+        budgeted_generations: finalBudgetedGen,
         effective_reserve_percent: effectiveReservePercent,
         base_cost_usd: finalBaseUsd,
         reserve_cost_usd: finalReserveUsd,
@@ -466,10 +520,20 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         base_cost_idr: finalBaseIdr,
         reserve_cost_idr: finalReserveIdr,
         total_cost_idr: finalTotalIdr,
-        total_credit: hasCreditItems
-            ? sumTotalCredit.toDecimalPlaces(2).toNumber()
-            : null,
+        total_credit: finalTotalCredit,
         has_credit_items: hasCreditItems,
+        // Proyeksi 1 Video Murni
+        target_videos: targetVideosCount,
+        one_video_planned_generations: oneVideoPlannedGen,
+        one_video_reserve_generations: oneVideoReserveGen,
+        one_video_budgeted_generations: oneVideoBudgetedGen,
+        one_video_base_cost_usd: oneVideoBaseUsd,
+        one_video_reserve_cost_usd: oneVideoReserveUsd,
+        one_video_total_cost_usd: oneVideoTotalUsd,
+        one_video_base_cost_idr: oneVideoBaseIdr,
+        one_video_reserve_cost_idr: oneVideoReserveIdr,
+        one_video_total_cost_idr: oneVideoTotalIdr,
+        one_video_total_credit: oneVideoTotalCredit,
         cost_per_video_usd: costPerVideoUsd,
         cost_per_video_idr: costPerVideoIdr,
         cost_per_minute_usd: costPerMinuteUsd,
@@ -477,7 +541,7 @@ function calculateProjectBudget(items, assumptions, exchangeRate) {
         is_complete: isComplete,
         incomplete_item_count: incompleteItemCount,
         item_results: itemResults,
-        category_summaries: categorySummaries,
+        category_summaries: multiVideoCategorySummaries,
         warnings,
         calculated_at: new Date().toISOString(),
     };
@@ -621,7 +685,7 @@ function createSampleCommercialProject(currentExchangeRate) {
     };
     const assumptions = {
         estimation_mode: 'per_shot',
-        target_videos: 2,
+        target_videos: 1,
         final_duration_minutes: 1.5,
         default_shots_per_video: 6,
         default_attempts_per_shot: 2,

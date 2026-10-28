@@ -479,6 +479,13 @@ export const App: React.FC = () => {
                     {calc.budgeted_generations}x • {formatCurrencyUsd(calc.total_cost_usd, language)}
                   </div>
                 </div>
+                {calc.target_videos > 1 && (
+                  <div className="text-[9.5px] text-[#7acaff] truncate font-medium mt-0.5">
+                    {isId
+                      ? `(${calc.target_videos} video • ${formatCurrencyIdr(calc.one_video_total_cost_idr, language)}/vid)`
+                      : `(${calc.target_videos} vids • ${formatCurrencyUsd(calc.one_video_total_cost_usd, language)}/vid)`}
+                  </div>
+                )}
               </button>
 
               <button

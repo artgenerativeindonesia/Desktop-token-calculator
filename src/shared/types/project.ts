@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.7.0';
+export const APP_VERSION = '1.8.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -251,6 +251,19 @@ export interface CalculationResult {
   total_cost_idr: number | null; // BIDR = BUSD * X
   total_credit: number | null; // Ctotal
   has_credit_items: boolean;
+
+  // Multi-Video & Proyeksi 1 Video (Fitur 1 - v2.0.0)
+  target_videos: number;
+  one_video_planned_generations: number;
+  one_video_reserve_generations: number;
+  one_video_budgeted_generations: number;
+  one_video_base_cost_usd: number;
+  one_video_reserve_cost_usd: number;
+  one_video_total_cost_usd: number;
+  one_video_base_cost_idr: number | null;
+  one_video_reserve_cost_idr: number | null;
+  one_video_total_cost_idr: number | null;
+  one_video_total_credit: number | null;
   cost_per_video_usd: number | null; // Bvideo (USD)
   cost_per_video_idr: number | null; // Bvideo (IDR)
   cost_per_minute_usd: number | null; // Bminute (USD)

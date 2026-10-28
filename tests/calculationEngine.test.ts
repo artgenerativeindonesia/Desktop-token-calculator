@@ -94,9 +94,15 @@ describe('Calculation Engine — PRD Bab 8 Mathematical Rules & Acceptance Crite
       validExchangeRate
     );
 
-    expect(result.planned_generations).toBe(10);
-    expect(result.reserve_generations).toBe(5);
-    expect(result.budgeted_generations).toBe(15);
+    // Proyeksi 1 video (Langkah 3)
+    expect(result.one_video_planned_generations).toBe(10);
+    expect(result.one_video_reserve_generations).toBe(5);
+    expect(result.one_video_budgeted_generations).toBe(15);
+
+    // Total keseluruhan proyek untuk 2 video (Langkah 2: target_videos = 2)
+    expect(result.planned_generations).toBe(20);
+    expect(result.reserve_generations).toBe(10);
+    expect(result.budgeted_generations).toBe(30);
     expect(result.effective_reserve_percent).toBe(50);
   });
 

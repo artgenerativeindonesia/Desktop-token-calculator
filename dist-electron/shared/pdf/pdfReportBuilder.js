@@ -339,38 +339,25 @@ function generatePdfReportHtml(project, overrideLang) {
   ${sections.executive_summary ? `
   <h2>1. ${isId ? 'Ringkasan Eksekutif' : 'Executive Summary'}</h2>
   <div class="grid-4">
-    ${calc.reserve_cost_usd && calc.reserve_cost_usd > 0 ? `
-    <div class="metric-card">
-      <div class="metric-label">${isId ? 'Biaya Dasar' : 'Base Cost'}</div>
-      <div class="metric-val">${formatUsd(calc.base_cost_usd, lang)}</div>
-      <div class="metric-sub">${formatIdr(calc.base_cost_idr, lang)}</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">${isId ? 'Biaya Cadangan' : 'Reserve Cost'} (${calc.effective_reserve_percent}%)</div>
-      <div class="metric-val">${formatUsd(calc.reserve_cost_usd, lang)}</div>
-      <div class="metric-sub">${formatIdr(calc.reserve_cost_idr, lang)}</div>
-    </div>
-    ` : `
     <div class="metric-card" style="background:#eff6ff;border-color:#93c5fd;">
-      <div class="metric-label" style="color:#1d4ed8;font-weight:700;">${isId ? 'Total Anggaran (Rupiah)' : 'Total Budget (IDR)'}</div>
+      <div class="metric-label" style="color:#1d4ed8;font-weight:700;">${isId ? 'Total Seluruh Anggaran' : 'Grand Total Budget'}</div>
       <div class="metric-val" style="color:#1e3a8a;font-size:16px;">${formatIdr(calc.total_cost_idr, lang)}</div>
-      <div class="metric-sub" style="color:#1e40af;font-weight:600;">${formatUsd(calc.total_cost_usd, lang)}</div>
+      <div class="metric-sub" style="color:#1e40af;font-weight:600;">${formatUsd(calc.total_cost_usd, lang)}${calc.target_videos > 1 ? ` (${calc.target_videos} Video)` : ''}</div>
     </div>
     <div class="metric-card">
-      <div class="metric-label">${isId ? 'Cadangan Langkah 2' : 'Step 2 Reserve Multiplier'}</div>
-      <div class="metric-val">${cadanganMultiplier}x ${isId ? 'Cadangan' : 'Reserve'}</div>
-      <div class="metric-sub">${isId ? 'Pengali jatah coba adegan' : 'Retry multiplier per scene'}</div>
+      <div class="metric-label">${isId ? 'Proyeksi 1 Video Jadi' : '1 Finished Video Cost'}</div>
+      <div class="metric-val">${formatIdr(calc.one_video_total_cost_idr, lang)}</div>
+      <div class="metric-sub">${formatUsd(calc.one_video_total_cost_usd, lang)} &bull; ${calc.one_video_budgeted_generations}x buat</div>
     </div>
-    `}
+    <div class="metric-card">
+      <div class="metric-label">${isId ? 'Target Jumlah Video' : 'Target Video Count'}</div>
+      <div class="metric-val">${calc.target_videos} ${isId ? 'Video' : 'Videos'}</div>
+      <div class="metric-sub">${cadanganMultiplier}x ${isId ? 'cadangan per adegan' : 'reserve multiplier'}</div>
+    </div>
     <div class="metric-card">
       <div class="metric-label">${isId ? 'Total Kali Buat AI' : 'Total AI Generations'}</div>
       <div class="metric-val">${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</div>
-      <div class="metric-sub">${totalSceneQuantity} ${isId ? 'adegan / gambar pokok' : 'base scene items'}</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">${isId ? 'Total Konsumsi Credit' : 'Total Credit Consumption'}</div>
-      <div class="metric-val">${calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : isId ? 'Bebas / Rp 0' : 'Free / $0'}</div>
-      <div class="metric-sub">${calc.budgeted_generations} ${isId ? 'kali proses AI' : 'total AI runs'}</div>
+      <div class="metric-sub">${calc.total_credit !== null ? `${calc.total_credit.toLocaleString()} Credits` : (isId ? 'Bebas Credit' : 'No Credits')}</div>
     </div>
   </div>
   ` : ''}
@@ -422,6 +409,19 @@ function generatePdfReportHtml(project, overrideLang) {
       ${itemRowsHtml}
     </tbody>
   </table>
+  <div style="margin-top:10px;margin-bottom:14px;padding:12px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:10px;">
+    <div style="font-weight:700;color:#166534;font-size:11.5px;margin-bottom:4px;display:flex;align-items:center;gap:6px;">
+      <span>📌</span>
+      <span>${isId ? 'CATATAN PENTING & RUMUS PROYEKSI MULTI-VIDEO:' : 'IMPORTANT NOTICE & MULTI-VIDEO PROJECTION FORMULA:'}</span>
+    </div>
+    <div style="font-size:11px;color:#0f172a;line-height:1.5;">
+      ${isId
+        ? `Seluruh rincian pekerjaan dan adegan pada tabel di atas adalah proyeksi teknis kebutuhan untuk <strong>1 (satu) video</strong> utuh.<br/>
+           <strong>Perhitungan Total Anggaran Akhir:</strong> Biaya 1 Video (<strong>${formatIdr(calc.one_video_total_cost_idr, lang)}</strong> / ${formatUsd(calc.one_video_total_cost_usd, lang)}) &times; <strong>${calc.target_videos} Video</strong> = <strong>${formatIdr(calc.total_cost_idr, lang)}</strong> (${formatUsd(calc.total_cost_usd, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`
+        : `All stage requirements and scenes in the table above project technical needs for <strong>1 (one) single video</strong>.<br/>
+           <strong>Final Grand Total Calculation:</strong> 1 Video Cost (<strong>${formatUsd(calc.one_video_total_cost_usd, lang)}</strong> / ${formatIdr(calc.one_video_total_cost_idr, lang)}) &times; <strong>${calc.target_videos} Videos</strong> = <strong>${formatUsd(calc.total_cost_usd, lang)}</strong> (${formatIdr(calc.total_cost_idr, lang)}${calc.total_credit !== null ? ` &bull; ${calc.total_credit.toLocaleString()} Credits` : ''})`}
+    </div>
+  </div>
   ` : ''}
 
   <!-- 5. RINCIAN CREDIT (PRD Bab 12.2) -->
@@ -512,12 +512,16 @@ function generatePdfReportHtml(project, overrideLang) {
         <td class="num"><strong>${formatUsd(calc.total_cost_usd, lang)}</strong></td>
         <td class="num"><strong>${formatIdr(calc.total_cost_idr, lang)}</strong></td>
       </tr>
-      ${project.assumptions.estimation_mode === 'target_final' && calc.cost_per_video_usd !== null ? `
       <tr>
-        <th>${isId ? 'Rata-rata Biaya per 1 Video Jadi' : 'Average Cost per Final Video'}</th>
-        <td class="num">${formatUsd(calc.cost_per_video_usd, lang)}</td>
-        <td class="num">${formatIdr(calc.cost_per_video_idr, lang)}</td>
+        <th>${isId ? 'Proyeksi Biaya per 1 Video Jadi' : '1 Finished Video Projected Cost'}</th>
+        <td class="num">${formatUsd(calc.one_video_total_cost_usd, lang)}</td>
+        <td class="num"><strong>${formatIdr(calc.one_video_total_cost_idr, lang)}</strong></td>
       </tr>
+      <tr>
+        <th>${isId ? 'Jumlah Video yang Diproduksi' : 'Total Videos Produced'}</th>
+        <td class="num" colspan="2"><strong>&times; ${calc.target_videos} ${isId ? 'Video' : 'Videos'}</strong></td>
+      </tr>
+      ${calc.cost_per_minute_usd !== null ? `
       <tr>
         <th>${isId ? 'Rata-rata Biaya per 1 Menit Video Jadi' : 'Average Cost per Final Video Minute'}</th>
         <td class="num">${formatUsd(calc.cost_per_minute_usd, lang)}</td>

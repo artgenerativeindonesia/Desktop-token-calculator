@@ -221,6 +221,13 @@ export const BudgetSummaryView: React.FC = () => {
               <div className="text-3xl md:text-4xl font-bold tabular-nums tracking-tight text-[var(--vv-text-primary)]">
                 {formatCurrencyIdr(calc.total_cost_idr, language)}
               </div>
+              {calc.target_videos > 1 && (
+                <div className="text-xs text-emerald-400 font-semibold mt-1">
+                  {isId
+                    ? `Total Anggaran untuk ${calc.target_videos} Video (Proyeksi 1 Video: ${formatCurrencyIdr(calc.one_video_total_cost_idr, language)})`
+                    : `Total Budget for ${calc.target_videos} Videos (1 Video Plan: ${formatCurrencyUsd(calc.one_video_total_cost_usd, language)})`}
+                </div>
+              )}
               <div className="text-lg font-semibold tabular-nums text-[#0099ff] mt-1">
                 {formatCurrencyUsd(calc.total_cost_usd, language)}
               </div>
@@ -368,15 +375,26 @@ export const BudgetSummaryView: React.FC = () => {
             </div>
 
             {/* Optional Target Final Metrics if explicit */}
-            {project.assumptions.estimation_mode === 'target_final' &&
-              calc.cost_per_video_usd !== null && (
-                <div className="vv-card-quiet p-3 flex items-center justify-between text-xs">
-                  <span className="text-[var(--vv-text-muted)]">{t.costPerVideo}</span>
-                  <span className="font-bold tabular-nums">
-                    {formatCurrencyIdr(calc.cost_per_video_idr, language)} ({formatCurrencyUsd(calc.cost_per_video_usd, language)})
-                  </span>
-                </div>
-              )}
+            {calc.target_videos > 1 && (
+              <div className="vv-card-quiet p-3 flex items-center justify-between text-xs">
+                <span className="text-[var(--vv-text-muted)]">
+                  {isId ? 'Biaya per 1 Video Jadi:' : 'Cost per 1 Final Video:'}
+                </span>
+                <span className="font-bold tabular-nums text-emerald-400">
+                  {formatCurrencyIdr(calc.one_video_total_cost_idr, language)} ({formatCurrencyUsd(calc.one_video_total_cost_usd, language)})
+                </span>
+              </div>
+            )}
+            {calc.one_video_duration_seconds > 0 && (
+              <div className="vv-card-quiet p-3 flex items-center justify-between text-xs">
+                <span className="text-[var(--vv-text-muted)]">
+                  {isId ? 'Panjang 1 Video (Durasi Bersih):' : '1 Video Clean Duration:'}
+                </span>
+                <span className="font-bold tabular-nums text-[#0099ff]">
+                  ⏱️ {isId ? calc.one_video_duration_formatted.id : calc.one_video_duration_formatted.en}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
