@@ -17,6 +17,8 @@ exports.ProcessCategorySchema = zod_1.z.preprocess((val) => {
         return 'upscale_video';
     if (val === 'voiceover' || val === 'voice' || val === 'tts')
         return 'voice_over';
+    if (val === 'soundtrack' || val === 'bgm' || val === 'audio_bgm' || val === 'audio_music')
+        return 'music';
     return val;
 }, zod_1.z.enum([
     'text_to_image',
@@ -27,6 +29,7 @@ exports.ProcessCategorySchema = zod_1.z.preprocess((val) => {
     'upscale_image',
     'upscale_video',
     'voice_over',
+    'music',
 ]));
 exports.EstimationModeSchema = zod_1.z.enum(['target_final', 'per_shot']);
 exports.QuantityTypeSchema = zod_1.z.enum(['shot', 'asset', 'output']);
@@ -72,6 +75,9 @@ exports.ProductionItemSchema = zod_1.z.object({
     script_text: zod_1.z.string().optional(),
     script_language: zod_1.z.enum(['id', 'en']).optional(),
     character_count: zod_1.z.number().int().nonnegative().optional(),
+    music_prompt: zod_1.z.string().optional(),
+    music_genre: zod_1.z.string().optional(),
+    is_instrumental: zod_1.z.boolean().optional(),
 });
 exports.ElevenLabsSubscriptionPlanSchema = zod_1.z.object({
     plan_id: zod_1.z.string().min(1),
@@ -98,6 +104,7 @@ exports.BudgetAssumptionsSchema = zod_1.z.object({
     reserve_percent: zod_1.z.number().nonnegative(),
     reserve_generations_override: zod_1.z.number().int().nonnegative(),
     elevenlabs_plan_id: zod_1.z.string().optional(),
+    suno_plan_id: zod_1.z.string().optional(),
 });
 exports.ExchangeRateSchema = zod_1.z.object({
     base_currency: zod_1.z.literal('USD'),

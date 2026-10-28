@@ -3,7 +3,7 @@
  */
 
 export const CURRENT_SCHEMA_VERSION = '1.0.0';
-export const APP_VERSION = '1.11.2';
+export const APP_VERSION = '1.12.0';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
@@ -49,7 +49,7 @@ export type VerificationStatus =
   | 'unavailable'
   | 'invalid';
 
-/** 8 Kategori Proses AI (termasuk Image to Image, Upscale Image/Video, & Voice Over ElevenLabs) */
+/** 9 Kategori Proses AI (termasuk Image to Image, Upscale Image/Video, Voice Over ElevenLabs, & Musik Suno AI) */
 export type ProcessCategory =
   | 'text_to_image'
   | 'image_to_image'
@@ -58,7 +58,8 @@ export type ProcessCategory =
   | 'text_to_video'
   | 'upscale_image'
   | 'upscale_video'
-  | 'voice_over';
+  | 'voice_over'
+  | 'music';
 
 export const ALL_PROCESS_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
@@ -69,6 +70,7 @@ export const ALL_PROCESS_CATEGORIES: ProcessCategory[] = [
   'upscale_image',
   'upscale_video',
   'voice_over',
+  'music',
 ];
 
 /** PRD Bab 1.1 & 8.8: Dua mode estimasi */
@@ -174,6 +176,11 @@ export interface ProductionItem {
   script_text?: string;
   script_language?: 'id' | 'en';
   character_count?: number;
+
+  // Musik Pengiring & Soundtrack (Tahap 4 - Suno AI)
+  music_prompt?: string;
+  music_genre?: string;
+  is_instrumental?: boolean;
 }
 
 /** PRD Bab 8.1, 8.3, 8.8, 10.2: Objek BudgetAssumptions */
@@ -187,6 +194,7 @@ export interface BudgetAssumptions {
   reserve_percent: number; // R dalam persen, mis. 20 untuk 20%
   reserve_generations_override: number; // Greserve jika diinput langsung oleh user
   elevenlabs_plan_id?: string; // Paket langganan ElevenLabs aktif (mis. 'free', 'starter', 'creator', 'pro', 'scale', 'business')
+  suno_plan_id?: string; // Paket langganan Suno AI aktif ('free', 'pro', 'premier')
 }
 
 /** PRD Bab 9.3 & 10.2: Objek ExchangeRate */
@@ -259,7 +267,8 @@ export interface CalculationWarning {
     | 'ZERO_DIVISOR_VIDEO'
     | 'ZERO_DIVISOR_MINUTE'
     | 'INSUFFICIENT_SHOT_DURATION'
-    | 'INCOMPLETE_VOICE_OVER';
+    | 'INCOMPLETE_VOICE_OVER'
+    | 'INCOMPLETE_MUSIC';
   severity: 'error' | 'warning' | 'info';
   message_id: string;
   message_en: string;
@@ -298,6 +307,11 @@ export interface CalculationResult {
   total_elevenlabs_credit: number | null;
   one_video_elevenlabs_credit: number | null;
   selected_elevenlabs_plan_id?: string;
+
+  // Pelacakan Terpisah Credit Suno AI (Musik) - Tahap 4
+  total_suno_credit: number | null;
+  one_video_suno_credit: number | null;
+  selected_suno_plan_id?: string;
 
   // Klasifikasi Shot / Gambar Utama vs Aset Pendukung (v1.9.0)
   one_video_primary_shot_count: number;

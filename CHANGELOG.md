@@ -12,6 +12,52 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.12.0] - Integrasi Katalog Resmi Suno AI Music Generator, Manajemen Paket Langganan & Pelacakan Kredit Musik Transparan (Tahap 4)
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.12.0`
+
+### Ditambahkan (Added)
+1. **Integrasi Penuh Katalog Model Musik Resmi Suno AI (`sunoCatalog.ts`)**:
+   - Memuat 5 model musik resmi Suno:
+     - **Suno v4 (Flagship Next-Gen)**: Model generasi ke-4 tercanggih dengan aransemen sinematik megah, fidelitas audio studio 48kHz, vokal sangat jernih, dan struktur lagu dinamis hingga 4–8 menit (10 kredit/generate).
+     - **Suno v3.5 (Workhorse Teruji)**: Model teruji paling stabil untuk pembuatan lagu komersial lengkap (verse, chorus, bridge, outro) hingga 4 menit per generate (10 kredit/generate).
+     - **Suno v3 (Klasik / Legacy)**: Model generasi ke-3 untuk jingle pendek atau melodi dasar hingga 2 menit (10 kredit/generate).
+     - **Suno v6 Mini (Fast & Agile)**: Model generasi baru berkecepatan tinggi, optimal untuk pembuatan ide lagu latar cepat dan jingle (10 kredit/generate).
+     - **Suno v6 (Orchestral & Studio)**: Model dengan orkestrasi multi-layer dan separasi instrumen studio tingkat lanjut (10 kredit/generate).
+   - Menetapkan aturan baku resmi Suno: 1 kali tombol generate membutuhkan tepat **10 kredit Suno** dan menghasilkan **2 variasi klip lagu** siap pilih.
+2. **Manajemen Paket Langganan Suno AI di Langkah 6 (`DataSettingsView.tsx`)**:
+   - Menghadirkan pemilihan 3 tier langganan resmi Suno:
+     - **Free**: $0/bulan (50 kredit harian reset tiap hari, lisensi non-komersial).
+     - **Pro**: $10/bulan (2.500 kredit/bulan, $0.0040/kredit atau ~Rp 65/kredit, lisensi komersial penuh untuk YouTube, iklan, dan streaming).
+     - **Premier**: $30/bulan (10.000 kredit/bulan, $0.0030/kredit atau ~Rp 48.75/kredit, lisensi komersial penuh & antrean prioritas tinggi).
+   - Menambahkan tombol *"Perbarui Katalog Suno"* dengan konektor real-time resmi dan fallback otomatis ke snapshot lokal terverifikasi.
+3. **UI Modal Khusus Musik Sineas di Langkah 3 (`ProductionPlannerView.tsx`)**:
+   - Input kuantitas *"Mau Buat Berapa Track / Lagu Jadi?"* yang langsung menghitung pengali cadangan Langkah 2: `track lagu × cadangan = total kali generate Suno (variasi lagu dihasilkan)`.
+   - Pilihan format musik satu-klik: *Instrumental Saja (Tanpa Vokal)* vs *Lagu Lengkap dengan Vokal AI*.
+   - Tombol preset cepat genre & nuansa mood: Sinematik Megah, Upbeat & Ceria, Santai Lo-Fi, Dramatis Emosional, Ambient Elektronik, dan Tradisional Etnik.
+   - Area naskah prompt musik Suno AI untuk mengatur instrumen, tempo (bpm), dan mood.
+   - Pengaturan target durasi musik (detik) dengan tombol pintar *"Samakan dgn Video (+8s buffer)"* untuk memberikan jeda fade-out musik yang mulus saat diedit di timeline video editor.
+   - Kartu Live Kalkulasi Suno di dalam modal yang nilainya 100% konsisten dengan footer modal dan anggaran proyek.
+4. **Kartu Ringkasan Resmi Suno AI di Langkah 4 & Dokumen Cetak PDF (`BudgetSummaryView.tsx` & `pdfReportBuilder.ts`)**:
+   - Menghadirkan Kartu Ringkasan Musik Resmi Suno AI di Langkah 4 yang merangkum jumlah track lagu, variasi klip lagu dihasilkan, durasi musik, kredit Suno, dan subtotal biaya musik (USD & IDR).
+   - Pelacakan kredit multi-platform yang transparan: kredit Higgsfield (video/gambar), ElevenLabs (suara), dan Suno (musik) ditampilkan secara terpisah dan jelas pada ringkasan biaya dan laporan cetak PDF.
+5. **Rangkaian Unit Test Lengkap Suno AI (`tests/sunoCatalog.test.ts`)**:
+   - 12 unit test otomatis baru menguji integritas katalog model, tier paket langganan, rumus desimal kredit & biaya, adaptasi tarif ke katalog gabungan, dan kalkulasi proyek multi-video.
+
+### Diubah (Changed)
+1. **Klasifikasi Peran Track Musik dalam Storyboard**:
+   - Item musik secara otomatis diklasifikasikan sebagai Aset Pendukung (`is_primary_shot: false`) dengan label khusus `🎵 Track Musik` sehingga biayanya terhitung sebagai *production overhead* tanpa menambah jumlah shot utama storyboard video.
+2. **Isolasi Durasi Bersih Video (`cleanDurationSec`)**:
+   - Memastikan durasi bersih storyboard video hanya menghitung klip shot kamera visual dan tidak membengkak ganda oleh durasi musik latar.
+
+### Diperbaiki (Fixed)
+1. **Normalisasi Kategori Skema Zod (`projectSchema.ts`)**:
+   - Memperbaiki `ProcessCategorySchema` agar mengenali alias `music`, `soundtrack`, `bgm`, dan `audio_bgm` secara backward-compatible.
+2. **Ketahanan Alokasi Cadangan Terhadap Asumsi Parsial (`calculationEngine.ts`)**:
+   - Menambahkan pengaman `Math.floor(assumptions.reserve_generations_override || 0)` untuk mencegah nilai `NaN` jika fungsi kalkulasi dipanggil dengan objek asumsi tanpa field cadangan eksplisit.
+
+---
+
 ## Versi [1.11.2] - Audit Presisi Kalkulasi, Akuntansi Bottom-Up Rupiah & Sinkronisasi Penuh Tahap 1–3
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.11.2`

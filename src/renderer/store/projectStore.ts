@@ -37,10 +37,17 @@ import {
   ELEVENLABS_SUBSCRIPTION_PLANS,
   ElevenLabsSubscriptionTier,
 } from '../../shared/catalog/elevenlabsCatalog';
+import {
+  applySunoPlanRateToCatalog,
+  SUNO_AS_CATALOG_MODELS,
+  SUNO_SUBSCRIPTION_PLANS,
+  SunoSubscriptionTier,
+} from '../../shared/catalog/sunoCatalog';
 
 const DEFAULT_COMBINED_CATALOG: CatalogModelEntry[] = [
   ...HIGGSFIELD_MODEL_CATALOG,
   ...ELEVENLABS_AS_CATALOG_MODELS,
+  ...SUNO_AS_CATALOG_MODELS,
 ];
 import { validateProjectFileJson } from '../../shared/schema/projectSchema';
 import {
@@ -75,6 +82,8 @@ interface ProjectStoreState {
   usdPerCredit: number;
   selectedElevenLabsPlanId: ElevenLabsSubscriptionTier;
   setSelectedElevenLabsPlanId: (planId: ElevenLabsSubscriptionTier) => void;
+  selectedSunoPlanId: SunoSubscriptionTier;
+  setSelectedSunoPlanId: (planId: SunoSubscriptionTier) => void;
   recentProjects: RecentProjectEntry[];
   isRefreshingFx: boolean;
   isRefreshingCatalog: boolean;
@@ -133,6 +142,9 @@ interface ProjectStoreState {
         | 'script_text'
         | 'script_language'
         | 'character_count'
+        | 'music_prompt'
+        | 'music_genre'
+        | 'is_instrumental'
       >
     >
   ) => void;
@@ -224,7 +236,8 @@ function recalculateProject(project: ProjectFile): ProjectFile {
     syncedAssumptions,
     project.exchange_rate,
     undefined,
-    project.assumptions.elevenlabs_plan_id || 'starter'
+    project.assumptions.elevenlabs_plan_id || 'starter',
+    project.assumptions.suno_plan_id || 'pro'
   );
 
   return {
@@ -262,6 +275,26 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
           assumptions: {
             ...state.project.assumptions,
             elevenlabs_plan_id: planId,
+          },
+        }),
+      };
+    }),
+  selectedSunoPlanId: 'pro',
+  setSelectedSunoPlanId: (planId) =>
+    set((state) => {
+      const updatedCatalog = applySunoPlanRateToCatalog(
+        state.catalog,
+        planId
+      );
+      return {
+        selectedSunoPlanId: planId,
+        catalog: updatedCatalog,
+        hasUnsavedChanges: true,
+        project: recalculateProject({
+          ...state.project,
+          assumptions: {
+            ...state.project.assumptions,
+            suno_plan_id: planId,
           },
         }),
       };
@@ -736,6 +769,62 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
             state.language === 'id'
               ? 'File audio narasi / dialog resmi ElevenLabs.'
               : 'Official ElevenLabs voice over audio file.',
+        };
+
+        return {
+          hasUnsavedChanges: true,
+          project: recalculateProject({
+            ...state.project,
+            items: [...state.project.items, newItem],
+          }),
+        };
+      }
+
+      if (category === 'music') {
+        const musicModel =
+          models[0] ||
+          state.catalog.find((m) =>
+            m.supported_categories.includes('music')
+          ) ||
+          state.catalog[0];
+        const defaultParams = getDefaultParametersForModel(musicModel);
+        const pricing = resolveModelPricing(musicModel, defaultParams);
+        const cleanVideoDuration =
+          state.project.calculation.one_video_duration_seconds > 0
+            ? Math.round(state.project.calculation.one_video_duration_seconds)
+            : 120;
+        const musicDuration = cleanVideoDuration > 0 ? cleanVideoDuration : 120;
+
+        const newItem: ProductionItem = {
+          item_id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+          category: 'music',
+          label:
+            state.language === 'id'
+              ? `Track Musik ${String(nextIndex).padStart(2, '0')} (${musicModel.model_name})`
+              : `Music Track ${String(nextIndex).padStart(2, '0')} (${musicModel.model_name})`,
+          quantity: 1,
+          quantity_type: 'asset',
+          duration_seconds: musicDuration,
+          attempts_per_item:
+            state.project.assumptions.default_attempts_per_shot || 1,
+          use_project_target_multiplier: false,
+          is_primary_shot: false,
+          is_unlimited: false,
+          is_instrumental: true,
+          music_genre: 'Sinematik Megah',
+          music_prompt: '',
+          model_selection: {
+            provider: musicModel.provider,
+            model_id: musicModel.model_id,
+            model_name: musicModel.model_name,
+            category: 'music',
+            parameter_values: defaultParams,
+          },
+          pricing,
+          notes:
+            state.language === 'id'
+              ? 'Track musik pengiring resmi Suno AI.'
+              : 'Official Suno AI background music track.',
         };
 
         return {
@@ -1245,11 +1334,13 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         selectedCreditPlanId: 'api_standard',
         usdPerCredit: DEFAULT_USD_PER_CREDIT,
         selectedElevenLabsPlanId: 'starter',
+        selectedSunoPlanId: 'pro',
         project: recalculateProject({
           ...state.project,
           assumptions: {
             ...state.project.assumptions,
             elevenlabs_plan_id: 'starter',
+            suno_plan_id: 'pro',
           },
           items: updatedItems,
         }),
@@ -1257,8 +1348,8 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
     });
     get().showBanner(
       'info',
-      'Seluruh tarif katalog telah dikembalikan ke data referensi resmi Higgsfield & ElevenLabs.',
-      'All catalog rates have been reset to official Higgsfield & ElevenLabs reference data.'
+      'Seluruh tarif katalog telah dikembalikan ke data referensi resmi Higgsfield, ElevenLabs, & Suno.',
+      'All catalog rates have been reset to official Higgsfield, ElevenLabs, & Suno reference data.'
     );
   },
 

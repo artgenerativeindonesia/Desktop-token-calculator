@@ -62,9 +62,10 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
   });
 
   describe('Tahap 3 — Voice Over & ElevenLabs Schema Contract Integrity', () => {
-    it('ALL_PROCESS_CATEGORIES memuat voice_over dan berjumlah 8 kategori', () => {
+    it('ALL_PROCESS_CATEGORIES memuat voice_over dan berjumlah 9 kategori (termasuk music)', () => {
       expect(ALL_PROCESS_CATEGORIES).toContain('voice_over');
-      expect(ALL_PROCESS_CATEGORIES.length).toBe(8);
+      expect(ALL_PROCESS_CATEGORIES).toContain('music');
+      expect(ALL_PROCESS_CATEGORIES.length).toBe(9);
     });
 
     it('ProcessCategorySchema memvalidasi voice_over dan alias yang dinormalisasi', () => {
@@ -140,6 +141,55 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
       expect(parsedPlan.plan_id).toBe('creator');
       expect(parsedPlan.monthly_credits).toBe(100000);
       expect(parsedPlan.usd_per_credit).toBeCloseTo(0.00022);
+    });
+  });
+
+  describe('Tahap 4 — Suno AI Music Schema Contract Integrity', () => {
+    it('ProcessCategorySchema memvalidasi music dan alias seperti soundtrack / bgm', () => {
+      expect(ProcessCategorySchema.parse('music')).toBe('music');
+      expect(ProcessCategorySchema.parse('soundtrack')).toBe('music');
+      expect(ProcessCategorySchema.parse('bgm')).toBe('music');
+      expect(ProcessCategorySchema.parse('audio_bgm')).toBe('music');
+    });
+
+    it('ProductionItemSchema mendukung field opsional musik Suno', () => {
+      const musicItem = {
+        item_id: 'item-music-1',
+        category: 'music',
+        label: 'Main Cinematic Soundtrack',
+        quantity: 1,
+        quantity_type: 'asset',
+        duration_seconds: 120,
+        attempts_per_item: 2,
+        is_primary_shot: false,
+        music_genre: 'Sinematik Megah',
+        music_prompt: 'Epic orchestral theme with strings and brass',
+        is_instrumental: true,
+        model_selection: {
+          provider: 'suno',
+          model_id: 'suno_v4',
+          model_name: 'Suno v4',
+          category: 'music',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_generation',
+          price_value: 0.04,
+          currency: 'USD',
+          credit_cost: 10,
+          source_name: 'Official Suno Catalog',
+          source_url: 'https://suno.com/pricing',
+          retrieved_at: new Date().toISOString(),
+          status: 'verified',
+        },
+      };
+
+      const parsed = ProductionItemSchema.parse(musicItem);
+      expect(parsed.category).toBe('music');
+      expect(parsed.music_genre).toBe('Sinematik Megah');
+      expect(parsed.music_prompt).toBe('Epic orchestral theme with strings and brass');
+      expect(parsed.is_instrumental).toBe(true);
+      expect(parsed.is_primary_shot).toBe(false);
     });
   });
 });

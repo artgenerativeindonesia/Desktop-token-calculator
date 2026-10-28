@@ -18,6 +18,7 @@ const decimal_js_1 = __importDefault(require("decimal.js"));
 const project_1 = require("../types/project");
 const higgsfieldCatalog_1 = require("../catalog/higgsfieldCatalog");
 const elevenlabsCatalog_1 = require("../catalog/elevenlabsCatalog");
+const sunoCatalog_1 = require("../catalog/sunoCatalog");
 // PRD FR-14: Akurasi internal tinggi sebelum pembulatan tampilan
 decimal_js_1.default.set({ precision: 28, rounding: decimal_js_1.default.ROUND_HALF_UP });
 const ALL_CATEGORIES = project_1.ALL_PROCESS_CATEGORIES;
@@ -193,11 +194,11 @@ function allocateReserveAcrossItems(itemPlannedGenerations, assumptions) {
         return itemPlannedGenerations.map(() => 0);
     }
     if (assumptions.reserve_input_mode === 'percent') {
-        const rDecimal = new decimal_js_1.default(Math.max(0, assumptions.reserve_percent)).dividedBy(100);
+        const rDecimal = new decimal_js_1.default(Math.max(0, assumptions.reserve_percent || 0)).dividedBy(100);
         return itemPlannedGenerations.map((gPlanned) => rDecimal.times(gPlanned).ceil().toNumber());
     }
     // Mode 'count': pastikan total Greserve sama persis dengan angka yang diinput user
-    const targetReserveTotal = Math.max(0, Math.floor(assumptions.reserve_generations_override));
+    const targetReserveTotal = Math.max(0, Math.floor(assumptions.reserve_generations_override || 0));
     if (targetReserveTotal === 0) {
         return itemPlannedGenerations.map(() => 0);
     }
@@ -221,7 +222,7 @@ function allocateReserveAcrossItems(itemPlannedGenerations, assumptions) {
  * Mesin Kalkulasi Utama (PRD Bab 8.1 s/d 8.10)
  * Digunakan bersama oleh UI dan Generator PDF (PRD FR-06, FR-11, FR-14, NFR-01, NFR-02).
  */
-function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selectedElevenLabsPlanId) {
+function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selectedElevenLabsPlanId, selectedSunoPlanId) {
     const warnings = [];
     // Validasi kurs (PRD Bab 8.6 & 9.3)
     const hasValidExchangeRate = exchangeRate.rate !== null &&
@@ -312,6 +313,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
     // Pelacakan Terpisah Credit ElevenLabs (Voice Over) - Tahap 3
     let sumOneVideoElevenLabsCredit = new decimal_js_1.default(0);
     let hasElevenLabsItems = false;
+    // Pelacakan Terpisah Credit Suno AI (Musik) - Tahap 4
+    let sumOneVideoSunoCredit = new decimal_js_1.default(0);
+    let hasSunoItems = false;
     let oneVideoPrimaryShotCount = 0;
     let oneVideoSupportingAssetCount = 0;
     let sumOneVideoDurationDec = new decimal_js_1.default(0);
@@ -499,6 +503,125 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
                 total_credit: itemTotalCredit,
                 pricing_status: pricing.status === 'manual' ? 'manual' : 'verified',
                 is_item_complete: voChars > 0 || (item.duration_seconds || 0) > 0,
+                warnings: itemWarnings,
+            });
+            continue;
+        }
+        // --- INTEGRASI KHUSUS TAHAP 4: MUSIK PENGIRING (SUNO AI) ---
+        if (item.category === 'music') {
+            const activePlanId = assumptions.suno_plan_id ||
+                selectedSunoPlanId ||
+                'pro';
+            const activePlan = (0, sunoCatalog_1.getSunoPlanById)(activePlanId);
+            // Aturan Baku Suno: 1 kali generate = 10 kredit menghasilkan 2 variasi lagu
+            const creditsPerGen = 10;
+            const itemPlannedSuno = new decimal_js_1.default(gPlanned).times(creditsPerGen);
+            const itemReserveSuno = new decimal_js_1.default(gReserve).times(creditsPerGen);
+            const itemBudgetedSuno = new decimal_js_1.default(gBudget).times(creditsPerGen);
+            let itemTotalCredit = null;
+            if (gBudget > 0) {
+                sumOneVideoSunoCredit = sumOneVideoSunoCredit.plus(itemBudgetedSuno);
+                hasSunoItems = true;
+                itemTotalCredit = itemBudgetedSuno.toNumber();
+            }
+            // Biaya USD & IDR (Konsistensi Bottom-Up Akuntansi)
+            let bBaseDec;
+            let bReserveDec;
+            if (pricing.status === 'manual' &&
+                pricing.price_value !== null &&
+                pricing.price_value >= 0) {
+                bBaseDec = new decimal_js_1.default(gPlanned).times(pricing.price_value);
+                bReserveDec = new decimal_js_1.default(gReserve).times(pricing.price_value);
+            }
+            else {
+                bBaseDec = new decimal_js_1.default(itemPlannedSuno).times(activePlan.usd_per_credit);
+                bReserveDec = new decimal_js_1.default(itemReserveSuno).times(activePlan.usd_per_credit);
+            }
+            const baseCostUsd = bBaseDec.toDecimalPlaces(4).toNumber();
+            const reserveCostUsd = bReserveDec.toDecimalPlaces(4).toNumber();
+            const totalCostUsd = new decimal_js_1.default(baseCostUsd)
+                .plus(reserveCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            sumBaseUsd = sumBaseUsd.plus(baseCostUsd);
+            sumReserveUsd = sumReserveUsd.plus(reserveCostUsd);
+            sumTotalUsd = sumTotalUsd.plus(totalCostUsd);
+            let baseCostIdr = null;
+            let reserveCostIdr = null;
+            let totalCostIdr = null;
+            if (fxDecimal) {
+                baseCostIdr = bBaseDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+                reserveCostIdr = bReserveDec.times(fxDecimal).toDecimalPlaces(2).toNumber();
+                totalCostIdr = new decimal_js_1.default(baseCostIdr)
+                    .plus(reserveCostIdr)
+                    .toDecimalPlaces(2)
+                    .toNumber();
+                sumBaseIdr = sumBaseIdr.plus(baseCostIdr);
+                sumReserveIdr = sumReserveIdr.plus(reserveCostIdr);
+                sumTotalIdr = sumTotalIdr.plus(totalCostIdr);
+            }
+            const catSum = categorySummaries[item.category];
+            catSum.item_count += 1;
+            catSum.planned_generations += gPlanned;
+            catSum.reserve_generations += gReserve;
+            catSum.budgeted_generations += gBudget;
+            catSum.base_cost_usd = new decimal_js_1.default(catSum.base_cost_usd)
+                .plus(baseCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            catSum.reserve_cost_usd = new decimal_js_1.default(catSum.reserve_cost_usd)
+                .plus(reserveCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            catSum.total_cost_usd = new decimal_js_1.default(catSum.total_cost_usd)
+                .plus(totalCostUsd)
+                .toDecimalPlaces(4)
+                .toNumber();
+            if (fxDecimal && catSum.total_cost_idr !== null && totalCostIdr !== null) {
+                catSum.total_cost_idr = new decimal_js_1.default(catSum.total_cost_idr)
+                    .plus(totalCostIdr)
+                    .toDecimalPlaces(2)
+                    .toNumber();
+            }
+            if (itemTotalCredit !== null) {
+                catSum.total_credit = new decimal_js_1.default(catSum.total_credit)
+                    .plus(itemTotalCredit)
+                    .toNumber();
+            }
+            const musicUnitPriceUsd = pricing.status === 'manual' &&
+                pricing.price_value !== null &&
+                pricing.price_value >= 0
+                ? pricing.price_value
+                : new decimal_js_1.default(creditsPerGen)
+                    .times(activePlan.usd_per_credit)
+                    .toDecimalPlaces(4)
+                    .toNumber();
+            itemResults.push({
+                item_id: item.item_id,
+                label: item.label,
+                category: item.category,
+                is_primary_shot: isPrimaryShot,
+                duration_seconds: item.duration_seconds || 120,
+                is_eligible_duration_clip: false, // Musik adalah audio track, bukan klip shot video
+                model_name: item.model_selection.model_name,
+                effective_quantity: effectiveQty,
+                attempts_per_item: attempts,
+                planned_generations: gPlanned,
+                reserve_generations: gReserve,
+                budgeted_generations: gBudget,
+                unit_multiplier: 1,
+                pricing_unit: 'per_generation',
+                unit_price_usd: musicUnitPriceUsd,
+                base_cost_usd: baseCostUsd,
+                reserve_cost_usd: reserveCostUsd,
+                total_cost_usd: totalCostUsd,
+                base_cost_idr: baseCostIdr,
+                reserve_cost_idr: reserveCostIdr,
+                total_cost_idr: totalCostIdr,
+                unit_credit: creditsPerGen,
+                total_credit: itemTotalCredit,
+                pricing_status: pricing.status === 'manual' ? 'manual' : 'verified',
+                is_item_complete: effectiveQty > 0,
                 warnings: itemWarnings,
             });
             continue;
@@ -903,6 +1026,14 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
         selected_elevenlabs_plan_id: assumptions.elevenlabs_plan_id ||
             selectedElevenLabsPlanId ||
             'starter',
+        // Pelacakan Terpisah Credit Suno AI (Musik) - Tahap 4
+        total_suno_credit: hasSunoItems
+            ? sumOneVideoSunoCredit.times(vDec).toNumber()
+            : null,
+        one_video_suno_credit: hasSunoItems
+            ? sumOneVideoSunoCredit.toNumber()
+            : null,
+        selected_suno_plan_id: assumptions.suno_plan_id || selectedSunoPlanId || 'pro',
         // Proyeksi 1 Video Murni
         target_videos: targetVideosCount,
         one_video_planned_generations: oneVideoPlannedGen,
@@ -951,6 +1082,7 @@ function createProductionItemFromCatalog(category, modelId, label, quantity = 1,
     const combinedCatalog = [
         ...higgsfieldCatalog_1.HIGGSFIELD_MODEL_CATALOG,
         ...elevenlabsCatalog_1.ELEVENLABS_AS_CATALOG_MODELS,
+        ...sunoCatalog_1.SUNO_AS_CATALOG_MODELS,
     ];
     const model = (0, higgsfieldCatalog_1.getModelById)(modelId, combinedCatalog) ||
         combinedCatalog.find((m) => m.supported_categories.includes(category)) ||
@@ -982,6 +1114,12 @@ function createProductionItemFromCatalog(category, modelId, label, quantity = 1,
     if (category === 'voice_over') {
         baseItem.script_language = 'id';
         baseItem.character_count = (0, elevenlabsCatalog_1.convertDurationToCharacters)(durationSec, 'id', String(defaultParams.speed_preset || 'normal'));
+    }
+    else if (category === 'music') {
+        baseItem.is_primary_shot = false; // Aset Pendukung (Background Music)
+        baseItem.duration_seconds = durationSec > 0 ? durationSec : 120;
+        baseItem.is_instrumental = true;
+        baseItem.music_genre = 'Sinematik Megah';
     }
     return baseItem;
 }

@@ -44,6 +44,14 @@ import {
   getElevenLabsPlanById,
   ELEVENLABS_MODELS_CATALOG,
 } from '../../shared/catalog/elevenlabsCatalog';
+import {
+  calculateSunoCostIdr,
+  calculateSunoCostUsd,
+  calculateSunoCredits,
+  getSunoModelById,
+  getSunoPlanById,
+  SUNO_MODELS_CATALOG,
+} from '../../shared/catalog/sunoCatalog';
 
 export type DepartmentTab = 'all' | 'video' | 'stills' | 'voiceover' | 'music';
 
@@ -85,6 +93,7 @@ const ALL_CATEGORIES: ProcessCategory[] = [
   'upscale_image',
   'upscale_video',
   'voice_over',
+  'music',
 ];
 
 export const ProductionPlannerView: React.FC = () => {
@@ -108,10 +117,13 @@ export const ProductionPlannerView: React.FC = () => {
     setActiveTab,
   } = useProjectStore();
 
-  /** Kata benda sesuai jenis isi (shot / file / audio file / gambar) */
+  /** Kata benda sesuai jenis isi (shot / file / audio file / track musik / gambar) */
   const unitNoun = (qt: QuantityType, category?: ProcessCategory) => {
     if (category === 'voice_over') {
       return language === 'id' ? 'file audio' : 'audio files';
+    }
+    if (category === 'music') {
+      return language === 'id' ? 'track lagu' : 'music tracks';
     }
     if (language === 'id') {
       return qt === 'shot' ? 'shot' : qt === 'asset' ? 'file' : 'gambar';
@@ -125,6 +137,11 @@ export const ProductionPlannerView: React.FC = () => {
       return language === 'id'
         ? 'Mau Buat Berapa File Audio?'
         : 'How Many Audio Files?';
+    }
+    if (category === 'music') {
+      return language === 'id'
+        ? 'Mau Buat Berapa Track / Lagu?'
+        : 'How Many Music Tracks?';
     }
     return language === 'id'
       ? `Mau Buat Berapa ${qt === 'shot' ? 'Shot' : qt === 'asset' ? 'File' : 'Gambar'}?`
@@ -198,6 +215,7 @@ export const ProductionPlannerView: React.FC = () => {
     if (dept === 'video') return VIDEO_CATEGORIES.includes(cat);
     if (dept === 'stills') return STILLS_CATEGORIES.includes(cat);
     if (dept === 'voiceover') return cat === 'voice_over';
+    if (dept === 'music') return cat === 'music';
     return false;
   };
 
@@ -456,6 +474,7 @@ export const ProductionPlannerView: React.FC = () => {
                 label: isId ? 'Musik & Soundtrack' : 'Music & Soundtrack',
                 icon: Music,
                 badgeText: isId ? 'BGM' : 'BGM',
+                count: items.filter((i) => i.category === 'music').length,
               },
             ].map((dept) => {
               const Icon = dept.icon;
@@ -514,7 +533,8 @@ export const ProductionPlannerView: React.FC = () => {
         {(activeDepartment === 'all' ||
           activeDepartment === 'video' ||
           activeDepartment === 'stills' ||
-          activeDepartment === 'voiceover') && (
+          activeDepartment === 'voiceover' ||
+          activeDepartment === 'music') && (
           <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
             {/* Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -535,6 +555,8 @@ export const ProductionPlannerView: React.FC = () => {
                 ? STILLS_CATEGORIES
                 : activeDepartment === 'voiceover'
                 ? (['voice_over'] as ProcessCategory[])
+                : activeDepartment === 'music'
+                ? (['music'] as ProcessCategory[])
                 : ALL_CATEGORIES
               ).map((cat) => {
                 const count = items.filter((i) => i.category === cat).length;
@@ -571,6 +593,8 @@ export const ProductionPlannerView: React.FC = () => {
                 ? STILLS_CATEGORIES
                 : activeDepartment === 'voiceover'
                 ? (['voice_over'] as ProcessCategory[])
+                : activeDepartment === 'music'
+                ? (['music'] as ProcessCategory[])
                 : ALL_CATEGORIES
               ).map((cat) => (
                 <button
@@ -721,14 +745,31 @@ export const ProductionPlannerView: React.FC = () => {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setActiveDepartment('video')}
-              className="vv-btn-secondary px-3.5 py-2 text-xs shrink-0 self-start sm:self-center"
-            >
-              <Film className="w-3.5 h-3.5 text-[#0099ff]" />
-              <span>{isId ? 'Kembali ke Shot / Video' : 'Back to Shots / Video'}</span>
-            </button>
+            <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+              <button
+                type="button"
+                onClick={() => handleAddAndOpenModal('music')}
+                className="vv-btn-primary px-3.5 py-2 text-xs font-semibold"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>
+                  {isId
+                    ? '+ Tambah Track Musik Suno'
+                    : '+ Add Suno Music Track'}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveDepartment('video')}
+                className="vv-btn-secondary px-3.5 py-2 text-xs shrink-0"
+              >
+                <Film className="w-3.5 h-3.5 text-[#0099ff]" />
+                <span>
+                  {isId ? 'Kembali ke Shot / Video' : 'Back to Shots / Video'}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Live Music Metrics */}
@@ -838,6 +879,10 @@ export const ProductionPlannerView: React.FC = () => {
                               ? isId
                                 ? 'File Audio Tanpa Nama'
                                 : 'Untitled Audio File'
+                              : item.category === 'music'
+                              ? isId
+                                ? 'Track Musik Tanpa Nama'
+                                : 'Untitled Music Track'
                               : isId
                               ? 'Shot / Gambar Tanpa Nama'
                               : 'Untitled Shot')}
@@ -846,6 +891,11 @@ export const ProductionPlannerView: React.FC = () => {
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-sky-500/15 text-sky-300 border-sky-500/35 flex items-center gap-1">
                             <span>🎙️</span>
                             <span>{isId ? 'File Audio' : 'Audio File'}</span>
+                          </span>
+                        ) : item.category === 'music' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold border bg-purple-500/15 text-purple-300 border-purple-500/35 flex items-center gap-1">
+                            <span>🎵</span>
+                            <span>{isId ? 'Track Musik' : 'Music Track'}</span>
                           </span>
                         ) : (() => {
                           const isPrimary =
@@ -913,6 +963,9 @@ export const ProductionPlannerView: React.FC = () => {
                           {item.category === 'voice_over' && (
                             <Mic className="w-3.5 h-3.5 text-sky-400" />
                           )}
+                          {item.category === 'music' && (
+                            <Music className="w-3.5 h-3.5 text-purple-400" />
+                          )}
                           {item.model_selection.model_name}
                         </strong>
 
@@ -943,6 +996,35 @@ export const ProductionPlannerView: React.FC = () => {
                                 <span className="text-sky-300 font-semibold">
                                   🎙️ {calcRow.total_credit.toLocaleString()}{' '}
                                   ElevenLabs Cr
+                                </span>
+                              </>
+                            )}
+                          </>
+                        ) : item.category === 'music' ? (
+                          <>
+                            <span>&bull;</span>
+                            <span className="text-purple-300 font-medium">
+                              🎵 {item.music_genre || 'Sinematik Megah'} •{' '}
+                              {item.is_instrumental !== false
+                                ? isId
+                                  ? 'Instrumental'
+                                  : 'Instrumental'
+                                : isId
+                                ? 'Dengan Vokal'
+                                : 'With Vocals'}
+                            </span>
+                            <span>&bull;</span>
+                            <span className="text-amber-400 font-medium">
+                              ⏱️ {item.duration_seconds || 120}s (
+                              {formatDualDuration(item.duration_seconds || 120, isId)}
+                              )
+                            </span>
+                            {calcRow?.total_credit !== null && (
+                              <>
+                                <span>&bull;</span>
+                                <span className="text-pink-300 font-semibold">
+                                  🎼 {calcRow.total_credit.toLocaleString()} Suno
+                                  Cr
                                 </span>
                               </>
                             )}
@@ -1331,6 +1413,10 @@ export const ProductionPlannerView: React.FC = () => {
                   ? `${isId ? 'File Audio' : 'Audio File'} #${String(
                       idx + 1
                     ).padStart(2, '0')}`
+                  : item.category === 'music'
+                  ? `${isId ? 'Track Musik' : 'Music Track'} #${String(
+                      idx + 1
+                    ).padStart(2, '0')}`
                   : `${isId ? 'Tahap Shot / Gambar' : 'Production Stage'} #${String(
                       idx + 1
                     ).padStart(2, '0')}`
@@ -1349,6 +1435,22 @@ export const ProductionPlannerView: React.FC = () => {
                       Configure Audio File &{' '}
                       <span className="vv-accent text-sky-400">
                         ElevenLabs AI Model
+                      </span>
+                    </>
+                  )
+                ) : item.category === 'music' ? (
+                  isId ? (
+                    <>
+                      Atur Detail Track Musik &{' '}
+                      <span className="vv-accent text-purple-400">
+                        Model AI Suno
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      Configure Music Track &{' '}
+                      <span className="vv-accent text-purple-400">
+                        Suno AI Model
                       </span>
                     </>
                   )
@@ -1408,8 +1510,16 @@ export const ProductionPlannerView: React.FC = () => {
                   >
                     <span>
                       {item.category === 'voice_over'
-                        ? (isId ? 'Selesai & Simpan File Audio' : 'Done & Save Audio File')
-                        : (isId ? 'Selesai & Simpan Shot' : 'Done & Save Shot')}
+                        ? isId
+                          ? 'Selesai & Simpan File Audio'
+                          : 'Done & Save Audio File'
+                        : item.category === 'music'
+                        ? isId
+                          ? 'Selesai & Simpan Track Musik'
+                          : 'Done & Save Music Track'
+                        : isId
+                        ? 'Selesai & Simpan Shot'
+                        : 'Done & Save Shot'}
                     </span>
                   </button>
                 </>
@@ -1424,6 +1534,10 @@ export const ProductionPlannerView: React.FC = () => {
                         ? (isId
                             ? '1. Nama File Audio / Dialog'
                             : '1. Audio File / Dialogue Name')
+                        : item.category === 'music'
+                        ? (isId
+                            ? '1. Judul / Deskripsi Track Musik'
+                            : '1. Music Track Title / Description')
                         : (isId
                             ? '1. Nama Shot / Tahap Pekerjaan'
                             : '1. Shot / Production Stage Name')}
@@ -1448,6 +1562,15 @@ export const ProductionPlannerView: React.FC = () => {
                         {isId
                           ? 'Item ini adalah file audio / naskah sulih suara ElevenLabs. File audio berdiri sebagai layer suara tersendiri dan tidak dihitung sebagai shot kamera video pokok.'
                           : 'This item is an ElevenLabs voiceover / dialogue audio file. Audio files reside on a dedicated audio track and are not counted as camera video shots.'}
+                      </span>
+                    </div>
+                  ) : item.category === 'music' ? (
+                    <div className="p-3 rounded-[10px] bg-purple-500/10 border border-purple-500/25 text-purple-300 text-xs flex items-center gap-2.5">
+                      <span className="text-base">🎵</span>
+                      <span className="leading-relaxed">
+                        {isId
+                          ? 'Item ini adalah background soundtrack / musik latar Suno AI. Musik berdiri sebagai layer audio pengiring dan tidak dihitung sebagai shot kamera video pokok.'
+                          : 'This item is a Suno AI background soundtrack. Music resides as an ambient background audio layer and is not counted as camera video shots.'}
                       </span>
                     </div>
                   ) : (
@@ -1526,7 +1649,7 @@ export const ProductionPlannerView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 2. Model AI Higgsfield & Pengaturan Kualitas */}
+                {/* 2. Model AI & Pengaturan Kualitas */}
                 <div className="vv-card-quiet p-4 space-y-4">
                   <div>
                     <label className="block text-xs font-semibold text-[var(--vv-text-strong)] mb-1.5">
@@ -1534,6 +1657,10 @@ export const ProductionPlannerView: React.FC = () => {
                         ? isId
                           ? '3. Pilih Model Suara Resmi ElevenLabs'
                           : '3. Select Official ElevenLabs Voice Model'
+                        : item.category === 'music'
+                        ? isId
+                          ? '3. Pilih Model Musik Resmi Suno AI'
+                          : '3. Select Official Suno AI Music Model'
                         : isId
                         ? '3. Pilih Model AI Higgsfield'
                         : '3. Select Higgsfield AI Model'}
@@ -2091,6 +2218,409 @@ export const ProductionPlannerView: React.FC = () => {
                     );
                   }
 
+                  if (item.category === 'music') {
+                    const cadanganCount = Math.max(
+                      1,
+                      assumptions.default_attempts_per_shot ||
+                        item.attempts_per_item ||
+                        1
+                    );
+                    const budgetedGen =
+                      calcRow?.budgeted_generations ??
+                      (Number(item.quantity) || 0) * cadanganCount;
+                    const activeSunoPlan = getSunoPlanById(
+                      (assumptions.suno_plan_id as any) || 'pro'
+                    );
+                    const totalSunoCr =
+                      calcRow?.total_credit ?? budgetedGen * 10;
+                    const costUsd =
+                      calcRow?.total_cost_usd ??
+                      calculateSunoCostUsd(totalSunoCr, activeSunoPlan.plan_id);
+                    const costIdr =
+                      calcRow?.total_cost_idr ??
+                      (project.exchange_rate.rate
+                        ? calculateSunoCostIdr(
+                            totalSunoCr,
+                            activeSunoPlan.plan_id,
+                            project.exchange_rate.rate
+                          )
+                        : null);
+
+                    const musicPresets = [
+                      {
+                        label: isId ? 'Sinematik Megah' : 'Epic Cinematic',
+                        value:
+                          'Cinematic orchestral adventure theme, powerful brass and strings, 110 bpm, motivational build-up',
+                      },
+                      {
+                        label: isId ? 'Upbeat & Ceria' : 'Upbeat Pop',
+                        value:
+                          'Upbeat commercial corporate pop, acoustic guitars, light drums, inspiring, positive vibe',
+                      },
+                      {
+                        label: isId ? 'Santai Lo-Fi' : 'Chill Lo-Fi',
+                        value:
+                          'Relaxing lo-fi hip hop study beat, mellow piano, warm vinyl crackle, 75 bpm',
+                      },
+                      {
+                        label: isId ? 'Dramatis Emosional' : 'Dramatic Emotional',
+                        value:
+                          'Emotional cinematic soundtrack, poignant cello and piano melody, slow crescendo, tearjerker',
+                      },
+                      {
+                        label: isId ? 'Ambient Elektronik' : 'Cyber Ambient',
+                        value:
+                          'Futuristic cyberpunk synth ambient, deep analog bass, spacious atmosphere, 95 bpm',
+                      },
+                      {
+                        label: isId ? 'Tradisional Etnik' : 'Ethnic World',
+                        value:
+                          'Traditional Indonesian gamelan fusion, modern acoustic percussion, exotic cinematic world music',
+                      },
+                    ];
+
+                    return (
+                      <div className="vv-card-quiet p-4 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
+                            <Music className="w-4 h-4 text-purple-400" />
+                            <span>
+                              {isId
+                                ? '4. Kuantitas Track Musik, Genre & Durasi (Suno AI Music)'
+                                : '4. Music Track Quantity, Genre & Duration (Suno AI Music)'}
+                            </span>
+                          </div>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 font-semibold border border-purple-500/30">
+                            Suno AI Official
+                          </span>
+                        </div>
+
+                        {/* Jumlah Track Musik & Cadangan Langkah 2 */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)]">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-[var(--vv-text-strong)] mb-1 flex items-center gap-1">
+                              <span>
+                                {isId
+                                  ? 'Mau Buat Berapa Track / Lagu Jadi?'
+                                  : 'How Many Music Tracks Needed?'}
+                              </span>
+                              <InfoTip>
+                                {isId
+                                  ? 'Jumlah track musik jadi yang Anda butuhkan (misal 1 lagu tema intro, atau 2 soundtrack berbeda).'
+                                  : 'Number of finished music tracks needed for this stage.'}
+                              </InfoTip>
+                            </label>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                step={1}
+                                value={item.quantity}
+                                onChange={(e) => {
+                                  const qty = Math.max(
+                                    0,
+                                    Math.floor(Number(e.target.value) || 0)
+                                  );
+                                  updateProductionItemField(item.item_id, {
+                                    quantity: qty,
+                                    attempts_per_item: cadanganCount,
+                                  });
+                                }}
+                                className={`${inputClass} w-28 px-3 py-1.5 rounded-[9px] text-xs font-bold tabular-nums text-right`}
+                              />
+                              <span className="text-xs font-semibold text-[var(--vv-text-muted)]">
+                                {isId ? 'track lagu' : 'music tracks'}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col justify-center sm:items-end text-[11px] text-[var(--vv-text-muted)]">
+                            <span>
+                              {isId
+                                ? 'Total Rencana Generate Suno (Termasuk Cadangan):'
+                                : 'Total Planned Suno Generations (Incl. Reserve):'}
+                            </span>
+                            <span className="text-xs font-bold text-purple-300 font-mono mt-0.5">
+                              {item.quantity} {isId ? 'track' : 'tracks'} &times;{' '}
+                              {cadanganCount} {isId ? 'cadangan' : 'reserve'} ={' '}
+                              {budgetedGen}x {isId ? 'generate' : 'runs'}
+                            </span>
+                            <span className="text-[10px] text-purple-400 font-medium mt-0.5">
+                              &bull; {budgetedGen * 2}{' '}
+                              {isId
+                                ? 'variasi lagu dihasilkan'
+                                : 'song variations generated'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Format Musik: Instrumental vs Vokal */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--vv-text-muted)] mb-1.5">
+                            {isId ? 'Format Musik' : 'Music Format'}
+                          </label>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateProductionItemField(item.item_id, {
+                                  is_instrumental: true,
+                                })
+                              }
+                              className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                                item.is_instrumental !== false
+                                  ? 'bg-purple-600/25 text-purple-200 border-purple-400/50'
+                                  : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                              }`}
+                            >
+                              <span>🎹</span>
+                              <span>
+                                {isId
+                                  ? 'Instrumental Saja (Tanpa Vokal)'
+                                  : 'Instrumental Only'}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateProductionItemField(item.item_id, {
+                                  is_instrumental: false,
+                                })
+                              }
+                              className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                                item.is_instrumental === false
+                                  ? 'bg-purple-600/25 text-purple-200 border-purple-400/50'
+                                  : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                              }`}
+                            >
+                              <span>🎤</span>
+                              <span>
+                                {isId
+                                  ? 'Lagu Lengkap dengan Vokal'
+                                  : 'With AI Vocals'}
+                              </span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Preset Genre & Mood Cepat */}
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--vv-text-muted)] mb-1.5">
+                            {isId ? 'Genre & Nuansa Mood Cepat' : 'Genre & Mood Presets'}
+                          </label>
+                          <div className="flex flex-wrap gap-1.5">
+                            {musicPresets.map((preset) => (
+                              <button
+                                key={preset.value}
+                                type="button"
+                                onClick={() =>
+                                  updateProductionItemField(item.item_id, {
+                                    music_genre: preset.label,
+                                    music_prompt: item.music_prompt
+                                      ? item.music_prompt
+                                      : preset.value,
+                                  })
+                                }
+                                className={`px-2.5 py-1 rounded-[7px] text-[11px] font-medium border transition ${
+                                  item.music_genre === preset.label
+                                    ? 'bg-purple-500/25 text-purple-200 border-purple-500/40 font-semibold'
+                                    : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                }`}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Prompt / Deskripsi Musik Suno */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                              <span>
+                                {isId
+                                  ? 'Prompt Gaya / Instrumen Suno AI'
+                                  : 'Suno AI Style / Instrument Prompt'}
+                              </span>
+                              <InfoTip>
+                                {isId
+                                  ? 'Deskripsi gaya musik, instrumen, tempo (bpm), dan mood untuk diproses oleh Suno AI.'
+                                  : 'Description of musical styles, instruments, tempo (bpm), and mood for Suno AI.'}
+                              </InfoTip>
+                            </label>
+                          </div>
+
+                          <textarea
+                            rows={3}
+                            value={item.music_prompt || ''}
+                            placeholder={
+                              isId
+                                ? 'Tulis deskripsi musik (contoh: "Cinematic orchestral adventure theme, powerful brass and strings, 110 bpm, motivational build-up")...'
+                                : 'Type music prompt (e.g. "Cinematic orchestral adventure theme, powerful brass and strings, 110 bpm, motivational build-up")...'
+                            }
+                            onChange={(e) =>
+                              updateProductionItemField(item.item_id, {
+                                music_prompt: e.target.value,
+                              })
+                            }
+                            className={`${inputClass} w-full p-3 rounded-[10px] text-xs font-mono leading-relaxed resize-y`}
+                          />
+                        </div>
+
+                        {/* Target Durasi Musik (Detik) */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                              <span>
+                                {isId
+                                  ? 'Target Durasi Track Musik (Detik)'
+                                  : 'Target Music Track Duration (Seconds)'}
+                              </span>
+                              <InfoTip align="right">
+                                {isId
+                                  ? 'Panjang audio yang diinginkan. Suno v4 mendukung hingga 4-8 menit per lagu.'
+                                  : 'Target audio length. Suno v4 supports up to 4-8 minutes per song.'}
+                              </InfoTip>
+                            </label>
+                            <span className="text-[11px] font-mono font-bold text-purple-400">
+                              ⏱️ {item.duration_seconds || 120}s (
+                              {formatDualDuration(item.duration_seconds || 120, isId)})
+                            </span>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              type="number"
+                              min={10}
+                              max={600}
+                              step={5}
+                              value={item.duration_seconds || 120}
+                              onChange={(e) =>
+                                updateProductionItemField(item.item_id, {
+                                  duration_seconds: Math.max(
+                                    0,
+                                    Number(e.target.value) || 0
+                                  ),
+                                })
+                              }
+                              className={`${inputClass} w-28 px-3.5 py-2 rounded-[9px] text-xs font-bold tabular-nums text-right`}
+                            />
+
+                            {[30, 60, 90, 120, 180, 240].map((presetSec) => (
+                              <button
+                                key={presetSec}
+                                type="button"
+                                onClick={() =>
+                                  updateProductionItemField(item.item_id, {
+                                    duration_seconds: presetSec,
+                                  })
+                                }
+                                className={`px-2 py-1 rounded-[7px] text-[11px] font-mono font-semibold transition ${
+                                  item.duration_seconds === presetSec
+                                    ? 'bg-purple-500/25 text-purple-200 border border-purple-500/40'
+                                    : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                }`}
+                              >
+                                {presetSec}s
+                              </button>
+                            ))}
+
+                            {/* Sync dengan durasi video + 8 detik buffer fade-out */}
+                            {(cleanDurationSec > 0 || targetDurationSec > 0) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const baseSec = Math.round(
+                                    cleanDurationSec || targetDurationSec || 60
+                                  );
+                                  const musicBuffSec = baseSec + 8;
+                                  updateProductionItemField(item.item_id, {
+                                    duration_seconds: musicBuffSec,
+                                  });
+                                }}
+                                className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/35 hover:bg-purple-500/25 transition flex items-center gap-1"
+                              >
+                                <span>🎵</span>
+                                <span>
+                                  {isId
+                                    ? `Samakan dgn Video (+8s buffer: ${
+                                        Math.round(
+                                          cleanDurationSec || targetDurationSec
+                                        ) + 8
+                                      }s)`
+                                    : `Sync with Video (+8s buffer: ${
+                                        Math.round(
+                                          cleanDurationSec || targetDurationSec
+                                        ) + 8
+                                      }s)`}
+                                </span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Live Suno Calculation Summary Card */}
+                        <div className="p-3.5 rounded-[12px] bg-purple-950/20 border border-purple-500/30 space-y-2">
+                          <div className="flex items-center justify-between text-[11px] text-[var(--vv-text-muted)]">
+                            <span>
+                              {isId
+                                ? 'Model Musik Suno AI:'
+                                : 'Suno AI Music Model:'}
+                            </span>
+                            <span className="font-semibold text-purple-300">
+                              {selectedModel?.model_name || 'Suno v4'} (10 Kredit / Run &bull; 2 Variasi Lagu)
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1 border-t border-purple-500/20">
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId
+                                  ? 'Variasi Klip Lagu Dihasilkan'
+                                  : 'Song Variations Generated'}
+                              </span>
+                              <span className="text-sm font-bold font-mono text-[var(--vv-text-primary)]">
+                                {(budgetedGen * 2).toLocaleString()} {isId ? 'klip' : 'clips'}
+                              </span>
+                              <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono">
+                                10 kredit / generate (2 variasi)
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId
+                                  ? `Total Kredit Suno (${budgetedGen}x buat)`
+                                  : `Total Suno Credits (${budgetedGen}x runs)`}
+                              </span>
+                              <span className="text-sm font-bold font-mono text-purple-400">
+                                {totalSunoCr.toLocaleString()} Cr Suno
+                              </span>
+                              <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono">
+                                {item.quantity} track &times; {cadanganCount}{' '}
+                                {isId ? 'cadangan' : 'reserve'}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-[var(--vv-text-subtle)] block">
+                                {isId
+                                  ? `Subtotal Tahap (${activeSunoPlan.name_id})`
+                                  : `Stage Subtotal (${activeSunoPlan.name_en})`}
+                              </span>
+                              <span className="text-sm font-bold tabular-nums text-emerald-400">
+                                {costIdr !== null
+                                  ? formatCurrencyIdr(costIdr, language)
+                                  : formatCurrencyUsd(costUsd, language)}
+                              </span>
+                              <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono">
+                                {formatCurrencyUsd(costUsd, language)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
               const noun = unitNoun(item.quantity_type, item.category);
               const isPerSecond = item.pricing.pricing_unit === 'per_second';
               const showDuration =
@@ -2308,41 +2838,43 @@ export const ProductionPlannerView: React.FC = () => {
                 })()}
 
                 {/* 3b. Paket Unlimited Higgsfield (Bebas Credit / Rp 0) */}
-                <label
-                  className={`vv-card-quiet p-4 flex items-start gap-3 cursor-pointer transition ${
-                    item.is_unlimited ? 'border border-purple-500/50' : ''
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={!!item.is_unlimited}
-                    onChange={(e) =>
-                      toggleItemUnlimited(item.item_id, e.target.checked)
-                    }
-                    className="mt-0.5 rounded border-[var(--vv-border)]"
-                  />
-                  <div className="space-y-0.5">
-                    <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex flex-wrap items-center gap-2">
-                      <span>
-                        {isId
-                          ? 'Termasuk Paket Unlimited Higgsfield (Bebas Credit / Rp 0)'
-                          : 'Included in Higgsfield Unlimited Plan (Free / Rp 0)'}
-                      </span>
-                      {selectedModel?.unlimited_eligible && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
-                          Unlimited Ready
+                {item.category !== 'voice_over' && item.category !== 'music' && (
+                  <label
+                    className={`vv-card-quiet p-4 flex items-start gap-3 cursor-pointer transition ${
+                      item.is_unlimited ? 'border border-purple-500/50' : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={!!item.is_unlimited}
+                      onChange={(e) =>
+                        toggleItemUnlimited(item.item_id, e.target.checked)
+                      }
+                      className="mt-0.5 rounded border-[var(--vv-border)]"
+                    />
+                    <div className="space-y-0.5">
+                      <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex flex-wrap items-center gap-2">
+                        <span>
+                          {isId
+                            ? 'Termasuk Paket Unlimited Higgsfield (Bebas Credit / Rp 0)'
+                            : 'Included in Higgsfield Unlimited Plan (Free / Rp 0)'}
                         </span>
-                      )}
+                        {selectedModel?.unlimited_eligible && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-medium bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                            Unlimited Ready
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed">
+                        {isId
+                          ? 'Centang jika model ini gratis di paket langganan Anda, sehingga tahap ini tidak menambah biaya.'
+                          : 'Tick if this model is free on your subscription plan, so this stage adds no cost.'}{' '}
+                        {isId ? 'Patokan saat ini: 1 Credit = ' : 'Current rate: 1 Credit = '}
+                        {formatCurrencyUsd(usdPerCredit, language)}
+                      </p>
                     </div>
-                    <p className="text-[11px] text-[var(--vv-text-muted)] leading-relaxed">
-                      {isId
-                        ? 'Centang jika model ini gratis di paket langganan Anda, sehingga tahap ini tidak menambah biaya.'
-                        : 'Tick if this model is free on your subscription plan, so this stage adds no cost.'}{' '}
-                      {isId ? 'Patokan saat ini: 1 Credit = ' : 'Current rate: 1 Credit = '}
-                      {formatCurrencyUsd(usdPerCredit, language)}
-                    </p>
-                  </div>
-                </label>
+                  </label>
+                )}
 
                 {/* 4. Progressive Disclosure: Manual Price Override Accordion */}
                 <div className="vv-card-quiet p-4">

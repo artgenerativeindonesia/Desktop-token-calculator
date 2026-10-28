@@ -39,6 +39,10 @@ export const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }
     id: 'Voice Over (Pengisi Suara / TTS AI)',
     en: 'Voice Over (AI TTS)',
   },
+  music: {
+    id: 'Musik & Soundtrack (Suno AI Music)',
+    en: 'Music & Soundtrack (Suno AI Music)',
+  },
 };
 
 export const SHORT_CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
@@ -50,6 +54,7 @@ export const SHORT_CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: st
   upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
   upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
   voice_over: { id: 'Voice Over', en: 'Voice Over' },
+  music: { id: 'Musik AI', en: 'AI Music' },
 };
 
 export const STATUS_LABELS: Record<VerificationStatus, { id: string; en: string }> = {

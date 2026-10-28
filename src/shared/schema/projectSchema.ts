@@ -13,6 +13,7 @@ export const ProcessCategorySchema = z.preprocess(
   (val) => {
     if (val === 'upscaling') return 'upscale_video';
     if (val === 'voiceover' || val === 'voice' || val === 'tts') return 'voice_over';
+    if (val === 'soundtrack' || val === 'bgm' || val === 'audio_bgm' || val === 'audio_music') return 'music';
     return val;
   },
   z.enum([
@@ -24,6 +25,7 @@ export const ProcessCategorySchema = z.preprocess(
     'upscale_image',
     'upscale_video',
     'voice_over',
+    'music',
   ])
 );
 
@@ -77,6 +79,9 @@ export const ProductionItemSchema = z.object({
   script_text: z.string().optional(),
   script_language: z.enum(['id', 'en']).optional(),
   character_count: z.number().int().nonnegative().optional(),
+  music_prompt: z.string().optional(),
+  music_genre: z.string().optional(),
+  is_instrumental: z.boolean().optional(),
 });
 
 export const ElevenLabsSubscriptionPlanSchema = z.object({
@@ -105,6 +110,7 @@ export const BudgetAssumptionsSchema = z.object({
   reserve_percent: z.number().nonnegative(),
   reserve_generations_override: z.number().int().nonnegative(),
   elevenlabs_plan_id: z.string().optional(),
+  suno_plan_id: z.string().optional(),
 });
 
 export const ExchangeRateSchema = z.object({

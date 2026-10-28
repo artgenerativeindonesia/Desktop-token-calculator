@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<ProcessCategory, { id: string; en: string }> = {
   upscale_image: { id: 'Upscale Image', en: 'Upscale Image' },
   upscale_video: { id: 'Upscale Video', en: 'Upscale Video' },
   voice_over: { id: 'Voice Over', en: 'Voice Over' },
+  music: { id: 'Musik & Soundtrack', en: 'Music & Soundtrack' },
 };
 
 const STATUS_LABELS: Record<VerificationStatus, { id: string; en: string }> = {
@@ -92,6 +93,7 @@ function escapeHtml(text: string): string {
 
 function getUnitNoun(qType: string, isId: boolean, category?: string): string {
   if (category === 'voice_over') return isId ? 'file audio' : 'audio files';
+  if (category === 'music') return isId ? 'track lagu' : 'music tracks';
   if (qType === 'asset') return isId ? 'file / gambar' : 'files / images';
   if (qType === 'output') return isId ? 'hasil jadi' : 'outputs';
   return isId ? 'shot' : 'shots';
@@ -235,10 +237,15 @@ export function generatePdfReportHtml(
             .join(', ')
         : '-';
       const isVO = res.category === 'voice_over';
+      const isMusic = res.category === 'music';
       const unitLabel = isVO
         ? isId
           ? 'Per File Audio'
           : 'Per Audio File'
+        : isMusic
+        ? isId
+          ? 'Per Generate (2 Variasi)'
+          : 'Per Run (2 Variations)'
         : res.pricing_unit === 'per_second'
         ? isId
           ? `Per Detik (${sourceItem?.duration_seconds ?? 0}s)`
@@ -254,6 +261,8 @@ export function generatePdfReportHtml(
       const attemptsCount = res.attempts_per_item || cadanganMultiplier;
       const countBreakdown = isVO
         ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
+        : isMusic
+        ? `<strong>${res.effective_quantity}</strong> ${isId ? 'track lagu' : 'music tracks'}<br/><span style="font-size:10px;color:#9333ea;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
         : res.reserve_generations > 0
         ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
         : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
@@ -280,6 +289,10 @@ export function generatePdfReportHtml(
           ? isId
             ? '🎙️ File Audio'
             : '🎙️ Audio File'
+          : isMusic
+          ? isId
+            ? '🎵 Track Musik'
+            : '🎵 Music Track'
           : res.is_primary_shot
           ? isId
             ? '🎬 Shot Utama'
@@ -296,6 +309,10 @@ export function generatePdfReportHtml(
                 ? `🔤 ${voChars} chars &bull; ⏱️ ${res.duration_seconds}s (${
                     sourceItem?.script_language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'
                   })`
+                : isMusic
+                ? `🎵 ${escapeHtml(sourceItem?.music_genre || 'Sinematik')} &bull; ${
+                    sourceItem?.is_instrumental !== false ? 'Instrumental' : 'Vokal'
+                  } &bull; ⏱️ ${res.duration_seconds || 120}s`
                 : escapeHtml(paramSummary)
             }</span>
           </td>
@@ -309,6 +326,8 @@ export function generatePdfReportHtml(
             <span style="font-size:10px;color:#64748b;">${
               isVO
                 ? 'ElevenLabs'
+                : isMusic
+                ? 'Suno AI'
                 : res.unit_credit !== null
                 ? `@${res.unit_credit} cr`
                 : ''
@@ -576,17 +595,19 @@ export function generatePdfReportHtml(
       <div class="metric-label">${isId ? 'Total Kali Buat AI' : 'Total AI Generations'}</div>
       <div class="metric-val">${calc.budgeted_generations} ${isId ? 'kali buat' : 'tries'}</div>
       <div class="metric-sub">${
-        calc.total_credit !== null
-          ? `${calc.total_credit.toLocaleString()} Cr (Higgsfield)${
-              calc.total_elevenlabs_credit !== null
-                ? ` + ${calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)`
-                : ''
-            }`
-          : calc.total_elevenlabs_credit !== null
-          ? `${calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)`
-          : isId
-          ? 'Bebas Credit'
-          : 'No Credits'
+        [
+          calc.total_credit !== null
+            ? `${calc.total_credit.toLocaleString()} Cr (Higgsfield)`
+            : null,
+          calc.total_elevenlabs_credit !== null
+            ? `${calc.total_elevenlabs_credit.toLocaleString()} Cr (ElevenLabs)`
+            : null,
+          calc.total_suno_credit !== null
+            ? `${calc.total_suno_credit.toLocaleString()} Cr (Suno)`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' + ') || (isId ? 'Bebas Credit' : 'No Credits')
       }</div>
     </div>
   </div>
@@ -761,6 +782,15 @@ export function generatePdfReportHtml(
       <tr>
         <th>${isId ? 'Total Konsumsi Credit ElevenLabs (Voice Over)' : 'Total ElevenLabs Credits (Voice Over)'}</th>
         <td class="num" colspan="2"><strong style="color:#0284c7;">${calc.total_elevenlabs_credit.toLocaleString()} Credits ElevenLabs</strong></td>
+      </tr>`
+          : ''
+      }
+      ${
+        calc.total_suno_credit !== null
+          ? `
+      <tr>
+        <th>${isId ? 'Total Konsumsi Kredit Suno (Musik & Soundtrack)' : 'Total Suno Credits (Music & Soundtrack)'}</th>
+        <td class="num" colspan="2"><strong style="color:#9333ea;">${calc.total_suno_credit.toLocaleString()} Kredit Suno</strong></td>
       </tr>`
           : ''
       }
