@@ -86,6 +86,11 @@ exports.ProductionItemSchema = zod_1.z.object({
     extend_count: zod_1.z.number().int().nonnegative().optional(),
     stem_separation_mode: zod_1.z.enum(['none', 'two_stems', 'full_stems']).optional(),
     exclude_styles: zod_1.z.string().optional(),
+    stem_enabled: zod_1.z.boolean().optional(),
+    stem_type: zod_1.z.enum(['two_stems', 'full_stems']).optional(),
+    stem_runs: zod_1.z.number().int().nonnegative().optional(),
+    stem_reserve: zod_1.z.number().int().nonnegative().optional(),
+    music_reserve_override: zod_1.z.number().int().nonnegative().optional(),
 });
 exports.ElevenLabsSubscriptionPlanSchema = zod_1.z.object({
     plan_id: zod_1.z.string().min(1),

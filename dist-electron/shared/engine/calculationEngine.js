@@ -514,19 +514,43 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
                 'pro';
             const activePlan = (0, sunoCatalog_1.getSunoPlanById)(activePlanId);
             // Aturan Baku Suno AI:
-            // 1. Base audisi generasi per track: attempts * 10 kredit (menghasilkan attempts * 2 variasi klip awal)
-            // 2. Sambungan/Extend per track: extendRuns * 10 kredit (menghasilkan extendRuns * 2 variasi perpanjangan)
-            // 3. Separasi stem: none = 0 cr, two_stems = 20 cr, full_stems = 50 cr per lagu
-            const creditsPerGen = 10;
+            // 1. Generate Lagu Utama: attempts * 10 kredit (menghasilkan attempts * 2 variasi klip lagu)
+            //    Cadangan Lagu: music_reserve_override (jika diatur manual) atau gReserve dari asumsi Langkah 2
+            // 2. Generate Stem (Pemisahan Track Audio):
+            //    Tarif stem: two_stems (20 cr) atau full_stems (50 cr)
+            //    Kredit stem = (stem_runs + stem_reserve) * stem_rate
+            const creditsPerSongGen = 10;
+            const baseSongRuns = Math.max(1, attempts || 1);
+            const songReserve = typeof item.music_reserve_override === 'number'
+                ? Math.max(0, item.music_reserve_override)
+                : gReserve;
+            const songBaseCredits = effectiveQty * baseSongRuns * creditsPerSongGen;
+            const songReserveCredits = songReserve * creditsPerSongGen;
+            // Stem Separation
+            const isStemEnabled = item.stem_enabled ??
+                (item.stem_separation_mode && item.stem_separation_mode !== 'none');
+            const stemType = item.stem_type ||
+                (item.stem_separation_mode === 'full_stems' ? 'full_stems' : 'two_stems');
+            const stemRate = stemType === 'full_stems' ? 50 : 20;
+            const stemRuns = isStemEnabled ? Math.max(1, item.stem_runs ?? 1) : 0;
+            const stemReserve = isStemEnabled ? Math.max(0, item.stem_reserve ?? 0) : 0;
+            const stemBaseCredits = isStemEnabled
+                ? effectiveQty * stemRuns * stemRate
+                : 0;
+            const stemReserveCredits = isStemEnabled
+                ? effectiveQty * stemReserve * stemRate
+                : 0;
+            // Extend Runs (dukungan kompatibilitas backward jika ada)
             const extendRuns = Math.max(0, Math.floor(item.extend_count || 0));
-            const stemMode = item.stem_separation_mode || 'none';
-            const stemCost = stemMode === 'full_stems' ? 50 : stemMode === 'two_stems' ? 20 : 0;
-            const plannedGenPerTrack = attempts + extendRuns;
-            const plannedCreditsPerTrack = plannedGenPerTrack * creditsPerGen + stemCost;
+            const extendBaseCredits = effectiveQty * extendRuns * creditsPerSongGen;
+            const totalBaseCredits = songBaseCredits + stemBaseCredits + extendBaseCredits;
+            const totalReserveCredits = songReserveCredits + stemReserveCredits;
+            const plannedGenPerTrack = baseSongRuns + extendRuns;
             const musicPlannedGen = effectiveQty * plannedGenPerTrack;
-            const musicBudgetedGen = musicPlannedGen + gReserve;
-            const itemPlannedSuno = new decimal_js_1.default(effectiveQty).times(plannedCreditsPerTrack);
-            const itemReserveSuno = new decimal_js_1.default(gReserve).times(creditsPerGen);
+            const musicReserveGen = songReserve;
+            const musicBudgetedGen = musicPlannedGen + musicReserveGen;
+            const itemPlannedSuno = new decimal_js_1.default(totalBaseCredits);
+            const itemReserveSuno = new decimal_js_1.default(totalReserveCredits);
             const itemBudgetedSuno = itemPlannedSuno.plus(itemReserveSuno);
             let itemTotalCredit = null;
             if (itemBudgetedSuno.greaterThan(0)) {
@@ -541,7 +565,7 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
                 pricing.price_value !== null &&
                 pricing.price_value >= 0) {
                 bBaseDec = new decimal_js_1.default(musicPlannedGen).times(pricing.price_value);
-                bReserveDec = new decimal_js_1.default(gReserve).times(pricing.price_value);
+                bReserveDec = new decimal_js_1.default(musicReserveGen).times(pricing.price_value);
             }
             else {
                 bBaseDec = itemPlannedSuno.times(activePlan.usd_per_credit);
@@ -573,7 +597,7 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
             const catSum = categorySummaries[item.category];
             catSum.item_count += 1;
             catSum.planned_generations += musicPlannedGen;
-            catSum.reserve_generations += gReserve;
+            catSum.reserve_generations += musicReserveGen;
             catSum.budgeted_generations += musicBudgetedGen;
             catSum.base_cost_usd = new decimal_js_1.default(catSum.base_cost_usd)
                 .plus(baseCostUsd)
@@ -598,6 +622,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
                     .plus(itemTotalCredit)
                     .toNumber();
             }
+            const plannedCreditsPerTrack = effectiveQty > 0
+                ? Math.round(totalBaseCredits / effectiveQty)
+                : totalBaseCredits;
             const musicUnitPriceUsd = pricing.status === 'manual' &&
                 pricing.price_value !== null &&
                 pricing.price_value >= 0
@@ -615,9 +642,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
                 is_eligible_duration_clip: false, // Musik adalah audio track, bukan klip shot video
                 model_name: item.model_selection.model_name,
                 effective_quantity: effectiveQty,
-                attempts_per_item: attempts,
+                attempts_per_item: baseSongRuns,
                 planned_generations: musicPlannedGen,
-                reserve_generations: gReserve,
+                reserve_generations: musicReserveGen,
                 budgeted_generations: musicBudgetedGen,
                 unit_multiplier: 1,
                 pricing_unit: 'per_asset',
@@ -1133,6 +1160,10 @@ function createProductionItemFromCatalog(category, modelId, label, quantity = 1,
         baseItem.music_genre = 'Sinematik Megah';
         baseItem.extend_count = 0;
         baseItem.stem_separation_mode = 'none';
+        baseItem.stem_enabled = false;
+        baseItem.stem_type = 'two_stems';
+        baseItem.stem_runs = 1;
+        baseItem.stem_reserve = 0;
     }
     return baseItem;
 }

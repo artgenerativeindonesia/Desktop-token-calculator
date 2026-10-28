@@ -386,6 +386,93 @@ describe('Suno AI Music Generator — Official Catalog & Engine Suite (Tahap 4)'
       expect(item.music_genre).toBe('Sinematik Megah');
       expect(item.is_instrumental).toBe(true);
       expect(item.pricing.credit_cost).toBe(10);
+      expect(item.stem_enabled).toBe(false);
+      expect(item.stem_type).toBe('two_stems');
+      expect(item.stem_runs).toBe(1);
+      expect(item.stem_reserve).toBe(0);
+    });
+
+    it('menghitung akurat fitur musik sederhana: quantity, direct attempts, music_reserve_override, dan stem separation', () => {
+      const customFx: ExchangeRate = {
+        base_currency: 'USD',
+        quote_currency: 'IDR',
+        rate: 16000,
+        rate_type: 'Manual',
+        source_name: 'Manual Rate',
+        source_url: '',
+        retrieved_at: new Date().toISOString(),
+        status: 'verified',
+      };
+
+      const musicItem: ProductionItem = {
+        item_id: 'track_music_simplified',
+        category: 'music',
+        label: 'Musik Latar Video Komersial',
+        quantity: 2, // 2 lagu
+        quantity_type: 'asset',
+        duration_seconds: 90,
+        attempts_per_item: 1, // 1x generate langsung = 10 cr per lagu
+        music_reserve_override: 2, // 2 cadangan lagu = 2 * 10 cr = 20 cr
+        stem_enabled: true,
+        stem_type: 'two_stems', // 20 cr
+        stem_runs: 1, // 1x per lagu = 20 cr * 2 lagu = 40 cr
+        stem_reserve: 1, // 1 cadangan stem per lagu = 20 cr * 2 lagu = 40 cr
+        use_project_target_multiplier: false,
+        is_primary_shot: false,
+        model_selection: {
+          provider: 'suno',
+          model_id: 'suno_v6',
+          model_name: 'Suno v6 (Flagship Core Studio)',
+          category: 'music',
+          parameter_values: {},
+        },
+        pricing: {
+          pricing_unit: 'per_generation',
+          price_value: 0.04,
+          currency: 'USD',
+          credit_cost: 10,
+          credit_unit: 'per_generation',
+          source_name: 'Suno Official Catalog',
+          source_url: 'https://suno.com/pricing',
+          retrieved_at: new Date().toISOString(),
+          status: 'verified',
+        },
+      };
+
+      const result = calculateProjectBudget(
+        [musicItem],
+        {
+          target_videos: 1,
+          default_attempts_per_shot: 1,
+          suno_plan_id: 'pro', // $0.004 per credit
+          reserve_input_mode: 'percent',
+          reserve_percent: 0,
+          reserve_generations_override: 0,
+          estimation_mode: 'per_shot',
+          default_shots_per_video: 10,
+          final_duration_minutes: 1,
+        },
+        customFx
+      );
+
+      // Hitungan Rinci:
+      // Lagu Base: 2 lagu * 1x * 10 cr = 20 cr
+      // Lagu Cadangan (music_reserve_override): 2 * 10 cr = 20 cr
+      // Stem Base: 2 lagu * 1 run * 20 cr = 40 cr
+      // Stem Cadangan: 2 lagu * 1 reserve * 20 cr = 40 cr
+      // Total Base Credit = 20 + 40 = 60 cr
+      // Total Reserve Credit = 20 + 40 = 60 cr
+      // Total Suno Credit = 120 cr
+      expect(result.item_results[0].total_credit).toBe(120);
+      expect(result.total_suno_credit).toBe(120);
+
+      // Biaya Pro Plan: 120 * $0.004 = $0.48
+      expect(result.item_results[0].total_cost_usd).toBe(0.48);
+      expect(result.total_cost_usd).toBe(0.48);
+
+      // Biaya IDR: $0.48 * 16000 = Rp 7.680
+      expect(result.item_results[0].total_cost_idr).toBe(7680);
+      expect(result.total_cost_idr).toBe(7680);
     });
   });
 });

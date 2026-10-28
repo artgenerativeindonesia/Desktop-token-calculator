@@ -12,6 +12,37 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [1.13.1] - Penyederhanaan Menyeluruh Input Musik Suno AI: Penyesuaian Kolom Angka Budgeting Langsung, Perbaikan Pemanggilan Model Suno di Electron IPC, serta Pengaturan Pemisahan Track Audio (Stems) yang Intuitif
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v1.13.1`
+
+### Ditambahkan (Added)
+1. **Dukungan Bidirectional Pengaturan Stems & Cadangan Musik di Schema & Mesin Hitung**:
+   - Menambahkan field `stem_enabled` (boolean), `stem_type` ('two_stems' | 'full_stems'), `stem_runs` (jumlah kali pemisahan stem per lagu), `stem_reserve` (cadangan pemisahan stem per lagu), dan `music_reserve_override` (penyesuaian mandiri cadangan lagu per track) pada antarmuka `ProductionItem`.
+   - Menambahkan validasi skema Zod pada `ProductionItemSchema` di `src/shared/schema/projectSchema.ts`.
+   - Menambahkan unit test komprehensif pada `tests/sunoCatalog.test.ts` untuk menguji keakuratan perhitungan budget musik yang telah disederhanakan (total 115 test lulus 100%).
+
+### Diubah (Changed)
+1. **Penyederhanaan Total Antarmuka "Atur Detail Track Musik & Model AI Suno" (`ProductionPlannerView.tsx`)**:
+   - Menghapus seluruh kolom teks kreatif yang membingungkan dan tidak relevan untuk kalkulator budget token (Naskah Lirik lagu, tag lirik `[Verse]` / `[Chorus]`, Negative prompt / Exclude styles, Genre prompt chips, dan 6 tombol peran adegan film).
+   - Menggantikannya dengan 4 bagian numerik yang bersih, fokus, dan langsung pada sasaran anggaran:
+     - **1. Target Durasi Musik (Detik)**: Dilengkapi tombol durasi cepat (30s, 60s, 90s, 120s, 180s, 240s, 480s) serta tombol *"Samakan dgn Durasi Video (+8s buffer)"* untuk sinkronisasi otomatis dengan timeline storyboard video.
+     - **2. Jumlah Lagu & Percobaan Generate (Audisi)**: 3 kolom angka intuitif: Mau buat berapa lagu (`quantity`), Berapa kali generate langsung (`attempts_per_item` - default 1x = 10 Cr = 2 variasi lagu), dan Cadangan coba lagi (`music_reserve_override` - default sinkron dari Langkah 2).
+     - **3. Fitur Pisahkan Track Audio (Stems)**: Sakelar toggle sederhana *"Tidak (Stereo Mix Standar - 0 Cr)"* vs *"Ya (Aktifkan Pemisahan Track)"*. Jika aktif, pengguna dapat memilih antara *2-Stems Split* (+20 Cr/run untuk keamanan dialog) atau *Full Studio Auto-Split* (+50 Cr/run), beserta jumlah run dan cadangan run.
+     - **4. Kartu Rincian Live Suno Terperinci**: Rincian 3 kartu transparan: Kredit Pembuatan Lagu, Kredit Pemisahan Stems, dan Total Kredit Suno Proyek beserta konversi Rupiah (IDR) dan Dollar (USD).
+2. **Pembersihan Modal Card 1 & Card 2 untuk Kategori Musik**:
+   - Menghilangkan 6 tombol peran musik adegan film dari Card 1, menyederhanakannya menjadi input judul lagu dan banner informasi layer audio pengiring yang seragam dengan voice over.
+   - Menyembunyikan parameter teknis redundant pada Card 2 saat memilih model Suno, sehingga Card 2 fokus murni pada pemilihan model AI Suno resmi.
+
+### Diperbaiki (Fixed)
+1. **Perbaikan Kritis Bug "Model Suno Belum Masuk" pada Proses Utama Electron (`pricingConnector.ts`)**:
+   - Mengatasi akar masalah mengapa dropdown model Suno sebelumnya kosong: fungsi `loadMergedCatalog()` pada konektor IPC Electron (`src/main/connectors/pricingConnector.ts`) sebelumnya hanya menggabungkan katalog Higgsfield dan ElevenLabs tanpa menyertakan `SUNO_AS_CATALOG_MODELS`.
+   - Mengimpor dan menyatukan `SUNO_AS_CATALOG_MODELS` ke dalam `combinedBase`, sehingga saat aplikasi desktop pertama kali dibuka atau katalog disegarkan, model resmi Suno (v6, v6-wild, v6-mini, v4, v3.5, v3) tampil lengkap dengan status terverifikasi.
+2. **Sinkronisasi Presisi Logika Generasi Musik pada Mesin Hitung (`calculationEngine.ts`)**:
+   - Memastikan `planned_generations` untuk track musik secara akurat menghitung generasi klip musik baru (audisi langsung + cadangan), sementara pemisahan audio stems dihitung sebagai biaya kredit post-processing terpisah tanpa menggelembungkan jumlah klip lagu.
+
+---
+
 ## Versi [1.13.0] - Penyempurnaan Menyeluruh Fitur Musik Suno AI: Penyesuaian Model Mutakhir (Lini v6), Konteks Musik Sineas, Sambungan Lagu (Extend Runs), dan Separasi Audio Multi-Stems
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.13.0`

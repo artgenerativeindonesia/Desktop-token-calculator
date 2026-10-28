@@ -90,6 +90,11 @@ export const ProductionItemSchema = z.object({
   extend_count: z.number().int().nonnegative().optional(),
   stem_separation_mode: z.enum(['none', 'two_stems', 'full_stems']).optional(),
   exclude_styles: z.string().optional(),
+  stem_enabled: z.boolean().optional(),
+  stem_type: z.enum(['two_stems', 'full_stems']).optional(),
+  stem_runs: z.number().int().nonnegative().optional(),
+  stem_reserve: z.number().int().nonnegative().optional(),
+  music_reserve_override: z.number().int().nonnegative().optional(),
 });
 
 export const ElevenLabsSubscriptionPlanSchema = z.object({

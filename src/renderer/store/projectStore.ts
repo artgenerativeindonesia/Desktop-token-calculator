@@ -151,6 +151,11 @@ interface ProjectStoreState {
         | 'extend_count'
         | 'stem_separation_mode'
         | 'exclude_styles'
+        | 'stem_enabled'
+        | 'stem_type'
+        | 'stem_runs'
+        | 'stem_reserve'
+        | 'music_reserve_override'
       >
     >
   ) => void;

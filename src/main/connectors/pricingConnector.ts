@@ -9,6 +9,7 @@ import {
   HIGGSFIELD_MODEL_CATALOG,
 } from '../../shared/catalog/higgsfieldCatalog';
 import { ELEVENLABS_AS_CATALOG_MODELS } from '../../shared/catalog/elevenlabsCatalog';
+import { SUNO_AS_CATALOG_MODELS } from '../../shared/catalog/sunoCatalog';
 
 export interface CustomModelRateOverride {
   model_id: string;
@@ -51,6 +52,7 @@ export function loadMergedCatalog(
     ...customModels,
     ...HIGGSFIELD_MODEL_CATALOG,
     ...ELEVENLABS_AS_CATALOG_MODELS,
+    ...SUNO_AS_CATALOG_MODELS,
   ];
 
   return combinedBase.map((model) => {

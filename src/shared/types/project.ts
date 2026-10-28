@@ -187,6 +187,11 @@ export interface ProductionItem {
   extend_count?: number; // Jumlah sambungan/kelanjutan lagu yang direncanakan (Part 2, Part 3, dst.)
   stem_separation_mode?: MusicStemSeparationMode; // None (0 cr), Two Stems (20 cr), Full Stems (50 cr)
   exclude_styles?: string; // Gaya/instrumen terlarang (negative prompt)
+  stem_enabled?: boolean; // Apakah digenerate stem pemisahan audio
+  stem_type?: 'two_stems' | 'full_stems'; // 2-stems (20 cr) atau full 12-stems (50 cr)
+  stem_runs?: number; // Berapa kali generate stem per lagu (default 1)
+  stem_reserve?: number; // Berapa jumlah cadangan stem per lagu (default 0)
+  music_reserve_override?: number; // Cadangan generate lagu jika disesuaikan khusus
 }
 
 export type MusicSceneRole =
