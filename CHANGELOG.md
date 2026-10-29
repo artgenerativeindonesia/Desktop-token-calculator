@@ -12,6 +12,31 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.5] - Modularisasi Komponen Shell Aplikasi (Sidebar Rail, Header Bar, dan Modal Panduan/Intip Anggaran)
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.5`
+
+### Ditambahkan (Added)
+1. **Folder Direktori Modul Shell Aplikasi (`src/renderer/components/shell/`)**:
+   - Membentuk folder arsitektur khusus untuk mengelola komponen kerangka utama antarmuka pengguna (*Application Shell*).
+2. **Komponen Kerangka Terisolasi**:
+   - `StudioSidebarRail.tsx`: Komponen bilah navigasi samping (*Architectural Sidebar Rail*) yang mendukung mode penuh dan mode minimalis ikon (*Collapsed Icon Mode*), Zona 1 (Logo & Identitas Higgsfield Studio), Zona 2 (Navigasi Langkah Alur 01—05 dan Data Referensi 06), serta Zona 3 (Tombol Intip Ringkasan Anggaran & Tombol Simpan Proyek).
+   - `StudioTopHeader.tsx`: Komponen bilah atas (*Studio Top Header Bar*) yang memuat tombol pembuka sidebar, pill nama proyek aktif, badge status kelengkapan data, tombol buka Panduan Cepat, ticker kurs USD/IDR, saklar bahasa (ID/EN), dan saklar tema gelap/terang.
+   - `StudioQuickGuideModal.tsx`: Jendela modal kaca buram (*Frosted Glass Modal*) panduan langkah kerja 4-tahap bagi pengguna awam, dilengkapi tombol pemuat sampel proyek komersial dan pengujian PRD sintetis.
+   - `QuickBudgetPeekModal.tsx`: Jendela modal kaca buram (*Live Budget Peek*) untuk mengintip total anggaran, rumus kali pembuatan AI, biaya per video jadi, dan total kredit dari layar mana saja.
+   - `NotificationBanner.tsx`: Komponen spanduk notifikasi pesan info, sukses, peringatan, atau galat yang dapat ditutup pengguna.
+   - `index.ts`: Titik ekspor terpusat (*barrel export*) untuk seluruh komponen shell.
+
+### Diubah (Changed)
+1. **Penyederhanaan `App.tsx` Menjadi Orkestrator Ramping**:
+   - Memangkas ukuran file `App.tsx` dari 908 baris menjadi hanya 105 baris (reduksi 88.4%), menjadikannya sangat bersih, mudah dipelihara, dan hanya fokus mengorkestrasi inisialisasi aplikasi, pendengar pintasan papan ketik (`Ctrl+B`), serta penyajian tampilan aktif.
+
+### Diperbaiki (Fixed)
+1. **Kerapian Struktur Renderer**:
+   - Seluruh 6 tampilan utama (Langkah 01—05 dan 06) serta kerangka shell kini 100% modular, rapi, dan terisolasi tanpa ada satupun file antarmuka raksasa yang tersisa di `src/renderer/`.
+
+---
+
 ## Versi [2.1.4] - Modularisasi Komponen Cetak Dokumen PDF (`ExportPdfView.tsx`) Menjadi Modul-Modul Terfokus
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.4`

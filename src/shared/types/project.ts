@@ -2,8 +2,8 @@
  * AI Video Budget Calculator — Shared Data Types (PRD v1.0 Bab 6, 8, 9, 10, 12)
  */
 
-export const CURRENT_SCHEMA_VERSION = '2.1.4';
-export const APP_VERSION = '2.1.4';
+export const CURRENT_SCHEMA_VERSION = '2.1.5';
+export const APP_VERSION = '2.1.5';
 
 export type AppLanguage = 'id' | 'en';
 export type GlassTheme = 'dark' | 'light';
