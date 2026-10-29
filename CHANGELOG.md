@@ -12,6 +12,28 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.3] - Modularisasi Komponen Pengaturan Parameter Proyek (`ProjectSetupView.tsx`) Menjadi Modul-Modul Terfokus
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.3`
+
+### Ditambahkan (Added)
+1. **Folder Direktori Modul Pengaturan Proyek (`src/renderer/components/setup/`)**:
+   - Membentuk folder khusus untuk mengorganisir formulir parameter proyek, kartu cadangan dana jaga-jaga, dan jendela panduan edukasi pada Langkah 02 secara terstruktur dan terisolasi.
+2. **Komponen-Komponen Pengaturan Terisolasi**:
+   - `ProjectIdentityForm.tsx`: Formulir kolom kiri yang mencakup nama proyek, penentuan jumlah video multi-video beserta pilihan preset cepat, target durasi per video jadi dengan konversi timecode instan, dan patokan nilai kurs mata uang.
+   - `SafetyReserveCard.tsx`: Kartu kolom kanan yang mencakup pilihan preset cadangan (2x Hemat, 5x Standar, 10x Aman), slider angka pengali cadangan, serta rangkuman otomatis dampak anggaran (perkalian kebutuhan shot × cadangan × jumlah video).
+   - `SafetyReserveGuideModal.tsx`: Jendela modal pop-up penjelasan konsep dana jaga-jaga (toleransi revisi AI) dan bagaimana sistem menghubungkannya secara otomatis ke susunan shot di Langkah 03.
+
+### Diubah (Changed)
+1. **Penyederhanaan `ProjectSetupView.tsx` Menjadi Orkestrator Ringan**:
+   - Berhasil memangkas ukuran file dari ~577 baris menjadi hanya 135 baris (reduksi 76.6%) tanpa mengubah satupun tampilan, rumus keuangan, maupun validasi input.
+
+### Diperbaiki (Fixed)
+1. **Penyelarasan Tipe Data Asumsi Anggaran**:
+   - Menyelaraskan impor antarmuka skema `BudgetAssumptions` agar 100% konsisten dengan skema TypeScript proyek.
+
+---
+
 ## Versi [2.1.2] - Modularisasi Komponen Beranda Proyek (`DashboardView.tsx`) Menjadi Modul-Modul Terfokus
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.2`
@@ -34,6 +56,11 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 ### Diperbaiki (Fixed)
 1. **Penyelarasan Tipe Data State & Entri Proyek**:
    - Menyelaraskan penggunaan tipe `ExchangeRate` dan `RecentProjectEntry` pada modal pemeriksaan data agar 100% konsisten dengan skema TypeScript proyek.
+2. **Perbaikan Karakter Khusus `&` dan `%` pada File Perintah Windows (`.bat`)**:
+   - Mengganti simbol `&` yang tidak di-escape pada `Jalankan-Cek-Otomatis.bat`, `Klik-Untuk-Testing-Tanpa-Install.bat`, dan `Buat-Publish-Installer.bat` menjadi kata `dan` serta menggandakan `%%`, sehingga menghilangkan pesan peringatan Windows `'Fitur' / 'Nama' / 'Anti-Layar-Hitam' is not recognized as an internal or external command`.
+   - Menambahkan catatan informasi bahwa tulisan `RUN v2.1.9` pada terminal pengujian adalah versi mesin penguji Vitest, bukan versi aplikasi.
+3. **Penyeragaman Nomor Versi `2.1.2` di Seluruh Dokumen & Skrip**:
+   - Menyelaraskan seluruh label versi pada `README.md`, `PANDUAN-INSTALASI-DAN-PENGGUNAAN.md`, dan seluruh berkas `.bat` serta `.command` ke versi `2.1.2` agar tidak ada lagi perbedaan penulisan versi.
 
 ---
 
