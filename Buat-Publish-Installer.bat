@@ -1,11 +1,11 @@
 @echo off
-title AI Video Budget Calculator - Buat Paket Publish Installer (Setelah Disetujui)
+title AI Video Budget Calculator - Buat Paket Publish Installer (v2.1.2)
 color 0E
 cd /d "%~dp0"
 
 echo ============================================================================
-echo   PEMBUATAN PAKET PUBLISH / INSTALLER (.EXE PORTABLE & SETUP)
-echo   (Jalankan hanya setelah versi aplikasi disetujui untuk dipublikasikan)
+echo   AI VIDEO BUDGET CALCULATOR - VERSI APLIKASI: v2.1.2 (STUDIO EDITION)
+echo   PEMBUATAN PAKET PUBLISH / INSTALLER (.EXE PORTABLE DAN SETUP)
 echo ============================================================================
 echo.
 call npm.cmd run dist:win

@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# AI Video Budget Calculator - Mode Testing Tanpa Instalasi di Mac (Zero-Install)
+# AI Video Budget Calculator - Mode Testing Tanpa Instalasi di Mac (v2.1.2)
 # ============================================================================
 
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -14,7 +14,7 @@ fi
 cd "$(dirname "$0")"
 
 echo "============================================================================"
-echo "  AI VIDEO BUDGET CALCULATOR"
+echo "  AI VIDEO BUDGET CALCULATOR - VERSI APLIKASI: v2.1.2 (STUDIO EDITION)"
 echo "  Mode Testing Tanpa Instalasi untuk Pengguna Mac (Zero-Install)"
 echo "============================================================================"
 echo ""
@@ -35,9 +35,7 @@ if [ ! -d "node_modules" ] || [ ! -d "node_modules/electron/dist/Electron.app" ]
   npm install
 fi
 
-if [ ! -f "dist/index.html" ]; then
-  echo "[INFO] Menyiapkan tampilan aplikasi..."
-  npm run build
-fi
+echo "[INFO] Memastikan tampilan aplikasi versi terbaru (v2.1.2) siap dijalankan..."
+npm run build || { echo "[ERROR] Gagal menyiapkan tampilan aplikasi."; read -p "Tekan Enter untuk keluar..."; exit 1; }
 
 npx electron .

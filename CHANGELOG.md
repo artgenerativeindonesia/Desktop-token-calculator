@@ -12,6 +12,31 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.2] - Modularisasi Komponen Beranda Proyek (`DashboardView.tsx`) Menjadi Modul-Modul Terfokus
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.2`
+
+### Ditambahkan (Added)
+1. **Folder Direktori Modul Beranda (`src/renderer/components/dashboard/`)**:
+   - Membentuk folder khusus untuk mengorganisir kartu identitas proyek, metrik pendukung, dan jendela modal berkas pada Langkah 01 secara terstruktur dan terisolasi.
+2. **Komponen-Komponen Beranda Terisolasi**:
+   - `DashboardHeroSplit.tsx`: Kartu Tier 1 utama yang memuat identitas proyek, status penyimpanan, tombol aksi cepat, dan kotak jangkar total seluruh anggaran.
+   - `DashboardSupportingMetrics.tsx`: Kartu Tier 2 berisi 3 metrik pendukung seimbang: rumus kali pembuatan AI, rata-rata biaya produksi, dan pemantau kredit beserta kurs Rupiah.
+   - `DashboardCategoryDistribution.tsx`: Kartu Tier 3 berisi ringkasan cepat distribusi biaya 9 jenis pembuatan AI dalam format bento grid.
+   - `ProjectFileManagerModal.tsx`: Jendela modal pop-up untuk membuat proyek kosong baru, membuka berkas `.aivbudget`, memuat contoh proyek siap pakai, dan riwayat berkas terakhir.
+   - `CategoryBreakdownModal.tsx`: Jendela modal tabel rincian biaya lengkap untuk setiap jenis pembuatan AI.
+   - `DataHealthCheckModal.tsx`: Jendela modal pemeriksaan kelengkapan data, status kurs dolar, dan daftar catatan peringatan sistem.
+
+### Diubah (Changed)
+1. **Penyederhanaan `DashboardView.tsx` Menjadi Orkestrator Ringan**:
+   - Berhasil memangkas ukuran file dari ~978 baris menjadi hanya 164 baris (reduksi 83.2%) tanpa mengubah satupun tampilan, fitur, maupun alur kerja pengguna.
+
+### Diperbaiki (Fixed)
+1. **Penyelarasan Tipe Data State & Entri Proyek**:
+   - Menyelaraskan penggunaan tipe `ExchangeRate` dan `RecentProjectEntry` pada modal pemeriksaan data agar 100% konsisten dengan skema TypeScript proyek.
+
+---
+
 ## Versi [2.1.1] - Modularisasi Komponen Rekapitulasi Anggaran (`BudgetSummaryView.tsx`) Menjadi Modul-Modul Terfokus
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.1`
