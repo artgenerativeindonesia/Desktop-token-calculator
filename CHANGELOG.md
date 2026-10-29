@@ -12,6 +12,25 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.7] - Perapian Root Repositori dan Penguatan Konfigurasi `.gitignore` Standar Industri
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.7`
+
+### Ditambahkan (Added)
+1. **Penguatan Aturan `.gitignore` Standar Industri**:
+   - Menambahkan perlindungan pencegahan commit untuk berkas lingkungan rahasia (`.env*`), berkas konfigurasi editor (`.vscode/`, `.idea/`), log sistem (`*.log`), dan berkas indeks sistem operasi (`.DS_Store`, `Thumbs.db`, `desktop.ini`).
+   - Tetap mempertahankan pelacakan berkas kompilasi `dist/` dan `dist-electron/` demi kelancaran alur *Zero-Install* bagi pengguna non-teknis.
+
+### Diperbaiki (Fixed)
+1. **Pembersihan Berkas Sampah Root Repositori**:
+   - Menghapus berkas placeholder yatim piatu `test.md` dari root repositori sesuai rekomendasi Audit Standar Industri Bab 9.4.
+
+### Diubah (Changed)
+1. **Penyelarasan Nomor Versi Aplikasi**:
+   - Menyelaraskan seluruh label aplikasi menjadi **`2.1.7`** pada `package.json`, `src/shared/types/project.ts`, `Jalankan-Cek-Otomatis.bat`, dan `Klik-Untuk-Testing-Tanpa-Install.bat`.
+
+---
+
 ## Versi [2.1.6] - Penambahan Pipeline Pengujian Otomatis di Awan (GitHub Actions CI Quality Assurance)
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.6`
