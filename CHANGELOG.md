@@ -12,6 +12,24 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.6] - Penambahan Pipeline Pengujian Otomatis di Awan (GitHub Actions CI Quality Assurance)
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.6`
+
+### Ditambahkan (Added)
+1. **Otomasi CI Pengujian 3-Lapis di GitHub Actions (`.github/workflows/ci.yml`)**:
+   - Memasang berkas alur kerja otomatis (*Continuous Integration*) yang secara mandiri menguji kode di dua sistem operasi sekaligus (`ubuntu-latest` dan `windows-latest`) setiap kali ada *push* atau *pull request* ke cabang `main`.
+   - Menjalankan 3 langkah verifikasi mutu standar industri:
+     1. Pemeriksaan tipe data statis TypeScript (`npm run typecheck`).
+     2. Pengujian 116 skenario logika matematika, audio provider, dan anti-layar-hitam (`npm test`).
+     3. Kompilasi build aplikasi desktop untuk memastikan integritas berkas distribusi (`npm run build`).
+
+### Diubah (Changed)
+1. **Penyelarasan Nomor Versi Aplikasi**:
+   - Menyelaraskan seluruh label versi rilis menjadi **`2.1.6`** pada `package.json`, `src/shared/types/project.ts`, `Jalankan-Cek-Otomatis.bat`, dan `Klik-Untuk-Testing-Tanpa-Install.bat`.
+
+---
+
 ## Versi [2.1.5] - Modularisasi Komponen Shell Aplikasi (Sidebar Rail, Header Bar, dan Modal Panduan/Intip Anggaran)
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.5`
