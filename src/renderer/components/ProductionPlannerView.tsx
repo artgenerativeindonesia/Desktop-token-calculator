@@ -273,7 +273,7 @@ export const ProductionPlannerView: React.FC = () => {
        * TIER 1: DOMINANT FOCAL POINT — PLANNER HERO & LIVE RUNNING TOTAL
        * ===================================================================== */}
       <div
-        className={`${heroCardClass} rounded-[18px] p-6 md:p-7 flex flex-col gap-5`}
+        className={`${heroCardClass} relative z-20 rounded-[18px] p-6 md:p-7 flex flex-col gap-5`}
       >
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
@@ -377,7 +377,7 @@ export const ProductionPlannerView: React.FC = () => {
             </div>
 
             {activeDepartment === 'all' ? (
-              <div className="relative">
+              <div className="relative z-40">
                 <button
                   type="button"
                   onClick={() => setShowQuickAddMenu((prev) => !prev)}
@@ -389,84 +389,90 @@ export const ProductionPlannerView: React.FC = () => {
                 </button>
 
                 {showQuickAddMenu && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-[14px] p-2 bg-[#0c1322]/95 border border-[var(--vv-border-strong)] shadow-2xl z-30 space-y-1 backdrop-blur-xl">
-                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--vv-text-subtle)]">
-                      {isId
-                        ? 'Pilih Jenis Tahap Produksi:'
-                        : 'Select Production Stage Type:'}
+                  <>
+                    <div
+                      className="fixed inset-0 z-30"
+                      onClick={() => setShowQuickAddMenu(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-64 rounded-[14px] p-2 bg-[#0c1322] border border-[var(--vv-border-strong)] shadow-2xl z-40 space-y-1 backdrop-blur-xl">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--vv-text-subtle)]">
+                        {isId
+                          ? 'Pilih Jenis Tahap Produksi:'
+                          : 'Select Production Stage Type:'}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleAddAndOpenModal('text_to_video')}
+                        className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-[#0099ff]/20 text-[var(--vv-text-primary)] transition"
+                      >
+                        <span>🎬</span>
+                        <div>
+                          <div>
+                            {isId
+                              ? 'Shot Video & Animasi AI'
+                              : 'AI Video & Animation Shot'}
+                          </div>
+                          <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                            Higgsfield (Text/Image/Video to Video)
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAddAndOpenModal('text_to_image')}
+                        className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-amber-500/20 text-[var(--vv-text-primary)] transition"
+                      >
+                        <span>🖼️</span>
+                        <div>
+                          <div>
+                            {isId
+                              ? 'Gambar & Konsep Visual'
+                              : 'Image & Visual Concept'}
+                          </div>
+                          <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                            Higgsfield (Text/Image to Image & Upscale)
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAddAndOpenModal('voice_over')}
+                        className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-sky-500/20 text-sky-300 transition"
+                      >
+                        <span>🎙️</span>
+                        <div>
+                          <div>
+                            {isId
+                              ? 'File Audio Voice Over'
+                              : 'Voice Over Audio File'}
+                          </div>
+                          <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                            ElevenLabs Official (Durasi & Karakter)
+                          </div>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAddAndOpenModal('music')}
+                        className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-purple-500/20 text-purple-300 transition"
+                      >
+                        <span>🎵</span>
+                        <div>
+                          <div>
+                            {isId
+                              ? 'Track Musik & Soundtrack'
+                              : 'Music & Soundtrack'}
+                          </div>
+                          <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                            Suno AI Official (Lagu & Pemisahan Stems)
+                          </div>
+                        </div>
+                      </button>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleAddAndOpenModal('text_to_video')}
-                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-[#0099ff]/20 text-[var(--vv-text-primary)] transition"
-                    >
-                      <span>🎬</span>
-                      <div>
-                        <div>
-                          {isId
-                            ? '+ Shot Video & Animasi AI'
-                            : '+ AI Video & Animation Shot'}
-                        </div>
-                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
-                          Higgsfield (Text/Image/Video to Video)
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleAddAndOpenModal('text_to_image')}
-                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-amber-500/20 text-[var(--vv-text-primary)] transition"
-                    >
-                      <span>🖼️</span>
-                      <div>
-                        <div>
-                          {isId
-                            ? '+ Gambar & Konsep Visual'
-                            : '+ Image & Visual Concept'}
-                        </div>
-                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
-                          Higgsfield (Text/Image to Image & Upscale)
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleAddAndOpenModal('voice_over')}
-                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-sky-500/20 text-sky-300 transition"
-                    >
-                      <span>🎙️</span>
-                      <div>
-                        <div>
-                          {isId
-                            ? '+ File Audio Voice Over'
-                            : '+ Voice Over Audio File'}
-                        </div>
-                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
-                          ElevenLabs Official (Durasi & Karakter)
-                        </div>
-                      </div>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleAddAndOpenModal('music')}
-                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-purple-500/20 text-purple-300 transition"
-                    >
-                      <span>🎵</span>
-                      <div>
-                        <div>
-                          {isId
-                            ? '+ Track Musik & Soundtrack'
-                            : '+ Music & Soundtrack'}
-                        </div>
-                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
-                          Suno AI Official (Lagu & Pemisahan Stems)
-                        </div>
-                      </div>
-                    </button>
-                  </div>
+                  </>
                 )}
               </div>
             ) : (
@@ -483,19 +489,19 @@ export const ProductionPlannerView: React.FC = () => {
                 <span>
                   {activeDepartment === 'video'
                     ? isId
-                      ? '+ Tambah Shot Video'
-                      : '+ Add Video Shot'
+                      ? 'Tambah Shot Video'
+                      : 'Add Video Shot'
                     : activeDepartment === 'stills'
                     ? isId
-                      ? '+ Tambah Gambar Visual'
-                      : '+ Add Visual Image'
+                      ? 'Tambah Gambar Visual'
+                      : 'Add Visual Image'
                     : activeDepartment === 'voiceover'
                     ? isId
-                      ? '+ Tambah File Audio'
-                      : '+ Add Audio File'
+                      ? 'Tambah File Audio'
+                      : 'Add Audio File'
                     : isId
-                    ? '+ Tambah Track Musik'
-                    : '+ Add Music Track'}
+                    ? 'Tambah Track Musik'
+                    : 'Add Music Track'}
                 </span>
               </button>
             )}
@@ -809,8 +815,8 @@ export const ProductionPlannerView: React.FC = () => {
                 <Plus className="w-3.5 h-3.5" />
                 <span>
                   {isId
-                    ? '+ Tambah Track Musik Suno'
-                    : '+ Add Suno Music Track'}
+                    ? 'Tambah Track Musik Suno'
+                    : 'Add Suno Music Track'}
                 </span>
               </button>
 
@@ -909,16 +915,16 @@ export const ProductionPlannerView: React.FC = () => {
             <span>
               {activeDepartment === 'stills'
                 ? isId
-                  ? '+ Tambah Gambar Visual'
-                  : '+ Add Visual Image'
+                  ? 'Tambah Gambar Visual'
+                  : 'Add Visual Image'
                 : activeDepartment === 'voiceover'
                 ? isId
-                  ? '+ Tambah File Audio'
-                  : '+ Add Audio File'
+                  ? 'Tambah File Audio'
+                  : 'Add Audio File'
                 : activeDepartment === 'music'
                 ? isId
-                  ? '+ Tambah Track Musik'
-                  : '+ Add Music Track'
+                  ? 'Tambah Track Musik'
+                  : 'Add Music Track'
                 : t.addStageBtn}
             </span>
           </button>

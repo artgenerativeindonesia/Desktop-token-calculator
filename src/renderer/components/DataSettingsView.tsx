@@ -1089,7 +1089,7 @@ export const DataSettingsView: React.FC = () => {
             >
               <Plus className="w-3.5 h-3.5" />
               <span>
-                {isId ? '+ Tambah Model Baru' : '+ Add New Model'}
+                {isId ? 'Tambah Model Baru' : 'Add New Model'}
               </span>
             </button>
 

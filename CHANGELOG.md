@@ -12,6 +12,18 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.0.3] - Perbaikan Layer Z-Index Menu Pilihan Cepat & Pembersihan Tanda `+` Ganda pada Tombol
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.0.3`
+
+### Diperbaiki (Fixed)
+1. **Perbaikan Menu Pilihan Cepat yang Tertutup Kartu di Bawahnya (`ProductionPlannerView.tsx`)**:
+   - Menambahkan pengaturan lapisan tampil (`relative z-20` pada kartu utama dan `z-40` pada menu *dropdown* beserta area klik-di-luar untuk menutup otomatis) sehingga menu pilihan *Tambah Tahap Pembuatan Baru* di tab **Semua Tahapan** selalu tampil utuh di paling depan dan tidak lagi tertutup oleh baris tab departemen di bawahnya.
+2. **Penghapusan Tanda `+` Ganda pada Seluruh Label Tombol (`ProductionPlannerView.tsx` & `DataSettingsView.tsx`)**:
+   - Menghapus karakter `+` pada teks label seluruh tombol yang sudah memiliki ikon `<Plus />` (seperti *Tambah Shot Video*, *Tambah Gambar Visual*, *Tambah File Audio*, *Tambah Track Musik*, *Tambah Track Musik Suno*, *Tambah Model Baru*, serta 4 opsi di dalam menu pilihan cepat) agar tampilan tombol rapi dan tidak menampilkan tanda `+ +` ganda.
+
+---
+
 ## Versi [2.0.2] - Penyederhanaan Navigasi 1 Baris (Eliminasi 20 Tombol Berlebihan), Isolasi Subkategori Lintas-Provider, & Proteksi State Katalog
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.0.2`
