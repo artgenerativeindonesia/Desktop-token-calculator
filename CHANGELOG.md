@@ -12,6 +12,47 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.0] - Pembaruan Arsitektur Standar Industri: Modularisasi Komponen Raksasa, Pemisahan Lemari State Store (Slices Pattern), & Penguatan Keamanan Desktop Electron
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.0`
+
+### Ditambahkan (Added)
+1. **Jaring Pengaman Pengecekan Tipe Statis Mandiri (`npm run typecheck`)**:
+   - Menambahkan skrip pemeriksaan statis TypeScript terisolasi (`tsc --noEmit`) pada `package.json` untuk mendeteksi potensi salah ketik nama variabel atau parameter secara otomatis sebelum proses kompilasi berjalan.
+2. **Struktur Folder Modular Terorganisir**:
+   - Membentuk arsitektur direktori berorientasi fitur yang bersih dan terisolasi: `src/renderer/components/planner/` (beserta `editors/`), `src/renderer/components/settings/`, `src/renderer/store/slices/`, dan `src/shared/examples/`.
+3. **Validasi Pengirim Pesan IPC Desktop (`validateIpcSender` di `main.ts`)**:
+   - Menerapkan perlindungan keamanan resmi *Electron Security Checklist* dengan memeriksa `event.senderFrame` dan memvalidasi `event.sender === mainWindow.webContents` pada seluruh 10 jalur IPC untuk menutup celah eksploitasi Remote Code Execution (RCE).
+
+### Diubah (Changed)
+1. **Modularisasi Komponen Raksasa Susun Shot AI (`ProductionPlannerView.tsx`)**:
+   - Memecah file raksasa ~3.109 baris menjadi modul-modul ramping (~292 baris, reduksi ~90.6%) yang bertindak murni sebagai orkestrator antarmuka:
+     - `PlannerHeroHeader.tsx`: Banner utama, total anggaran berjalan, dan menu pilihan cepat bertingkat.
+     - `PlannerDepartmentNav.tsx`: Navigasi filter 1 baris bersih untuk 5 departemen beserta panel panduan pacing audio.
+     - `PlannerItemCard.tsx`: Kartu baris pekerjaan bento modern dengan aksi duplikasi, hapus, dan indikator shot utama.
+     - `PlannerRunningSummary.tsx`: Rekapitulasi anggaran berjalan dan durasi bersih di bagian bawah daftar shot.
+     - `PlannerItemModal.tsx` & Sub-Editor: Memisahkan modal pengaturan ke dalam sub-editor terdedikasi per provider (`VisualItemEditor.tsx`, `VoiceOverItemEditor.tsx`, dan `MusicItemEditor.tsx`).
+2. **Modularisasi Komponen Pengaturan Data & Katalog AI (`DataSettingsView.tsx`)**:
+   - Memecah file raksasa ~1.732 baris menjadi modul-modul mandiri (~153 baris, reduksi ~91.2%) dengan navigasi 4-tab yang bersih:
+     - `ExchangeRateSection.tsx`: Kartu Tier 1 kurs USD/IDR, sinkronisasi otomatis Bank Sentral Eropa (ECB), dan input kurs manual.
+     - `HiggsfieldCatalogSection.tsx`: Tabel katalog model AI dengan pencarian/filter, paket kredit, dan modal tambah model.
+     - `AudioProvidersSection.tsx`: Manajemen langganan dan konektor API resmi ElevenLabs serta Suno AI.
+3. **Dekomposisi Lemari Penyimpanan Data State (`projectStore.ts`) Menjadi 4 Laci Modular**:
+   - Memecah file store ~1.569 baris menjadi 4 modul slice terfokus di `src/renderer/store/slices/`: `uiSlice.ts` (tampilan & bahasa), `exchangeRateSlice.ts` (kurs mata uang), `catalogSlice.ts` (katalog & paket AI), dan `projectSlice.ts` (proyek, adegan, dan PDF).
+   - Menyediakan facade `useProjectStore` yang 100% kompatibel balik (*Zero Breaking Changes*) sehingga komponen lain tidak memerlukan penyesuaian kode.
+4. **Pemisahan Data Contoh Proyek dari Mesin Kalkulasi Inti**:
+   - Memindahkan data contoh sintetis dan komersial dari `calculationEngine.ts` ke `src/shared/examples/sampleProjects.ts` agar mesin kalkulasi murni fokus pada rumus matematika dan presisi keuangan.
+5. **Penguatan Kebijakan Keamanan Jaringan (Content Security Policy)**:
+   - Memperbarui tag CSP pada `index.html` dengan whitelist domain resmi endpoint AI (`api.frankfurter.dev`, `open.er-api.com`, `docs.higgsfield.ai`, `api.elevenlabs.io`, `suno.com`, `higgsfield.ai`).
+
+### Diperbaiki (Fixed)
+1. **Penguatan Layer Tampilan Z-Index Menu Cepat Langkah 03 (`PlannerHeroHeader.tsx`)**:
+   - Memperkuat lapisan tumpukan visual (`relative z-30` pada kartu header dan `z-50` pada kotak menu dropdown beserta tirai `backdrop z-40`) sehingga menu pop-up di tab Semua Tahapan 100% bebas dari risiko terpotong oleh elemen di bawahnya.
+2. **Pembersihan Tanda `+` Ganda pada Seluruh Tombol Aksi**:
+   - Menghilangkan tanda `+` berlebih pada teks label seluruh tombol yang sudah memiliki ikon plus bawaan.
+
+---
+
 ## Versi [2.0.3] - Perbaikan Layer Z-Index Menu Pilihan Cepat & Pembersihan Tanda `+` Ganda pada Tombol
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.0.3`

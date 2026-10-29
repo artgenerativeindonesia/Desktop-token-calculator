@@ -42,12 +42,30 @@ function createWindow() {
         mainWindow = null;
     });
 }
+/**
+ * Memvalidasi bahwa pemanggilan IPC benar-benar berasal dari jendela aplikasi resmi (mainWindow)
+ * guna mencegah eksploitasi Remote Code Execution (RCE) sesuai standar keamanan industri Electron.
+ */
+function validateIpcSender(event) {
+    if (!event.senderFrame) {
+        return false;
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        if (event.sender !== mainWindow.webContents) {
+            return false;
+        }
+    }
+    return true;
+}
 function registerIpcHandlers() {
     const recentListPath = getUserDataFilePath('recent-projects.json');
     const fxCachePath = getUserDataFilePath('fx-usd-idr-cache.json');
     const catalogOverridesPath = getUserDataFilePath('catalog-overrides.json');
     // 1. Simpan Proyek (.aivbudget) dengan Atomic Write
-    electron_1.ipcMain.handle('project:save', async (_event, project, currentFilePath, saveAs) => {
+    electron_1.ipcMain.handle('project:save', async (event, project, currentFilePath, saveAs) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         let targetPath = !saveAs && currentFilePath ? currentFilePath : null;
         if (!targetPath) {
             const cleanDefaultName = (project.project_name || 'Project')
@@ -79,7 +97,10 @@ function registerIpcHandlers() {
         };
     });
     // 2. Buka Proyek (.aivbudget)
-    electron_1.ipcMain.handle('project:open', async (_event, specificFilePath) => {
+    electron_1.ipcMain.handle('project:open', async (event, specificFilePath) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         let targetPath = specificFilePath;
         if (!targetPath) {
             const openDialog = await electron_1.dialog.showOpenDialog(mainWindow, {
@@ -108,36 +129,60 @@ function registerIpcHandlers() {
         };
     });
     // 3. Daftar Proyek Terakhir
-    electron_1.ipcMain.handle('project:get-recents', async () => {
+    electron_1.ipcMain.handle('project:get-recents', async (event) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         return (0, projectStorage_1.loadRecentProjectsList)(recentListPath);
     });
     // 4. Kurs USD/IDR Otomatis (Frankfurter ECB / Open ER-API)
-    electron_1.ipcMain.handle('fx:refresh', async () => {
+    electron_1.ipcMain.handle('fx:refresh', async (event) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         return (0, fxConnector_1.fetchVerifiedUsdIdrRate)(fxCachePath);
     });
     // 5. Katalog Model Higgsfield
-    electron_1.ipcMain.handle('catalog:get', async () => {
+    electron_1.ipcMain.handle('catalog:get', async (event) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         return (0, pricingConnector_1.loadMergedCatalog)(catalogOverridesPath);
     });
-    electron_1.ipcMain.handle('catalog:refresh', async () => {
+    electron_1.ipcMain.handle('catalog:refresh', async (event) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         return (0, pricingConnector_1.refreshHiggsfieldCatalog)(catalogOverridesPath);
     });
-    electron_1.ipcMain.handle('catalog:save-override', async (_event, override) => {
+    electron_1.ipcMain.handle('catalog:save-override', async (event, override) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         (0, pricingConnector_1.saveCustomRateOverride)(catalogOverridesPath, {
             ...override,
             updated_at: new Date().toISOString(),
         });
         return (0, pricingConnector_1.loadMergedCatalog)(catalogOverridesPath);
     });
-    electron_1.ipcMain.handle('catalog:reset-overrides', async () => {
+    electron_1.ipcMain.handle('catalog:reset-overrides', async (event) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         (0, pricingConnector_1.clearCustomRateOverrides)(catalogOverridesPath);
         return (0, pricingConnector_1.loadMergedCatalog)(catalogOverridesPath);
     });
-    electron_1.ipcMain.handle('catalog:add-custom-model', async (_event, newModel) => {
+    electron_1.ipcMain.handle('catalog:add-custom-model', async (event, newModel) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         return (0, pricingConnector_1.saveCustomUserModel)(catalogOverridesPath, newModel);
     });
     // 6. Ekspor Laporan PDF
-    electron_1.ipcMain.handle('pdf:export', async (_event, project, language) => {
+    electron_1.ipcMain.handle('pdf:export', async (event, project, language) => {
+        if (!validateIpcSender(event)) {
+            throw new Error('Akses IPC ditolak: Pengirim pesan tidak sah.');
+        }
         const defaultFileName = (0, pdfReportBuilder_1.buildSafePdfFilename)(project.project_name, project.export_settings?.export_date);
         const saveDialog = await electron_1.dialog.showSaveDialog(mainWindow, {
             title: language === 'id'
