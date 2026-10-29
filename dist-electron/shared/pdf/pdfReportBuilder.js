@@ -214,17 +214,26 @@ function generatePdfReportHtml(project, overrideLang) {
                             ? 'Per Generasi'
                             : 'Per Generation';
         const attemptsCount = res.attempts_per_item || cadanganMultiplier;
+        const isMusicStem = sourceItem?.stem_enabled ??
+            (sourceItem?.stem_separation_mode &&
+                sourceItem.stem_separation_mode !== 'none');
+        const musicStemType = sourceItem?.stem_type ||
+            (sourceItem?.stem_separation_mode === 'full_stems'
+                ? 'full_stems'
+                : 'two_stems');
         const countBreakdown = isVO
             ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
             : isMusic
-                ? `<strong>${res.effective_quantity}</strong> ${isId ? 'track lagu' : 'music tracks'}<br/><span style="font-size:10px;color:#9333ea;">&times; ${attemptsCount} ${isId ? 'audisi' : 'attempts'}${res.reserve_generations > 0 ? ` (+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'})` : ''} = <strong>${res.budgeted_generations}x buat</strong></span>${sourceItem?.stem_enabled ? `<br/><span style="font-size:9.5px;color:#7e22ce;">+ Stems: ${sourceItem.stem_runs || 1}x (${sourceItem.stem_type === 'full_stems' ? 'Full Studio 50 Cr' : '2-Stems 20 Cr'})</span>` : ''}`
+                ? `<strong>${res.effective_quantity}</strong> ${isId ? 'track lagu' : 'music tracks'}<br/><span style="font-size:10px;color:#9333ea;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'}${res.reserve_generations > 0 ? ` (+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'})` : ''} = <strong>${res.budgeted_generations}x buat</strong></span>${isMusicStem ? `<br/><span style="font-size:9.5px;color:#7e22ce;">+ Stems: ${sourceItem?.stem_runs || 1}x (${musicStemType === 'full_stems' ? 'Full Studio 50 Cr' : '2-Stems 20 Cr'})</span>` : ''}`
                 : res.reserve_generations > 0
                     ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
                     : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
-        const voChars = sourceItem?.script_text && sourceItem.script_text.trim().length > 0
-            ? sourceItem.script_text.length
-            : sourceItem?.character_count ||
-                (0, elevenlabsCatalog_1.convertDurationToCharacters)(res.duration_seconds || 10, sourceItem?.script_language ?? 'id', String(sourceItem?.model_selection?.parameter_values?.speed_preset || 'normal'));
+        const voChars = typeof sourceItem?.character_count === 'number' &&
+            sourceItem.character_count > 0
+            ? Math.floor(sourceItem.character_count)
+            : sourceItem?.script_text && sourceItem.script_text.trim().length > 0
+                ? sourceItem.script_text.length
+                : (0, elevenlabsCatalog_1.convertDurationToCharacters)(res.duration_seconds || 10, sourceItem?.script_language ?? 'id', String(sourceItem?.model_selection?.parameter_values?.speed_preset || 'normal'));
         return `
         <tr>
           <td style="text-align:center;">${idx + 1}</td>
@@ -251,13 +260,11 @@ function generatePdfReportHtml(project, overrideLang) {
             <span style="font-size:10px;color:#64748b;">${isVO
             ? `🔤 ${voChars} chars &bull; ⏱️ ${res.duration_seconds}s (${sourceItem?.script_language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'})`
             : isMusic
-                ? `🎵 ⏱️ ${res.duration_seconds || 120}s &bull; ${sourceItem?.stem_enabled
-                    ? sourceItem.stem_type === 'full_stems'
+                ? `🎵 ${res.budgeted_generations * 2} ${isId ? 'variasi' : 'vars'} &bull; ${isMusicStem
+                    ? musicStemType === 'full_stems'
                         ? 'Full Studio Stems (+50 Cr)'
                         : '2-Stems Split (+20 Cr)'
-                    : isId
-                        ? 'Stereo Mix (0 Cr)'
-                        : 'Stereo Mix (0 Cr)'}`
+                    : 'Stereo Mix (0 Cr)'}`
                 : escapeHtml(paramSummary)}</span>
           </td>
           <td class="num">${countBreakdown}</td>

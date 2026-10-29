@@ -12,6 +12,31 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.0.1] - Audit Presisi Mesin Kalkulasi, Penyederhanaan Input Musik Suno AI, & Dwi-Input Angka Voice Over ElevenLabs
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.0.1`
+
+### Diubah (Changed)
+1. **Penyeragaman & Penyederhanaan Input Musik Suno AI (`ProductionPlannerView.tsx`)**:
+   - Menghapus kotak input *"Target Durasi Track Musik (Detik)"* pada form Suno AI karena tarif resmi Suno AI bersifat flat per pembuatan lagu (`10 kredit` menghasilkan 2 variasi lagu utuh), sehingga formulir jauh lebih bersih dan fokus pada komponen yang benar-benar memengaruhi biaya.
+   - Menyeragamkan rumus jumlah lagu dan cadangan menjadi **`Jumlah Lagu × Pengali Cadangan Langkah 2 × 10 Kredit`**, selaras 100% dengan cara kerja tahap Video dan Voice Over.
+   - Menyederhanakan fitur **Pemisahan Track Audio (Stem Separation)** menjadi otomatis **1x per lagu jadi** (`Jumlah Lagu × 20 Cr` untuk *2-Stems Split* atau `Jumlah Lagu × 50 Cr` untuk *Full Studio Auto-Split*) tanpa kotak input berlapis yang membingungkan.
+2. **Dwi-Input Angka Terhubung pada Voice Over ElevenLabs (`ProductionPlannerView.tsx`)**:
+   - Menghapus kotak teks naskah panjang (*textarea*) dan menggantinya dengan **2 kotak angka yang saling menghitung otomatis secara 2 arah (Bi-Directional)**: **`Durasi Bicara per File (Detik)`** $\leftrightarrow$ **`Jumlah Karakter per File Audio`** yang menyesuaikan kecepatan bicara Bahasa Indonesia (~14,5 karakter/detik) dan Bahasa Inggris (~16,5 karakter/detik).
+3. **Penyempurnaan Kartu Ringkasan Baris Pekerjaan & Ringkasan Biaya (`ProductionPlannerView.tsx`, `BudgetSummaryView.tsx`, `pdfReportBuilder.ts`)**:
+   - Merapikan lencana informasi (*badges*) pada kartu baris pekerjaan Musik Suno di Langkah 03 agar langsung menampilkan jumlah variasi klip lagu, status Stems, dan total Kredit Suno.
+   - Mengganti metrik durasi musik pada kartu ringkasan Suno di Langkah 04 dengan informasi status **Pemisahan Stems Audio**.
+
+### Diperbaiki (Fixed)
+1. **Perbaikan Bug Perhitungan Ganda (*Double-Counting*) Cadangan Musik Suno**:
+   - Memperbaiki ketidaksinkronan antara kartu rincian ke-1 dan ke-3 pada jendela pengaturan Suno AI akibat pengali cadangan Langkah 2 yang sebelumnya dihitung dua kali (`directAttempts + songReserve`).
+2. **Perbaikan Akumulasi Total Generasi Proyek (`calculationEngine.ts`)**:
+   - Memastikan `totalPlannedGen`, `totalReserveGen`, dan `totalBudgetedGen` pada tingkat proyek menggunakan nilai generasi musik yang akurat (`musicPlannedGen`, `musicReserveGen`, `musicBudgetedGen`) sehingga total generasi 1 video selalu sama persis dengan penjumlahan seluruh baris pekerjaan.
+3. **Proteksi Harga Katalog Suno saat Mengganti Paket Langganan Higgsfield (`higgsfieldCatalog.ts`)**:
+   - Memperbaiki fungsi `applyCreditPlanRateToCatalog` agar mengecualikan provider `suno` dan kategori `music` (sebagaimana `elevenlabs` dan `voice_over`), sehingga perubahan paket kredit Higgsfield tidak pernah menimpa harga per kredit resmi Suno AI.
+
+---
+
 ## Versi [2.0.0] - Pembaruan Akbar Studio Edition: Integrasi Penuh 4 Pilar Utama (Multi-Video Workflow, Kalkulator Durasi Bersih Video, Voice Over Resmi ElevenLabs, dan Musik Pengiring Resmi Suno AI & Pemisahan Stems)
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.0.0`

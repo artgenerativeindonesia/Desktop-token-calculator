@@ -976,12 +976,12 @@ export const ProductionPlannerView: React.FC = () => {
                             <span>&bull;</span>
                             <span className="font-mono text-emerald-400 font-semibold">
                               🔤{' '}
-                              {item.script_text
-                                ? item.script_text.length
-                                : item.character_count ||
-                                  Math.round(
-                                    (item.duration_seconds || 10) * 14.5
-                                  )}{' '}
+                              {item.character_count ||
+                                (item.script_text
+                                  ? item.script_text.length
+                                  : Math.round(
+                                      (item.duration_seconds || 10) * 14.5
+                                    ))}{' '}
                               {isId ? 'karakter' : 'chars'}
                             </span>
                             <span>&bull;</span>
@@ -1005,58 +1005,30 @@ export const ProductionPlannerView: React.FC = () => {
                         ) : item.category === 'music' ? (
                           <>
                             <span>&bull;</span>
-                            <span className="text-purple-300 font-semibold px-2 py-0.5 rounded-md bg-purple-500/15 border border-purple-500/30">
-                              {item.music_role === 'theme_ost'
-                                ? '🎬 OST'
-                                : item.music_role === 'action_score'
-                                ? '⚡ Action'
-                                : item.music_role === 'emotional'
-                                ? '💧 Dramatic'
-                                : item.music_role === 'jingle'
-                                ? '🔔 Jingle'
-                                : item.music_role === 'credits'
-                                ? '📜 Credits'
-                                : '🎭 BGM Scene'}
-                            </span>
-                            <span>&bull;</span>
                             <span className="text-purple-300 font-medium">
-                              🎵 {item.music_genre || 'Sinematik Megah'} •{' '}
-                              {item.is_instrumental !== false
-                                ? 'Instrumental'
-                                : isId
-                                ? 'Lagu Vokal'
-                                : 'With Vocals'}
+                              🎵 {(calcRow?.budgeted_generations || 1) * 2}{' '}
+                              {isId ? 'variasi klip' : 'clip variations'} (
+                              {calcRow?.budgeted_generations || 1}x{' '}
+                              {isId ? 'buat' : 'gen'})
                             </span>
-                            {item.extend_count && item.extend_count > 0 ? (
-                              <>
-                                <span>&bull;</span>
-                                <span className="text-indigo-300 font-medium">
-                                  +{item.extend_count} Extend
-                                </span>
-                              </>
-                            ) : null}
-                            {item.stem_separation_mode &&
-                            item.stem_separation_mode !== 'none' ? (
-                              <>
-                                <span>&bull;</span>
-                                <span className="text-emerald-300 font-medium">
-                                  {item.stem_separation_mode === 'two_stems'
-                                    ? '🎛️ 2-Stems'
-                                    : '🎚️ 12-Stems'}
-                                </span>
-                              </>
-                            ) : null}
                             <span>&bull;</span>
-                            <span className="text-amber-400 font-medium">
-                              ⏱️ {item.duration_seconds || 120}s (
-                              {formatDualDuration(item.duration_seconds || 120, isId)}
-                              )
+                            <span className="text-emerald-300 font-medium">
+                              {item.stem_enabled ||
+                              (item.stem_separation_mode &&
+                                item.stem_separation_mode !== 'none')
+                                ? item.stem_type === 'full_stems' ||
+                                  item.stem_separation_mode === 'full_stems'
+                                  ? '🎚️ Full Studio Stems (+50 Cr/lagu)'
+                                  : '🎛️ 2-Stems Split (+20 Cr/lagu)'
+                                : isId
+                                ? '🎛️ Stereo Mix Standar (0 Cr)'
+                                : '🎛️ Standard Stereo Mix (0 Cr)'}
                             </span>
                             {calcRow?.total_credit !== null && (
                               <>
                                 <span>&bull;</span>
-                                <span className="text-pink-300 font-semibold">
-                                  🎼 {calcRow.total_credit.toLocaleString()} Suno
+                                <span className="text-purple-300 font-semibold">
+                                  🎵 {calcRow.total_credit.toLocaleString()} Suno
                                   Cr
                                 </span>
                               </>
@@ -1839,6 +1811,18 @@ export const ProductionPlannerView: React.FC = () => {
                     const budgetedGen =
                       calcRow?.budgeted_generations ??
                       (Number(item.quantity) || 0) * cadanganCount;
+                    const currentVoChars =
+                      typeof item.character_count === 'number' &&
+                      item.character_count > 0
+                        ? Math.floor(item.character_count)
+                        : item.script_text &&
+                          item.script_text.trim().length > 0
+                        ? item.script_text.length
+                        : convertDurationToCharacters(
+                            item.duration_seconds || 10,
+                            item.script_language ?? 'id',
+                            speedPreset
+                          );
 
                     return (
                       <div className="vv-card-quiet p-4 space-y-4">
@@ -1847,8 +1831,8 @@ export const ProductionPlannerView: React.FC = () => {
                             <Mic className="w-4 h-4 text-sky-400" />
                             <span>
                               {isId
-                                ? '4. Kuantitas File Audio, Naskah Dialog & Durasi (Dwi-Input Sineas)'
-                                : '4. Audio File Quantity, Script & Duration Settings (Dual-Input)'}
+                                ? '4. Kuantitas File Audio, Durasi Bicara & Karakter (Sinkron 2 Arah)'
+                                : '4. Audio File Quantity, Spoken Duration & Characters (Bi-Directional Sync)'}
                             </span>
                           </div>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 text-sky-300 font-semibold border border-sky-500/30">
@@ -1909,12 +1893,12 @@ export const ProductionPlannerView: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Pilihan Bahasa Naskah */}
+                        {/* Pilihan Bahasa Suara */}
                         <div>
                           <label className="block text-[11px] font-semibold text-[var(--vv-text-muted)] mb-1.5">
                             {isId
-                              ? 'Bahasa Naskah Suara'
-                              : 'Voice Script Language'}
+                              ? 'Bahasa Bicara (Kecepatan Karakter per Detik)'
+                              : 'Spoken Language (Characters per Second Rate)'}
                           </label>
                           <div className="grid grid-cols-2 gap-2">
                             <button
@@ -1922,18 +1906,15 @@ export const ProductionPlannerView: React.FC = () => {
                               onClick={() => {
                                 const nextLang = 'id';
                                 const curDur = item.duration_seconds || 10;
-                                const newChars =
-                                  item.script_text &&
-                                  item.script_text.trim().length > 0
-                                    ? item.script_text.length
-                                    : convertDurationToCharacters(
-                                        curDur,
-                                        nextLang,
-                                        speedPreset
-                                      );
+                                const newChars = convertDurationToCharacters(
+                                  curDur,
+                                  nextLang,
+                                  speedPreset
+                                );
                                 updateProductionItemField(item.item_id, {
                                   script_language: nextLang,
                                   character_count: newChars,
+                                  script_text: '',
                                 });
                               }}
                               className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
@@ -1951,18 +1932,15 @@ export const ProductionPlannerView: React.FC = () => {
                               onClick={() => {
                                 const nextLang = 'en';
                                 const curDur = item.duration_seconds || 10;
-                                const newChars =
-                                  item.script_text &&
-                                  item.script_text.trim().length > 0
-                                    ? item.script_text.length
-                                    : convertDurationToCharacters(
-                                        curDur,
-                                        nextLang,
-                                        speedPreset
-                                      );
+                                const newChars = convertDurationToCharacters(
+                                  curDur,
+                                  nextLang,
+                                  speedPreset
+                                );
                                 updateProductionItemField(item.item_id, {
                                   script_language: nextLang,
                                   character_count: newChars,
+                                  script_text: '',
                                 });
                               }}
                               className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
@@ -1977,214 +1955,231 @@ export const ProductionPlannerView: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Area Naskah Narasi / Skrip */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
-                              <span>
-                                {isId
-                                  ? 'Teks Naskah Narasi / Dialog (Per 1 File Audio)'
-                                  : 'Narration / Dialogue Script (Per 1 Audio File)'}
+                        {/* Dwi-Input Angka Terhubung: Durasi Bicara <-> Jumlah Karakter */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)]">
+                          {/* Kolom Kiri: Target Durasi Bicara (Detik) */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                                <span>⏱️</span>
+                                <span>
+                                  {isId
+                                    ? 'Durasi Bicara per File (Detik)'
+                                    : 'Spoken Duration per File (Seconds)'}
+                                </span>
+                                <InfoTip>
+                                  {isId
+                                    ? 'Isi target durasi bicara (detik). Sistem otomatis menghitung jumlah karakter sesuai bahasa yang dipilih.'
+                                    : 'Enter target spoken duration (seconds). The system automatically calculates the character count based on language.'}
+                                </InfoTip>
+                              </label>
+                              <span className="text-[10px] font-mono font-bold text-sky-400">
+                                {formatDualDuration(
+                                  item.duration_seconds || 0,
+                                  isId
+                                )}
                               </span>
-                              <InfoTip>
-                                {isId
-                                  ? 'Tulis atau tempel teks yang akan disulihsuarakan oleh AI ElevenLabs. Jumlah karakter dan estimasi durasi bicara dihitung secara langsung.'
-                                  : 'Type or paste the narration script to be generated by ElevenLabs AI. Characters and speech duration are calculated in real time.'}
-                              </InfoTip>
-                            </label>
-                            <div className="flex items-center gap-2 text-[10px] font-mono text-[var(--vv-text-muted)]">
-                              <span className="text-emerald-400 font-bold">
-                                {item.script_text ? item.script_text.length : 0}{' '}
-                                {isId ? 'Karakter' : 'Characters'}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                max={600}
+                                step={1}
+                                value={item.duration_seconds || 0}
+                                onChange={(e) => {
+                                  const secs = Math.max(
+                                    0,
+                                    Number(e.target.value) || 0
+                                  );
+                                  const curLang = item.script_language ?? 'id';
+                                  const projectedChars =
+                                    convertDurationToCharacters(
+                                      secs,
+                                      curLang,
+                                      speedPreset
+                                    );
+                                  updateProductionItemField(item.item_id, {
+                                    duration_seconds: secs,
+                                    character_count: projectedChars,
+                                    script_text: '',
+                                  });
+                                }}
+                                className={`${inputClass} w-28 px-3 py-1.5 rounded-[8px] text-xs font-bold tabular-nums text-right`}
+                              />
+                              <span className="text-xs font-semibold text-[var(--vv-text-muted)]">
+                                {isId ? 'detik' : 'sec'}
                               </span>
-                              <span>&bull;</span>
-                              <span>
-                                {item.script_text
-                                  ? item.script_text
-                                      .trim()
-                                      .split(/\s+/)
-                                      .filter(Boolean).length
-                                  : 0}{' '}
-                                {isId ? 'Kata' : 'Words'}
-                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-1">
+                              {[5, 10, 15, 30, 60].map((presetSec) => (
+                                <button
+                                  key={presetSec}
+                                  type="button"
+                                  onClick={() => {
+                                    const curLang =
+                                      item.script_language ?? 'id';
+                                    const projectedChars =
+                                      convertDurationToCharacters(
+                                        presetSec,
+                                        curLang,
+                                        speedPreset
+                                      );
+                                    updateProductionItemField(item.item_id, {
+                                      duration_seconds: presetSec,
+                                      character_count: projectedChars,
+                                      script_text: '',
+                                    });
+                                  }}
+                                  className={`px-2 py-0.5 rounded-[6px] text-[10px] font-mono font-semibold transition ${
+                                    item.duration_seconds === presetSec
+                                      ? 'bg-sky-500/25 text-sky-300 border border-sky-500/40'
+                                      : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                  }`}
+                                >
+                                  {presetSec}s
+                                </button>
+                              ))}
+
+                              {(cleanDurationSec > 0 ||
+                                targetDurationSec > 0) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const syncSec =
+                                      cleanDurationSec > 0
+                                        ? Math.round(cleanDurationSec)
+                                        : targetDurationSec;
+                                    const curLang =
+                                      item.script_language ?? 'id';
+                                    const projectedChars =
+                                      convertDurationToCharacters(
+                                        syncSec,
+                                        curLang,
+                                        speedPreset
+                                      );
+                                    updateProductionItemField(item.item_id, {
+                                      duration_seconds: syncSec,
+                                      character_count: projectedChars,
+                                      script_text: '',
+                                    });
+                                  }}
+                                  className="px-2 py-0.5 rounded-[6px] text-[10px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/25 transition"
+                                >
+                                  🎯{' '}
+                                  {isId
+                                    ? `Video (${Math.round(
+                                        cleanDurationSec || targetDurationSec
+                                      )}s)`
+                                    : `Video (${Math.round(
+                                        cleanDurationSec || targetDurationSec
+                                      )}s)`}
+                                </button>
+                              )}
                             </div>
                           </div>
 
-                          <textarea
-                            rows={4}
-                            value={item.script_text || ''}
-                            placeholder={
-                              isId
-                                ? 'Tempel atau ketik naskah voice over Anda di sini (contoh: "Selamat datang di masa depan pembuatan video bersama AI...")...'
-                                : 'Paste or type your voice over script here (e.g. "Welcome to the future of AI video production...")...'
-                            }
-                            onChange={(e) => {
-                              const text = e.target.value;
-                              const hasText = text.trim().length > 0;
-                              const curLang = item.script_language ?? 'id';
-                              const chars = hasText
-                                ? text.length
-                                : convertDurationToCharacters(
-                                    item.duration_seconds || 10,
-                                    curLang,
-                                    speedPreset
-                                  );
-                              const estimatedDuration = hasText
-                                ? convertCharactersToDuration(
-                                    chars,
-                                    curLang,
-                                    speedPreset
-                                  )
-                                : item.duration_seconds || 10;
-                              updateProductionItemField(item.item_id, {
-                                script_text: text,
-                                character_count: chars,
-                                duration_seconds: estimatedDuration,
-                              });
-                            }}
-                            className={`${inputClass} w-full p-3 rounded-[10px] text-xs font-mono leading-relaxed resize-y`}
-                          />
-                        </div>
-
-                        {/* Durasi Detik Bicara & Preset Cepat */}
-                        <div>
-                          <div className="flex items-center justify-between mb-1.5">
-                            <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
-                              <span>
-                                {isId
-                                  ? 'Durasi Bicara per File Audio (Detik)'
-                                  : 'Spoken Duration per Audio File (Seconds)'}
-                              </span>
-                              <InfoTip align="right">
-                                {isId
-                                  ? 'Jika belum ada naskah jadi, Anda bisa menentukan durasi bicara target terlebih dahulu. Sistem akan menghitung batas karakter yang pas.'
-                                  : 'If you do not have a script yet, set the target spoken duration first. The system projects the corresponding character limit.'}
-                              </InfoTip>
-                            </label>
-                            <span className="text-[11px] font-mono font-bold text-sky-400">
-                              ⏱️ {item.duration_seconds || 0}s (
-                              {formatDualDuration(
-                                item.duration_seconds || 0,
-                                isId
-                              )}
-                              )
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            <input
-                              type="number"
-                              min={1}
-                              max={600}
-                              step={1}
-                              value={item.duration_seconds || 0}
-                              onChange={(e) => {
-                                const secs = Math.max(
-                                  0,
-                                  Number(e.target.value) || 0
-                                );
-                                const curLang = item.script_language ?? 'id';
-                                const projectedChars =
-                                  !item.script_text ||
-                                  item.script_text.trim().length === 0
-                                    ? convertDurationToCharacters(
-                                        secs,
-                                        curLang,
-                                        speedPreset
-                                      )
-                                    : item.script_text.length;
-                                updateProductionItemField(item.item_id, {
-                                  duration_seconds: secs,
-                                  character_count: projectedChars,
-                                });
-                              }}
-                              className={`${inputClass} w-28 px-3.5 py-2 rounded-[9px] text-xs font-bold tabular-nums text-right`}
-                            />
-
-                            {/* Preset durasi cepat */}
-                            {[5, 10, 15, 30, 60].map((presetSec) => (
-                              <button
-                                key={presetSec}
-                                type="button"
-                                onClick={() => {
-                                  const curLang = item.script_language ?? 'id';
-                                  const projectedChars =
-                                    !item.script_text ||
-                                    item.script_text.trim().length === 0
-                                      ? convertDurationToCharacters(
-                                          presetSec,
-                                          curLang,
-                                          speedPreset
-                                        )
-                                      : item.script_text.length;
-                                  updateProductionItemField(item.item_id, {
-                                    duration_seconds: presetSec,
-                                    character_count: projectedChars,
-                                  });
-                                }}
-                                className={`px-2 py-1 rounded-[7px] text-[11px] font-mono font-semibold transition ${
-                                  item.duration_seconds === presetSec
-                                    ? 'bg-sky-500/25 text-sky-300 border border-sky-500/40'
-                                    : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
-                                }`}
-                              >
-                                {presetSec}s
-                              </button>
-                            ))}
-
-                            {/* Tombol sinkronisasi dengan durasi video */}
-                            {(cleanDurationSec > 0 || targetDurationSec > 0) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const syncSec =
-                                    cleanDurationSec > 0
-                                      ? Math.round(cleanDurationSec)
-                                      : targetDurationSec;
-                                  const curLang = item.script_language ?? 'id';
-                                  const projectedChars =
-                                    !item.script_text ||
-                                    item.script_text.trim().length === 0
-                                      ? convertDurationToCharacters(
-                                          syncSec,
-                                          curLang,
-                                          speedPreset
-                                        )
-                                      : item.script_text.length;
-                                  updateProductionItemField(item.item_id, {
-                                    duration_seconds: syncSec,
-                                    character_count: projectedChars,
-                                  });
-                                }}
-                                className="px-2.5 py-1 rounded-[7px] text-[11px] font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/35 hover:bg-emerald-500/25 transition flex items-center gap-1"
-                              >
-                                <span>🎯</span>
+                          {/* Kolom Kanan: Jumlah Karakter per File Audio */}
+                          <div className="space-y-2 sm:border-l sm:border-[var(--vv-border)] sm:pl-3">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1">
+                                <span>🔤</span>
                                 <span>
                                   {isId
-                                    ? `Samakan dgn Video (${Math.round(
-                                        cleanDurationSec || targetDurationSec
-                                      )}s)`
-                                    : `Sync with Video (${Math.round(
-                                        cleanDurationSec || targetDurationSec
-                                      )}s)`}
+                                    ? 'Jumlah Karakter per File Audio'
+                                    : 'Characters per Audio File'}
                                 </span>
-                              </button>
-                            )}
+                                <InfoTip align="right">
+                                  {isId
+                                    ? 'Atau isi langsung jumlah karakter naskah Anda. Durasi bicara (detik) di sebelah kiri akan menyesuaikan otomatis.'
+                                    : 'Or directly enter your script character count. Spoken duration (seconds) on the left updates automatically.'}
+                                </InfoTip>
+                              </label>
+                              <span className="text-[10px] font-mono font-bold text-emerald-400">
+                                1 kar ={' '}
+                                {
+                                  (
+                                    ELEVENLABS_MODELS_CATALOG.find(
+                                      (m) =>
+                                        m.model_id ===
+                                        item.model_selection.model_id
+                                    ) || ELEVENLABS_MODELS_CATALOG[0]
+                                  ).credit_multiplier_per_character
+                                }{' '}
+                                Cr
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={1}
+                                max={10000}
+                                step={10}
+                                value={currentVoChars}
+                                onChange={(e) => {
+                                  const chars = Math.max(
+                                    0,
+                                    Math.floor(Number(e.target.value) || 0)
+                                  );
+                                  const curLang = item.script_language ?? 'id';
+                                  const projectedSec =
+                                    convertCharactersToDuration(
+                                      chars,
+                                      curLang,
+                                      speedPreset
+                                    );
+                                  updateProductionItemField(item.item_id, {
+                                    character_count: chars,
+                                    duration_seconds: projectedSec,
+                                    script_text: '',
+                                  });
+                                }}
+                                className={`${inputClass} w-28 px-3 py-1.5 rounded-[8px] text-xs font-bold tabular-nums text-right`}
+                              />
+                              <span className="text-xs font-semibold text-[var(--vv-text-muted)]">
+                                {isId ? 'karakter' : 'chars'}
+                              </span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-1">
+                              {[75, 150, 300, 500, 1000].map((presetChar) => (
+                                <button
+                                  key={presetChar}
+                                  type="button"
+                                  onClick={() => {
+                                    const curLang =
+                                      item.script_language ?? 'id';
+                                    const projectedSec =
+                                      convertCharactersToDuration(
+                                        presetChar,
+                                        curLang,
+                                        speedPreset
+                                      );
+                                    updateProductionItemField(item.item_id, {
+                                      character_count: presetChar,
+                                      duration_seconds: projectedSec,
+                                      script_text: '',
+                                    });
+                                  }}
+                                  className={`px-2 py-0.5 rounded-[6px] text-[10px] font-mono font-semibold transition ${
+                                    currentVoChars === presetChar
+                                      ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/40'
+                                      : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                  }`}
+                                >
+                                  {presetChar} kar
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         </div>
 
                         {/* Live ElevenLabs Calculation Summary Card */}
                         {(() => {
-                          const curChars =
-                            item.script_text &&
-                            item.script_text.trim().length > 0
-                              ? item.script_text.length
-                              : item.character_count ||
-                                convertDurationToCharacters(
-                                  item.duration_seconds || 10,
-                                  item.script_language ?? 'id',
-                                  speedPreset
-                                );
+                          const curChars = currentVoChars;
                           const modelInfo =
                             ELEVENLABS_MODELS_CATALOG.find(
                               (m) => m.model_id === item.model_selection.model_id
@@ -2282,21 +2277,17 @@ export const ProductionPlannerView: React.FC = () => {
                   }
 
                   if (item.category === 'music') {
-                    const defaultGlobalReserve = Math.max(
+                    const cadanganCount = Math.max(
                       1,
-                      assumptions.default_attempts_per_shot || 1
+                      assumptions.default_attempts_per_shot ||
+                        item.attempts_per_item ||
+                        1
                     );
                     const songQty = Math.max(1, Number(item.quantity) || 1);
-                    const directAttempts = Math.max(
-                      1,
-                      Number(item.attempts_per_item) || 1
-                    );
-                    const songReserve =
-                      typeof item.music_reserve_override === 'number'
-                        ? Math.max(0, item.music_reserve_override)
-                        : defaultGlobalReserve;
+                    const budgetedGen =
+                      calcRow?.budgeted_generations ?? songQty * cadanganCount;
 
-                    // Fitur Stem Separation
+                    // Fitur Stem Separation (Otomatis 1x per Lagu Jadi jika diaktifkan)
                     const isStemEnabled =
                       item.stem_enabled ??
                       (item.stem_separation_mode &&
@@ -2307,27 +2298,12 @@ export const ProductionPlannerView: React.FC = () => {
                         ? 'full_stems'
                         : 'two_stems');
                     const stemRate = stemType === 'full_stems' ? 50 : 20;
-                    const stemRuns = isStemEnabled
-                      ? Math.max(1, item.stem_runs ?? 1)
-                      : 0;
-                    const stemReserve = isStemEnabled
-                      ? Math.max(0, item.stem_reserve ?? 0)
-                      : 0;
 
-                    // Kalkulasi Total Kredit
-                    const songTotalRuns = directAttempts + songReserve;
-                    const songBaseCredits = songQty * directAttempts * 10;
-                    const songReserveCredits = songReserve * 10;
-                    const songTotalCredits = songBaseCredits + songReserveCredits;
-
-                    const stemBaseCredits = isStemEnabled
-                      ? songQty * stemRuns * stemRate
+                    // Kalkulasi Total Kredit Suno (Seragam dengan calculationEngine.ts)
+                    const songTotalCredits = budgetedGen * 10;
+                    const stemTotalCredits = isStemEnabled
+                      ? songQty * stemRate
                       : 0;
-                    const stemReserveCredits = isStemEnabled
-                      ? songQty * stemReserve * stemRate
-                      : 0;
-                    const stemTotalCredits = stemBaseCredits + stemReserveCredits;
-
                     const totalSunoCr =
                       calcRow?.total_credit ??
                       songTotalCredits + stemTotalCredits;
@@ -2348,17 +2324,15 @@ export const ProductionPlannerView: React.FC = () => {
                           )
                         : null);
 
-                    const currentDuration = item.duration_seconds || 120;
-
                     return (
-                      <div className="vv-card-quiet p-4 space-y-5">
+                      <div className="vv-card-quiet p-4 space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
                             <Music className="w-4 h-4 text-purple-400" />
                             <span>
                               {isId
-                                ? '4. Atur Detail Track Musik & Model AI Suno'
-                                : '4. Music Track Details & Suno AI Model'}
+                                ? '4. Kuantitas Lagu & Pemisahan Track Audio (Suno AI)'
+                                : '4. Song Quantity & Stem Separation (Suno AI)'}
                             </span>
                           </div>
                           <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 font-semibold border border-purple-500/30">
@@ -2366,229 +2340,63 @@ export const ProductionPlannerView: React.FC = () => {
                           </span>
                         </div>
 
-                        {/* 1. Target Durasi Musik */}
-                        <div className="p-3.5 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)] space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
-                              <span>⏱️</span>
+                        {/* 1. Jumlah Lagu & Pengali Cadangan Langkah 2 (Seragam dgn Video & Voice Over) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)]">
+                          <div>
+                            <label className="block text-[11px] font-semibold text-[var(--vv-text-strong)] mb-1 flex items-center gap-1">
+                              <span>🎼</span>
                               <span>
                                 {isId
-                                  ? 'Target Durasi Track Musik (Detik)'
-                                  : 'Target Music Track Duration (Seconds)'}
+                                  ? 'Mau Buat Berapa Lagu?'
+                                  : 'How Many Songs?'}
                               </span>
                               <InfoTip>
                                 {isId
-                                  ? 'Panjang durasi musik pengiring yang Anda rencanakan pada timeline video. Model Suno v6 mendukung komposisi utuh hingga 8 menit (480 detik).'
-                                  : 'Target background music duration on your video timeline. Suno v6 supports up to 8 minutes (480s).'}
+                                  ? 'Jumlah track lagu selesai yang Anda butuhkan (contoh: 1 lagu OST tema atau 2 lagu latar adegan). Tarif Suno flat 10 kredit per generate (menghasilkan 2 variasi lagu utuh).'
+                                  : 'Number of finished songs needed. Suno charges a flat 10 credits per generation (yielding 2 full song variations).'}
                               </InfoTip>
                             </label>
-                            <span className="text-[11px] font-mono font-bold text-purple-400">
-                              ⏱️ {currentDuration}s ({formatDualDuration(currentDuration, isId)})
-                            </span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2">
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-2">
                               <input
                                 type="number"
-                                min={10}
-                                max={480}
-                                step={5}
-                                value={currentDuration}
-                                onChange={(e) =>
-                                  updateProductionItemField(item.item_id, {
-                                    duration_seconds: Math.max(
-                                      10,
-                                      Math.min(
-                                        480,
-                                        Number(e.target.value) || 10
-                                      )
-                                    ),
-                                  })
-                                }
-                                className={`${inputClass} w-24 px-2.5 py-1.5 rounded-[8px] text-xs font-bold tabular-nums text-right`}
-                              />
-                              <span className="text-xs font-semibold text-[var(--vv-text-muted)]">
-                                {isId ? 'detik' : 'seconds'}
-                              </span>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-1">
-                              {[30, 60, 90, 120, 180, 240, 480].map((presetSec) => (
-                                <button
-                                  key={presetSec}
-                                  type="button"
-                                  onClick={() =>
-                                    updateProductionItemField(item.item_id, {
-                                      duration_seconds: presetSec,
-                                    })
-                                  }
-                                  className={`px-2 py-1 rounded-[7px] text-[10px] font-mono font-semibold transition ${
-                                    currentDuration === presetSec
-                                      ? 'bg-purple-500/25 text-purple-200 border border-purple-500/40'
-                                      : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
-                                  }`}
-                                >
-                                  {presetSec}s
-                                </button>
-                              ))}
-                            </div>
-
-                            {(cleanDurationSec > 0 || targetDurationSec > 0) && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const baseSec = Math.round(
-                                    cleanDurationSec || targetDurationSec || 60
+                                min={1}
+                                step={1}
+                                value={songQty}
+                                onChange={(e) => {
+                                  const qty = Math.max(
+                                    1,
+                                    Math.floor(Number(e.target.value) || 1)
                                   );
-                                  const musicBuffSec = Math.min(480, baseSec + 8);
                                   updateProductionItemField(item.item_id, {
-                                    duration_seconds: musicBuffSec,
+                                    quantity: qty,
+                                    music_reserve_override: undefined,
                                   });
                                 }}
-                                className="px-2.5 py-1 rounded-[7px] text-[10px] font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/35 hover:bg-purple-500/25 transition flex items-center gap-1"
-                              >
-                                <span>🎵</span>
-                                <span>
-                                  {isId
-                                    ? `Samakan dgn Durasi Video (+8s buffer: ${
-                                        Math.min(
-                                          480,
-                                          Math.round(
-                                            cleanDurationSec || targetDurationSec
-                                          ) + 8
-                                        )
-                                      }s)`
-                                    : `Sync with Video (+8s buffer: ${
-                                        Math.min(
-                                          480,
-                                          Math.round(
-                                            cleanDurationSec || targetDurationSec
-                                          ) + 8
-                                        )
-                                      }s)`}
-                                </span>
-                              </button>
-                            )}
+                                className={`${inputClass} w-28 px-3 py-1.5 rounded-[9px] text-xs font-bold tabular-nums text-right`}
+                              />
+                              <span className="text-xs font-semibold text-[var(--vv-text-muted)]">
+                                {isId ? 'lagu' : 'songs'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* 2. Kuantitas Lagu & Rencana Percobaan Generate (Audisi) */}
-                        <div className="p-3.5 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)] space-y-3">
-                          <label className="block text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
-                            <span>🎼</span>
+                          <div className="flex flex-col justify-center sm:items-end text-[11px] text-[var(--vv-text-muted)]">
                             <span>
                               {isId
-                                ? 'Jumlah Lagu & Rencana Percobaan Generate (Audisi Musik)'
-                                : 'Song Quantity & Generation Audition Plan'}
+                                ? 'Total Rencana Generate (Termasuk Cadangan Langkah 2):'
+                                : 'Total Planned Generations (Incl. Step 2 Reserve):'}
                             </span>
-                          </label>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            {/* A. Mau Buat Berapa Lagu */}
-                            <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)] border border-[var(--vv-border)]">
-                              <label className="block text-[10px] font-semibold text-[var(--vv-text-muted)] mb-1 flex items-center justify-between">
-                                <span>{isId ? 'Mau Buat Berapa Lagu?' : 'How Many Songs?'}</span>
-                                <InfoTip>
-                                  {isId
-                                    ? 'Jumlah track lagu selesai yang Anda butuhkan (contoh: 1 lagu OST tema atau 2 lagu latar adegan).'
-                                    : 'Number of finished songs needed for your project.'}
-                                </InfoTip>
-                              </label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min={1}
-                                  step={1}
-                                  value={songQty}
-                                  onChange={(e) => {
-                                    const qty = Math.max(
-                                      1,
-                                      Math.floor(Number(e.target.value) || 1)
-                                    );
-                                    updateProductionItemField(item.item_id, {
-                                      quantity: qty,
-                                    });
-                                  }}
-                                  className={`${inputClass} w-20 px-2.5 py-1.5 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                                />
-                                <span className="text-[11px] font-semibold text-[var(--vv-text-strong)]">
-                                  {isId ? 'lagu' : 'songs'}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* B. Generate Musik Langsung */}
-                            <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)] border border-[var(--vv-border)]">
-                              <label className="block text-[10px] font-semibold text-[var(--vv-text-muted)] mb-1 flex items-center justify-between">
-                                <span>{isId ? 'Generate Langsung' : 'Direct Generation'}</span>
-                                <InfoTip>
-                                  {isId
-                                    ? 'Berapa kali mencoba generate untuk memilih melodi terbaik. 1 kali klik resmi Suno = 10 kredit dan menghasilkan 2 variasi klip lagu utuh.'
-                                    : 'Audition attempts to pick the best composition. 1 Suno run = 10 credits generates 2 clip variations.'}
-                                </InfoTip>
-                              </label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min={1}
-                                  max={20}
-                                  step={1}
-                                  value={directAttempts}
-                                  onChange={(e) => {
-                                    const att = Math.max(
-                                      1,
-                                      Math.floor(Number(e.target.value) || 1)
-                                    );
-                                    updateProductionItemField(item.item_id, {
-                                      attempts_per_item: att,
-                                    });
-                                  }}
-                                  className={`${inputClass} w-20 px-2.5 py-1.5 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                                />
-                                <span className="text-[10px] text-purple-300 font-medium">
-                                  = {directAttempts * 2} {isId ? 'variasi' : 'vars'} ({directAttempts * 10} Cr)
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* C. Cadangan Generate Lagu */}
-                            <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)] border border-[var(--vv-border)]">
-                              <label className="block text-[10px] font-semibold text-[var(--vv-text-muted)] mb-1 flex items-center justify-between">
-                                <span>{isId ? 'Cadangan Generate' : 'Song Reserve Runs'}</span>
-                                <InfoTip>
-                                  {isId
-                                    ? `Cadangan coba lagi jika hasil awal belum sesuai selera. Default otomatis mengikuti cadangan Langkah 2 (${defaultGlobalReserve}x), atau bisa disesuaikan khusus untuk lagu ini.`
-                                    : `Safety reroll buffer. Synced by default with Step 2 (${defaultGlobalReserve}x), but can be customized per track.`}
-                                </InfoTip>
-                              </label>
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={20}
-                                  step={1}
-                                  value={songReserve}
-                                  onChange={(e) => {
-                                    const res = Math.max(
-                                      0,
-                                      Math.floor(Number(e.target.value) || 0)
-                                    );
-                                    updateProductionItemField(item.item_id, {
-                                      music_reserve_override: res,
-                                    });
-                                  }}
-                                  className={`${inputClass} w-20 px-2.5 py-1.5 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                                />
-                                <span className="text-[10px] text-indigo-300 font-medium">
-                                  = +{songReserve * 10} Cr ({songReserve * 2} {isId ? 'cadangan' : 'buffer'})
-                                </span>
-                              </div>
-                            </div>
+                            <span className="text-xs font-bold text-purple-300 font-mono mt-0.5">
+                              {songQty} {isId ? 'lagu' : 'songs'} &times;{' '}
+                              {cadanganCount}{' '}
+                              {isId ? 'cadangan' : 'reserve'} = {budgetedGen}x{' '}
+                              {isId ? 'buat' : 'runs'} ({budgetedGen * 2}{' '}
+                              {isId ? 'variasi klip' : 'clip variations'})
+                            </span>
                           </div>
                         </div>
 
-                        {/* 3. Pisahkan Track Audio (Multi-Stem Separation) */}
+                        {/* 2. Pemisahan Track Audio (Stem Separation) - Otomatis 1x per Lagu Jadi */}
                         <div className="p-3.5 rounded-[10px] bg-[var(--vv-surface-soft)] border border-[var(--vv-border)] space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-[11px] font-semibold text-[var(--vv-text-strong)] flex items-center gap-1.5">
@@ -2600,12 +2408,14 @@ export const ProductionPlannerView: React.FC = () => {
                               </span>
                               <InfoTip>
                                 {isId
-                                  ? 'Fitur resmi Suno untuk memisahkan vokal dan instrumen. Sangat penting bagi sineas agar musik latar tidak menenggelamkan suara dialog aktor atau voiceover.'
-                                  : 'Official Suno stem isolation. Essential for filmmakers to mute or lower vocals behind actor dialogue.'}
+                                  ? 'Fitur resmi Suno untuk memisahkan vokal dan instrumen pada lagu terpilih yang sudah jadi (otomatis dihitung 1x per lagu jadi).'
+                                  : 'Official Suno stem isolation for your finished song (automatically calculated 1x per finished song).'}
                               </InfoTip>
                             </label>
                             <span className="text-[10px] text-purple-400 font-medium">
-                              Suno Audio Engineering
+                              {isId
+                                ? 'Otomatis 1x per Lagu Jadi'
+                                : 'Auto 1x per Finished Song'}
                             </span>
                           </div>
 
@@ -2617,6 +2427,8 @@ export const ProductionPlannerView: React.FC = () => {
                                 updateProductionItemField(item.item_id, {
                                   stem_enabled: false,
                                   stem_separation_mode: 'none',
+                                  stem_runs: 1,
+                                  stem_reserve: 0,
                                 })
                               }
                               className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
@@ -2642,6 +2454,8 @@ export const ProductionPlannerView: React.FC = () => {
                                     stemType === 'full_stems'
                                       ? 'full_stems'
                                       : 'two_stems',
+                                  stem_runs: 1,
+                                  stem_reserve: 0,
                                 })
                               }
                               className={`py-2 px-3 rounded-[9px] text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
@@ -2653,154 +2467,90 @@ export const ProductionPlannerView: React.FC = () => {
                               <span>✨</span>
                               <span>
                                 {isId
-                                  ? 'Ya (Aktifkan Pemisahan Track)'
-                                  : 'Yes (Enable Track Separation)'}
+                                  ? 'Ya (Pisahkan Vokal & Instrumen)'
+                                  : 'Yes (Separate Vocals & Instruments)'}
                               </span>
                             </button>
                           </div>
 
-                          {/* Jika Stem Aktif, Tampilkan Opsi Tipe Stem & Input Runs */}
+                          {/* Jika Stem Aktif, Tampilkan 2 Pilihan Tipe Stem */}
                           {isStemEnabled && (
-                            <div className="p-3 rounded-[9px] bg-purple-950/25 border border-purple-500/25 space-y-3">
-                              <div>
-                                <label className="block text-[10px] font-semibold text-[var(--vv-text-strong)] mb-1.5">
-                                  {isId ? 'Pilih Jenis Pemisahan Track:' : 'Select Stem Type:'}
-                                </label>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateProductionItemField(item.item_id, {
-                                        stem_type: 'two_stems',
-                                        stem_separation_mode: 'two_stems',
-                                      })
-                                    }
-                                    className={`p-2.5 rounded-[8px] text-xs border text-left transition flex flex-col justify-between gap-1 ${
-                                      stemType === 'two_stems'
-                                        ? 'bg-purple-600/30 text-purple-200 border-purple-400/60 shadow-sm'
-                                        : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-semibold flex items-center gap-1">
-                                        <span>🎙️</span>
-                                        <span>{isId ? '2-Stems Split' : '2-Stems Split'}</span>
-                                      </span>
-                                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
-                                        +20 Cr / run
-                                      </span>
-                                    </div>
-                                    <span className="text-[10px] opacity-80 leading-relaxed">
-                                      {isId
-                                        ? 'Pemisahan vokal & musik latar. Rekomendasi utama agar dialog aktor aman & jernih.'
-                                        : 'Isolates vocals and background instrumental. Perfect for dialog safety.'}
+                            <div className="p-3 rounded-[9px] bg-purple-950/25 border border-purple-500/25 space-y-2">
+                              <label className="block text-[10px] font-semibold text-[var(--vv-text-strong)]">
+                                {isId
+                                  ? 'Pilih Jenis Pemisahan Track (1x per Lagu Jadi):'
+                                  : 'Select Stem Separation Type (1x per Finished Song):'}
+                              </label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateProductionItemField(item.item_id, {
+                                      stem_type: 'two_stems',
+                                      stem_separation_mode: 'two_stems',
+                                      stem_runs: 1,
+                                      stem_reserve: 0,
+                                    })
+                                  }
+                                  className={`p-2.5 rounded-[8px] text-xs border text-left transition flex flex-col justify-between gap-1 ${
+                                    stemType === 'two_stems'
+                                      ? 'bg-purple-600/30 text-purple-200 border-purple-400/60 shadow-sm'
+                                      : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold flex items-center gap-1">
+                                      <span>🎙️</span>
+                                      <span>2-Stems Split</span>
                                     </span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      updateProductionItemField(item.item_id, {
-                                        stem_type: 'full_stems',
-                                        stem_separation_mode: 'full_stems',
-                                      })
-                                    }
-                                    className={`p-2.5 rounded-[8px] text-xs border text-left transition flex flex-col justify-between gap-1 ${
-                                      stemType === 'full_stems'
-                                        ? 'bg-purple-600/30 text-purple-200 border-purple-400/60 shadow-sm'
-                                        : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
-                                    }`}
-                                  >
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-semibold flex items-center gap-1">
-                                        <span>🎚️</span>
-                                        <span>{isId ? 'Full Studio Auto-Split' : 'Full Studio Auto-Split'}</span>
-                                      </span>
-                                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
-                                        +50 Cr / run
-                                      </span>
-                                    </div>
-                                    <span className="text-[10px] opacity-80 leading-relaxed">
-                                      {isId
-                                        ? 'Pemisahan hingga 12 instrumen terpisah (drum, bass, vokal, keys, gitar, FX) untuk audio mixing DAW.'
-                                        : 'Up to 12 individual stems (drums, bass, keys, guitar, vocals, FX) for studio mixing.'}
-                                    </span>
-                                  </button>
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-purple-500/20">
-                                <div>
-                                  <label className="block text-[10px] font-semibold text-[var(--vv-text-muted)] mb-1 flex items-center justify-between">
-                                    <span>{isId ? 'Kali Generate Stem per Lagu' : 'Stem Runs per Song'}</span>
-                                    <InfoTip>
-                                      {isId
-                                        ? `Berapa kali proses pemisahan track audio dilakukan untuk setiap lagu (default: 1x).`
-                                        : `How many times stem separation is processed per song (default: 1x).`}
-                                    </InfoTip>
-                                  </label>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min={1}
-                                      max={10}
-                                      step={1}
-                                      value={stemRuns}
-                                      onChange={(e) => {
-                                        const r = Math.max(
-                                          1,
-                                          Math.floor(Number(e.target.value) || 1)
-                                        );
-                                        updateProductionItemField(item.item_id, {
-                                          stem_runs: r,
-                                        });
-                                      }}
-                                      className={`${inputClass} w-20 px-2.5 py-1.5 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                                    />
-                                    <span className="text-[10px] text-purple-300 font-medium">
-                                      = {stemRuns * stemRate} Cr / {isId ? 'lagu' : 'song'}
+                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
+                                      +20 Cr / {isId ? 'lagu' : 'song'}
                                     </span>
                                   </div>
-                                </div>
+                                  <span className="text-[10px] opacity-80 leading-relaxed">
+                                    {isId
+                                      ? 'Pisahkan Vokal & Musik Latar. Rekomendasi utama agar dialog aktor tetap jernih.'
+                                      : 'Isolates Vocals & Instrumental. Recommended for clear dialogue.'}
+                                  </span>
+                                </button>
 
-                                <div>
-                                  <label className="block text-[10px] font-semibold text-[var(--vv-text-muted)] mb-1 flex items-center justify-between">
-                                    <span>{isId ? 'Cadangan Percobaan Stem' : 'Stem Reserve Runs'}</span>
-                                    <InfoTip>
-                                      {isId
-                                        ? `Cadangan ekstra jika perlu mengulang pemisahan stem (default: 0x).`
-                                        : `Extra safety reroll attempts for stems (default: 0x).`}
-                                    </InfoTip>
-                                  </label>
-                                  <div className="flex items-center gap-2">
-                                    <input
-                                      type="number"
-                                      min={0}
-                                      max={10}
-                                      step={1}
-                                      value={stemReserve}
-                                      onChange={(e) => {
-                                        const res = Math.max(
-                                          0,
-                                          Math.floor(Number(e.target.value) || 0)
-                                        );
-                                        updateProductionItemField(item.item_id, {
-                                          stem_reserve: res,
-                                        });
-                                      }}
-                                      className={`${inputClass} w-20 px-2.5 py-1.5 rounded-[7px] text-xs font-bold tabular-nums text-right`}
-                                    />
-                                    <span className="text-[10px] text-indigo-300 font-medium">
-                                      = +{stemReserve * stemRate} Cr {isId ? 'cadangan' : 'reserve'}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateProductionItemField(item.item_id, {
+                                      stem_type: 'full_stems',
+                                      stem_separation_mode: 'full_stems',
+                                      stem_runs: 1,
+                                      stem_reserve: 0,
+                                    })
+                                  }
+                                  className={`p-2.5 rounded-[8px] text-xs border text-left transition flex flex-col justify-between gap-1 ${
+                                    stemType === 'full_stems'
+                                      ? 'bg-purple-600/30 text-purple-200 border-purple-400/60 shadow-sm'
+                                      : 'bg-[var(--vv-field)] text-[var(--vv-text-muted)] border-[var(--vv-border)] hover:text-[var(--vv-text-primary)]'
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-semibold flex items-center gap-1">
+                                      <span>🎚️</span>
+                                      <span>Full Studio Auto-Split</span>
+                                    </span>
+                                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold">
+                                      +50 Cr / {isId ? 'lagu' : 'song'}
                                     </span>
                                   </div>
-                                </div>
+                                  <span className="text-[10px] opacity-80 leading-relaxed">
+                                    {isId
+                                      ? 'Pisahkan hingga 12 instrumen terpisah (drum, bass, vokal, gitar, keys, FX) untuk mixing studio.'
+                                      : 'Up to 12 individual instrument tracks for full DAW studio mixing.'}
+                                  </span>
+                                </button>
                               </div>
                             </div>
                           )}
                         </div>
 
-                        {/* 4. Live Suno Calculation Summary Card */}
+                        {/* 3. Live Suno Calculation Summary Card */}
                         <div className="p-3.5 rounded-[12px] bg-purple-950/20 border border-purple-500/30 space-y-3">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] gap-1 text-[var(--vv-text-muted)]">
                             <span className="flex items-center gap-1.5 font-semibold text-purple-200">
@@ -2812,7 +2562,8 @@ export const ProductionPlannerView: React.FC = () => {
                               </span>
                             </span>
                             <span className="font-semibold text-purple-300">
-                              {selectedModel?.model_name || 'Suno v6'} • Paket {activeSunoPlan.name_id}
+                              {selectedModel?.model_name || 'Suno v5.5'} • Paket{' '}
+                              {activeSunoPlan.name_id}
                             </span>
                           </div>
 
@@ -2820,63 +2571,62 @@ export const ProductionPlannerView: React.FC = () => {
                             {/* Kartu 1: Kredit Lagu */}
                             <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)]/60 border border-[var(--vv-border)]">
                               <span className="text-[10px] text-[var(--vv-text-subtle)] block">
-                                {isId ? '1. Kredit Pembuatan Lagu' : '1. Song Creation Credits'}
+                                {isId
+                                  ? '1. Kredit Pembuatan Lagu'
+                                  : '1. Song Creation Credits'}
                               </span>
                               <span className="text-xs font-bold font-mono text-[var(--vv-text-primary)]">
-                                {songTotalCredits} Cr Suno
+                                {songTotalCredits.toLocaleString()} Cr Suno
                               </span>
                               <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono mt-0.5">
-                                {songQty} lagu &times; ({directAttempts} + {songReserve} cadangan) &times; 10 Cr
+                                {songQty} {isId ? 'lagu' : 'songs'} &times;{' '}
+                                {cadanganCount}{' '}
+                                {isId ? 'cadangan' : 'reserve'} &times; 10 Cr
                               </span>
                             </div>
 
                             {/* Kartu 2: Kredit Stem */}
                             <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)]/60 border border-[var(--vv-border)]">
                               <span className="text-[10px] text-[var(--vv-text-subtle)] block">
-                                {isId ? '2. Kredit Pemisahan Stems' : '2. Stem Separation Credits'}
+                                {isId
+                                  ? '2. Kredit Pemisahan Stems'
+                                  : '2. Stem Separation Credits'}
                               </span>
                               <span className="text-xs font-bold font-mono text-emerald-300">
-                                {isStemEnabled ? `+${stemTotalCredits} Cr Suno` : isId ? '0 Cr (Tidak Aktif)' : '0 Cr (Disabled)'}
+                                {isStemEnabled
+                                  ? `+${stemTotalCredits.toLocaleString()} Cr Suno`
+                                  : isId
+                                  ? '0 Cr (Tidak Aktif)'
+                                  : '0 Cr (Disabled)'}
                               </span>
                               <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono mt-0.5">
                                 {isStemEnabled
-                                  ? `${songQty} lagu &times; (${stemRuns} + ${stemReserve} cadangan) &times; ${stemRate} Cr`
-                                  : isId ? 'Stereo Mix Standar' : 'Standard Stereo Mix'}
+                                  ? `${songQty} ${
+                                      isId ? 'lagu jadi' : 'finished songs'
+                                    } \u00d7 ${stemRate} Cr`
+                                  : isId
+                                  ? 'Stereo Mix Standar'
+                                  : 'Standard Stereo Mix'}
                               </span>
                             </div>
 
                             {/* Kartu 3: Total Kredit Suno */}
                             <div className="p-2.5 rounded-[8px] bg-[var(--vv-field)]/60 border border-[var(--vv-border)]">
                               <span className="text-[10px] text-[var(--vv-text-subtle)] block">
-                                {isId ? '3. Total Kredit Suno Proyek' : '3. Total Suno Project Credits'}
+                                {isId
+                                  ? '3. Total Kredit & Biaya Tahap'
+                                  : '3. Stage Total Credits & Cost'}
                               </span>
                               <span className="text-xs font-bold font-mono text-purple-300">
                                 {totalSunoCr.toLocaleString()} Cr Suno
                               </span>
-                              <span className="text-[10px] text-[var(--vv-text-muted)] block font-mono mt-0.5">
-                                = {songQty * (directAttempts + songReserve) * 2} {isId ? 'variasi lagu' : 'variations'}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="pt-2 border-t border-purple-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div className="text-[11px] text-purple-200">
-                              <span>
-                                {songQty} {isId ? 'lagu' : 'songs'} &times; {songTotalCredits / songQty} Cr{' '}
-                                {isStemEnabled ? `(+${stemTotalCredits} Cr stem)` : ''} ={' '}
-                              </span>
-                              <span className="text-sm font-bold font-mono text-purple-300">
-                                {totalSunoCr.toLocaleString()} Cr Suno
-                              </span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xs font-bold tabular-nums text-emerald-400 block">
+                              <span className="text-[10px] text-emerald-400 font-bold block tabular-nums mt-0.5">
                                 {costIdr !== null
                                   ? formatCurrencyIdr(costIdr, language)
-                                  : formatCurrencyUsd(costUsd, language)}
-                              </span>
-                              <span className="text-[10px] text-[var(--vv-text-muted)] font-mono">
-                                ({formatCurrencyUsd(costUsd, language)})
+                                  : formatCurrencyUsd(costUsd, language)}{' '}
+                                <span className="text-[var(--vv-text-muted)] font-mono font-normal">
+                                  ({formatCurrencyUsd(costUsd, language)})
+                                </span>
                               </span>
                             </div>
                           </div>

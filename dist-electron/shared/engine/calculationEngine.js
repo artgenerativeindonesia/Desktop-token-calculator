@@ -347,9 +347,11 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
             const itemRawDurationDec = new decimal_js_1.default(gBudget).times(Math.max(0, item.duration_seconds || 0));
             sumOneVideoRawDurationDec = sumOneVideoRawDurationDec.plus(itemRawDurationDec);
         }
-        totalPlannedGen += gPlanned;
-        totalReserveGen += gReserve;
-        totalBudgetedGen += gBudget;
+        if (item.category !== 'music') {
+            totalPlannedGen += gPlanned;
+            totalReserveGen += gReserve;
+            totalBudgetedGen += gBudget;
+        }
         const itemWarnings = [];
         const pricing = item.pricing;
         // Satuan pengali berdasarkan pricing_unit (PRD Bab 8.4)
@@ -363,12 +365,12 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
             const voLang = item.script_language ?? 'id';
             const speedPreset = String(item.model_selection.parameter_values?.speed_preset || 'normal');
             let voChars = 0;
-            if (hasScriptText) {
-                voChars = rawScriptText.length;
-            }
-            else if (typeof item.character_count === 'number' &&
+            if (typeof item.character_count === 'number' &&
                 item.character_count > 0) {
                 voChars = Math.floor(item.character_count);
+            }
+            else if (hasScriptText) {
+                voChars = rawScriptText.length;
             }
             else if (item.duration_seconds > 0) {
                 voChars = (0, elevenlabsCatalog_1.convertDurationToCharacters)(item.duration_seconds, voLang, speedPreset);
@@ -549,6 +551,9 @@ function calculateProjectBudget(items, assumptions, exchangeRate, catalog, selec
             const musicPlannedGen = effectiveQty * plannedGenPerTrack;
             const musicReserveGen = songReserve;
             const musicBudgetedGen = musicPlannedGen + musicReserveGen;
+            totalPlannedGen += musicPlannedGen;
+            totalReserveGen += musicReserveGen;
+            totalBudgetedGen += musicBudgetedGen;
             const itemPlannedSuno = new decimal_js_1.default(totalBaseCredits);
             const itemReserveSuno = new decimal_js_1.default(totalReserveCredits);
             const itemBudgetedSuno = itemPlannedSuno.plus(itemReserveSuno);

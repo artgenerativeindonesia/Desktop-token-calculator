@@ -2582,7 +2582,9 @@ export function applyCreditPlanRateToCatalog(
     if (
       model.model_id === 'custom/unverified-preview-model' ||
       model.provider.toLowerCase() === 'elevenlabs' ||
-      model.supported_categories.includes('voice_over')
+      model.supported_categories.includes('voice_over') ||
+      model.provider.toLowerCase() === 'suno' ||
+      model.supported_categories.includes('music')
     ) {
       return model;
     }

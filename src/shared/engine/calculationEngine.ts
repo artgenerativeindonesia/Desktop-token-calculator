@@ -464,9 +464,11 @@ export function calculateProjectBudget(
       sumOneVideoRawDurationDec = sumOneVideoRawDurationDec.plus(itemRawDurationDec);
     }
 
-    totalPlannedGen += gPlanned;
-    totalReserveGen += gReserve;
-    totalBudgetedGen += gBudget;
+    if (item.category !== 'music') {
+      totalPlannedGen += gPlanned;
+      totalReserveGen += gReserve;
+      totalBudgetedGen += gBudget;
+    }
 
     const itemWarnings: string[] = [];
     const pricing = item.pricing;
@@ -487,13 +489,13 @@ export function calculateProjectBudget(
       );
       let voChars = 0;
 
-      if (hasScriptText) {
-        voChars = rawScriptText.length;
-      } else if (
+      if (
         typeof item.character_count === 'number' &&
         item.character_count > 0
       ) {
         voChars = Math.floor(item.character_count);
+      } else if (hasScriptText) {
+        voChars = rawScriptText.length;
       } else if (item.duration_seconds > 0) {
         voChars = convertDurationToCharacters(
           item.duration_seconds,
@@ -716,6 +718,10 @@ export function calculateProjectBudget(
       const musicPlannedGen = effectiveQty * plannedGenPerTrack;
       const musicReserveGen = songReserve;
       const musicBudgetedGen = musicPlannedGen + musicReserveGen;
+
+      totalPlannedGen += musicPlannedGen;
+      totalReserveGen += musicReserveGen;
+      totalBudgetedGen += musicBudgetedGen;
 
       const itemPlannedSuno = new Decimal(totalBaseCredits);
       const itemReserveSuno = new Decimal(totalReserveCredits);

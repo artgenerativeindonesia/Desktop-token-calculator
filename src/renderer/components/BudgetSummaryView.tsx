@@ -722,13 +722,13 @@ export const BudgetSummaryView: React.FC = () => {
               item.model_selection.parameter_values?.speed_preset || 'normal'
             );
             let charsPerFile = 0;
-            if (item.script_text && item.script_text.trim().length > 0) {
-              charsPerFile = item.script_text.length;
-            } else if (
+            if (
               typeof item.character_count === 'number' &&
               item.character_count > 0
             ) {
               charsPerFile = Math.floor(item.character_count);
+            } else if (item.script_text && item.script_text.trim().length > 0) {
+              charsPerFile = item.script_text.length;
             } else {
               charsPerFile = convertDurationToCharacters(
                 item.duration_seconds || 10,
@@ -877,15 +877,16 @@ export const BudgetSummaryView: React.FC = () => {
           (sum, item) => sum + Math.max(0, Math.floor(item.quantity || 0)),
           0
         );
-        const totalMusicSecondsPerVideo = musicItems.reduce(
-          (sum, item) =>
-            sum +
-            Math.max(0, Math.floor(item.quantity || 0)) *
-              (item.duration_seconds || 120),
-          0
-        );
+        const totalStemTracksPerVideo = musicItems.reduce((sum, item) => {
+          const isStem =
+            item.stem_enabled ??
+            (item.stem_separation_mode && item.stem_separation_mode !== 'none');
+          return (
+            sum + (isStem ? Math.max(0, Math.floor(item.quantity || 0)) : 0)
+          );
+        }, 0);
         const totalTracks = totalTracksPerVideo * targetVideosCount;
-        const totalMusicSeconds = totalMusicSecondsPerVideo * targetVideosCount;
+        const totalStemTracks = totalStemTracksPerVideo * targetVideosCount;
         const activeSunoPlan = getSunoPlanById(
           (calc.selected_suno_plan_id as any) || 'pro'
         );
@@ -947,14 +948,14 @@ export const BudgetSummaryView: React.FC = () => {
                   {isId ? 'Kebutuhan Track Lagu' : 'Music Tracks'}
                 </span>
                 <span className="text-base font-bold text-[var(--vv-text-primary)] font-mono">
-                  {totalTracks} {isId ? 'track' : 'tracks'}
+                  {totalTracks} {isId ? 'lagu' : 'songs'}
                 </span>
                 <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
                   &times; {cadanganMultiplier}{' '}
                   {isId ? 'cadangan' : 'reserve'} ={' '}
                   {musicCatSummary?.budgeted_generations ??
                     totalTracks * cadanganMultiplier}
-                  x {isId ? 'generate' : 'runs'}
+                  x {isId ? 'buat' : 'runs'}
                 </span>
               </div>
 
@@ -974,17 +975,24 @@ export const BudgetSummaryView: React.FC = () => {
 
               <div className="vv-card-quiet p-3 rounded-[12px]">
                 <span className="text-[10px] text-[var(--vv-text-muted)] block">
-                  {isId ? 'Total Durasi Musik' : 'Total Music Duration'}
+                  {isId ? 'Pemisahan Stems Audio' : 'Audio Stem Separation'}
                 </span>
                 <span className="text-base font-bold text-amber-400 font-mono">
-                  ⏱️ {totalMusicSeconds}s ({formatMinSec(totalMusicSeconds)})
+                  🎚️{' '}
+                  {totalStemTracks > 0
+                    ? `${totalStemTracks} ${isId ? 'lagu' : 'songs'}`
+                    : isId
+                    ? 'Stereo Mix'
+                    : 'Stereo Mix'}
                 </span>
                 <span className="text-[10px] text-[var(--vv-text-subtle)] block font-mono mt-0.5">
-                  {targetVideosCount > 1
-                    ? `${totalMusicSecondsPerVideo}s / video`
+                  {totalStemTracks > 0
+                    ? isId
+                      ? 'Otomatis 1x per lagu jadi'
+                      : 'Auto 1x per finished song'
                     : isId
-                    ? 'Panjang audio per video'
-                    : 'Audio length per video'}
+                    ? 'Tanpa pisah track (0 Cr)'
+                    : 'Standard mix (0 Cr)'}
                 </span>
               </div>
 
