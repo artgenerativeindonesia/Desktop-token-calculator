@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "dev:renderer": "vite",
+    "typecheck": "tsc --noEmit",
     "build:renderer": "tsc --noEmit && vite build",
     "build:main": "tsc -p tsconfig.main.json",
     "build": "npm run build:renderer && npm run build:main",
