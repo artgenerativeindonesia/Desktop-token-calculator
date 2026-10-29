@@ -12,6 +12,29 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.4] - Modularisasi Komponen Cetak Dokumen PDF (`ExportPdfView.tsx`) Menjadi Modul-Modul Terfokus
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.4`
+
+### Ditambahkan (Added)
+1. **Folder Direktori Modul Ekspor PDF (`src/renderer/components/export/`)**:
+   - Membentuk folder khusus untuk mengorganisir kartu aksi cetak PDF, pratinjau dokumen A4 interaktif, dan jendela modal kustomisasi pada Langkah 05 secara terstruktur dan terisolasi.
+2. **Komponen-Komponen Ekspor Terisolasi**:
+   - `ExportHeroActionCard.tsx`: Kartu Tier 1 utama yang memuat saklar dwi-bahasa dokumen (PDF Indonesia / PDF English), input judul & tanggal laporan, banner kesiapan kelengkapan data (*Data Health Check*), serta tombol aksi utama simpan PDF.
+   - `LivePdfPreviewCard.tsx`: Kartu Tier 2 yang memuat pratinjau dokumen ukuran A4 Portrait secara langsung menggunakan iframe dinamis dengan bayangan bento modern.
+   - `CustomizeSectionsModal.tsx`: Jendela modal pop-up kustomisasi untuk mengisi nama penyusun (*Prepared By*), nama klien/tim, dan centang 7 bagian dokumen yang ingin disertakan ke dalam laporan.
+   - `FullScreenPdfPreviewModal.tsx`: Jendela modal pratinjau dokumen ukuran penuh (*Full-Screen Preview*) yang memungkinkan pengguna meninjau seluruh halaman secara leluasa sebelum menekan tombol simpan PDF.
+
+### Diubah (Changed)
+1. **Penyederhanaan `ExportPdfView.tsx` Menjadi Orkestrator Ringan**:
+   - Berhasil memangkas ukuran file dari ~562 baris menjadi hanya 115 baris (reduksi 79.5%) tanpa mengubah satupun tampilan visual, generator HTML PDF, maupun mekanisme penyimpanan berkas.
+
+### Diperbaiki (Fixed)
+1. **Penyelarasan Tipe Data dan Handler Ekspor**:
+   - Memastikan seluruh fungsi pemanggil generator PDF, penamaan berkas otomatis (`safeFileName`), dan navigasi langkah tetap terhubung 100% tanpa regresi.
+
+---
+
 ## Versi [2.1.3] - Modularisasi Komponen Pengaturan Parameter Proyek (`ProjectSetupView.tsx`) Menjadi Modul-Modul Terfokus
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.3`
@@ -31,6 +54,11 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 ### Diperbaiki (Fixed)
 1. **Penyelarasan Tipe Data Asumsi Anggaran**:
    - Menyelaraskan impor antarmuka skema `BudgetAssumptions` agar 100% konsisten dengan skema TypeScript proyek.
+2. **Perbaikan Karakter Khusus `&` dan `%` pada File Perintah Windows (`.bat`)**:
+   - Mengganti simbol `&` pada `Jalankan-Cek-Otomatis.bat`, `Klik-Untuk-Testing-Tanpa-Install.bat`, dan `Buat-Publish-Installer.bat` menjadi kata `dan` serta menggandakan `%%`, sehingga menghilangkan pesan peringatan Windows `'Fitur' / 'Nama' / 'Anti-Layar-Hitam' is not recognized as an internal or external command`.
+   - Menambahkan catatan informasi bahwa tulisan `RUN v2.1.9` pada terminal pengujian adalah versi mesin penguji Vitest, bukan versi aplikasi.
+3. **Penyeragaman Nomor Versi `2.1.3` di Seluruh Dokumen & Skrip**:
+   - Menyelaraskan seluruh label versi pada `README.md`, `PANDUAN-INSTALASI-DAN-PENGGUNAAN.md`, `package.json`, `project.ts`, dan seluruh berkas `.bat` serta `.command` ke versi `2.1.3` agar tidak ada lagi perbedaan penulisan versi.
 
 ---
 
