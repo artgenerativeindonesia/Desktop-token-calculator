@@ -323,4 +323,57 @@ describe('PDF Report Builder & UI Consistency — PRD Bab 12 & AC-10', () => {
     expect(htmlId).toContain('Total Konsumsi Credit ElevenLabs (Voice Over)');
     expect(htmlEn).toContain('Total ElevenLabs Credits (Voice Over)');
   });
+
+  it('Memuat Rincian Musik Pengiring Resmi Suno AI & Pemisahan Stems dalam Laporan PDF secara Bersih & Terpisah', () => {
+    const project = createSampleCommercialProject();
+    project.items.push({
+      item_id: 'suno-pdf-test',
+      category: 'music',
+      label: 'Soundtrack Musik Sineas Utama',
+      quantity: 1,
+      quantity_type: 'asset',
+      duration_seconds: 120,
+      attempts_per_item: 2,
+      stem_enabled: true,
+      stem_type: 'two_stems',
+      stem_runs: 1,
+      stem_reserve: 0,
+      model_selection: {
+        provider: 'suno',
+        model_id: 'suno_v6',
+        model_name: 'Suno v6 (Flagship Studio)',
+        category: 'music',
+        parameter_values: {},
+      },
+      pricing: {
+        pricing_unit: 'per_asset',
+        price_value: 0.1,
+        currency: 'USD',
+        credit_cost: 10,
+        credit_unit: 'per_clip',
+        source_name: 'Suno Official Pricing',
+        source_url: 'https://suno.com/pricing',
+        retrieved_at: '2026-10-29T00:00:00.000Z',
+        status: 'verified',
+      },
+    });
+
+    const { html: htmlId } = generatePdfReportHtml(project, 'id');
+    const { html: htmlEn } = generatePdfReportHtml(project, 'en');
+
+    // 1. Label Musik, Track Musik, dan Model Suno
+    expect(htmlId).toContain('Soundtrack Musik Sineas Utama');
+    expect(htmlId).toContain('Suno v6 (Flagship Studio)');
+    expect(htmlId).toContain('🎵 Track Musik');
+    expect(htmlEn).toContain('🎵 Music Track');
+    expect(htmlId).toContain('Suno AI');
+
+    // 2. Pemisahan Stems
+    expect(htmlId).toContain('2-Stems Split (+20 Cr)');
+    expect(htmlId).toContain('Stems: 1x');
+
+    // 3. Rekap Kredit Suno
+    expect(htmlId).toContain('Total Konsumsi Kredit Suno (Musik & Soundtrack)');
+    expect(htmlEn).toContain('Total Suno Credits (Music & Soundtrack)');
+  });
 });

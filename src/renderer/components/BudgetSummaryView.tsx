@@ -1002,6 +1002,23 @@ export const BudgetSummaryView: React.FC = () => {
                 </span>
               </div>
             </div>
+
+            {musicItems.some((i) => i.stem_enabled) && (
+              <div className="p-3 rounded-[12px] bg-purple-500/10 border border-purple-500/25 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <Scissors className="w-4 h-4 text-purple-400" />
+                  <span className="font-semibold text-[var(--vv-text-primary)]">
+                    {isId ? 'Pemisahan Track Audio (Stems) Aktif' : 'Audio Stem Separation Active'}
+                  </span>
+                  <span className="text-[var(--vv-text-muted)]">
+                    ({musicItems.filter((i) => i.stem_enabled).length} {isId ? 'track menggunakan stems' : 'tracks using stems'})
+                  </span>
+                </div>
+                <div className="text-[11px] font-mono text-purple-300">
+                  {isId ? 'Termasuk biaya kredit stems ke dalam total kredit Suno' : 'Stem credits included in total Suno credits'}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}

@@ -6,7 +6,7 @@ import {
   ProductionItemSchema,
   ElevenLabsSubscriptionPlanSchema,
 } from '../src/shared/schema/projectSchema';
-import { ALL_PROCESS_CATEGORIES } from '../src/shared/types/project';
+import { ALL_PROCESS_CATEGORIES, CURRENT_SCHEMA_VERSION } from '../src/shared/types/project';
 import { createPrdSyntheticTestProject } from '../src/shared/engine/calculationEngine';
 
 describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, FR-13', () => {
@@ -17,7 +17,7 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
     const validation = validateProjectFileJson(jsonString);
     expect(validation.valid).toBe(true);
     expect(validation.data?.project_name).toBe(project.project_name);
-    expect(validation.data?.schema_version).toBe('1.0.0');
+    expect(validation.data?.schema_version).toBe(CURRENT_SCHEMA_VERSION);
   });
 
   it('FR-01: Menolak proyek dengan nama kosong', () => {
@@ -31,12 +31,12 @@ describe('Project File Schema Validator (.aivbudget) — PRD Bab 10.3 & FR-01, F
 
   it('PRD Bab 10.3: Menolak file dengan schema_version lebih baru tanpa merusak file', () => {
     const project = createPrdSyntheticTestProject();
-    project.schema_version = '2.1.0';
+    project.schema_version = '3.0.0';
     const validation = validateProjectFileJson(JSON.stringify(project));
 
     expect(validation.valid).toBe(false);
     expect(validation.errorCode).toBe('NEWER_SCHEMA_VERSION');
-    expect(validation.errorMessage_id).toContain('v2.1.0');
+    expect(validation.errorMessage_id).toContain('v3.0.0');
   });
 
   it('PRD Bab 13.1: Menangani file JSON yang rusak dengan pesan jelas', () => {

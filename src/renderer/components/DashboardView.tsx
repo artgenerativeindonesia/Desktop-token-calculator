@@ -323,15 +323,25 @@ export const DashboardView: React.FC = () => {
             </div>
           ) : (
             <div className="pt-3 border-t border-[var(--vv-border)] flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-[var(--vv-text-muted)] text-[11px]">
+              <div className="flex items-center gap-1.5 text-[var(--vv-text-muted)] text-[11px] flex-wrap">
                 <Coins className="w-3.5 h-3.5 text-[#0099ff] shrink-0" />
-                <span>
+                <span className="flex flex-wrap items-center gap-1.5">
                   {calc.total_credit !== null
                     ? `${calc.total_credit.toLocaleString()} Credit Higgsfield`
                     : (isId ? 'Credit belum dihitung' : 'Credits unconfigured')}
+                  {calc.total_elevenlabs_credit !== null && (
+                    <span className="text-sky-400 font-mono">
+                      &bull; {calc.total_elevenlabs_credit.toLocaleString()} Cr ElevenLabs
+                    </span>
+                  )}
+                  {calc.total_suno_credit !== null && (
+                    <span className="text-purple-400 font-mono">
+                      &bull; {calc.total_suno_credit.toLocaleString()} Cr Suno
+                    </span>
+                  )}
                 </span>
               </div>
-              <div className="text-[11px] font-mono text-[var(--vv-text-subtle)]">
+              <div className="text-[11px] font-mono text-[var(--vv-text-subtle)] shrink-0">
                 {fx.rate ? `~${formatCurrencyIdr(fx.rate, language)}/USD` : ''}
               </div>
             </div>
@@ -485,7 +495,9 @@ export const DashboardView: React.FC = () => {
                   : t.unavailableLabel}
               </div>
               <div className="text-[10px] text-[var(--vv-text-subtle)] text-right mt-0.5">
-                Higgsfield Points
+                {calc.total_elevenlabs_credit !== null || calc.total_suno_credit !== null
+                  ? 'Higgsfield, 11Labs, Suno'
+                  : 'Higgsfield Points'}
               </div>
             </div>
 

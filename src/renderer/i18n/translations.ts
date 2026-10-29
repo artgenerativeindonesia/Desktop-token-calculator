@@ -81,7 +81,7 @@ export const QUANTITY_TYPE_LABELS: Record<QuantityType, { id: string; en: string
 export const UI_TEXT = {
   id: {
     appTitle: 'Kalkulator Anggaran Video AI',
-    appSubtitle: 'Perencana Biaya Produksi Video & Gambar AI • Higgsfield',
+    appSubtitle: 'Perencana Biaya Studio Produksi Video, Voice Over & Musik AI (Higgsfield • ElevenLabs • Suno)',
     navDashboard: 'Beranda Proyek',
     navSetup: 'Pengaturan & Cadangan',
     navPlanner: 'Daftar Pekerjaan AI',
@@ -117,7 +117,7 @@ export const UI_TEXT = {
   },
   en: {
     appTitle: 'AI Video Budget Calculator',
-    appSubtitle: 'AI Video & Image Production Cost Planner • Higgsfield',
+    appSubtitle: 'AI Video, Voice Over & Music Studio Production Budget Planner (Higgsfield • ElevenLabs • Suno)',
     navDashboard: 'Project Home',
     navSetup: 'Project & Reserve Setup',
     navPlanner: 'AI Production List',

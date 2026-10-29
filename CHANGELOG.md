@@ -12,6 +12,38 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.0.0] - Pembaruan Akbar Studio Edition: Integrasi Penuh 4 Pilar Utama (Multi-Video Workflow, Kalkulator Durasi Bersih Video, Voice Over Resmi ElevenLabs, dan Musik Pengiring Resmi Suno AI & Pemisahan Stems)
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.0.0`
+
+### Ditambahkan (Added)
+1. **Rilis Perdana Versi Akbar 2.0.0 Studio Edition Terpadu**:
+   - Menuntaskan seluruh cetak biru *Master Implementation Plan v2.0.0*, menyatukan 3 ekosistem raksasa AI dalam satu platform budgeting desktop: **Higgsfield** (Pabrik Video & Gambar), **ElevenLabs** (Studio Pengisi Suara & Voice Over), dan **Suno AI** (Komposer Musik Latar Film & Audio Stems).
+   - Memutakhirkan `APP_VERSION` dan `CURRENT_SCHEMA_VERSION` menjadi `2.0.0` pada `src/shared/types/project.ts` dan `package.json`.
+2. **Dukungan Visual Status Pemisahan Stems pada Ringkasan Biaya & Dokumen PDF**:
+   - Menambahkan banner informatif pemisahan stems audio (*2-Stems Split* / *Full Studio Stems*) pada kartu ringkasan musik resmi Suno di Langkah 04 (`BudgetSummaryView.tsx`).
+   - Menambahkan visualisasi pemisahan stems dan rincian audisi musik pada tabel cetak laporan PDF (`src/shared/pdf/pdfReportBuilder.ts`).
+3. **Indikator Kredit Multi-Provider pada Hero Beranda (`DashboardView.tsx`)**:
+   - Menampilkan saldo kredit Higgsfield, ElevenLabs, dan Suno secara berdampingan di kartu utama beranda proyek.
+4. **Unit Test Otomatis Baru untuk PDF Suno & Stems (`tests/pdfConsistency.test.ts`)**:
+   - Menambahkan pengujian otomatis verifikasi cetak PDF untuk item musik Suno dan konfigurasi stems (seluruh 116 pengujian otomatis Vitest lulus 100%).
+
+### Diubah (Changed)
+1. **Pembaruan Menyeluruh Buku Panduan Pengguna & README (`v2.0.0`)**:
+   - Menulis ulang `README.md` dan `PANDUAN-INSTALASI-DAN-PENGGUNAAN.md` dengan penjelasan ramah pemula, analogi kasir studio, panduan 6 langkah kerja terstruktur, serta panduan instalasi Windows (*Zero-Install*, *Portable EXE*, *NSIS Setup*) dan Mac (*1-Klik Install*, *DMG*, *ZIP*).
+2. **Penyelarasan Subtitle & Identitas Aplikasi Dwibahasa (`translations.ts`)**:
+   - Mengubah subtitle aplikasi menjadi *"Perencana Biaya Studio Produksi Video, Voice Over & Musik AI (Higgsfield • ElevenLabs • Suno)"* dalam bahasa Indonesia dan Inggris.
+3. **Penyelarasan Dokumen Cetak PDF ke Edisi Studio**:
+   - Menyesuaikan header dokumen menjadi *AI VIDEO BUDGET CALCULATOR • STUDIO EDITION v2.0.0* dan footer menjadi *Higgsfield, ElevenLabs & Suno AI Studio Budgeting*.
+
+### Diperbaiki (Fixed)
+1. **Penyelarasan Total Nomor Versi di Seluruh Kode Aplikasi**:
+   - Menghilangkan ketidaksesuaian nomor versi lama yang sebelumnya tertinggal di beberapa berkas kode, konfigurasi, dan dokumentasi.
+2. **Jaminan Kompatibilitas Mundur (Backward Compatibility) 100%**:
+   - Skema validasi Zod tetap menerima dan memigrasikan berkas proyek lama pengguna (`.aivbudget`) tanpa pesan error atau risiko kehilangan data.
+
+---
+
 ## Versi [1.13.1] - Penyederhanaan Menyeluruh Input Musik Suno AI: Penyesuaian Kolom Angka Budgeting Langsung, Perbaikan Pemanggilan Model Suno di Electron IPC, serta Pengaturan Pemisahan Track Audio (Stems) yang Intuitif
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v1.13.1`

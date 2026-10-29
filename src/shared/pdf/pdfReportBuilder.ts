@@ -262,7 +262,7 @@ export function generatePdfReportHtml(
       const countBreakdown = isVO
         ? `<strong>${res.effective_quantity}</strong> ${isId ? 'file audio' : 'audio files'}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
         : isMusic
-        ? `<strong>${res.effective_quantity}</strong> ${isId ? 'track lagu' : 'music tracks'}<br/><span style="font-size:10px;color:#9333ea;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`
+        ? `<strong>${res.effective_quantity}</strong> ${isId ? 'track lagu' : 'music tracks'}<br/><span style="font-size:10px;color:#9333ea;">&times; ${attemptsCount} ${isId ? 'audisi' : 'attempts'}${res.reserve_generations > 0 ? ` (+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'})` : ''} = <strong>${res.budgeted_generations}x buat</strong></span>${sourceItem?.stem_enabled ? `<br/><span style="font-size:9.5px;color:#7e22ce;">+ Stems: ${sourceItem.stem_runs || 1}x (${sourceItem.stem_type === 'full_stems' ? 'Full Studio 50 Cr' : '2-Stems 20 Cr'})</span>` : ''}`
         : res.reserve_generations > 0
         ? `${res.effective_quantity} &times; ${attemptsCount} = <strong>${res.planned_generations}</strong><br/><span style="font-size:10px;color:#64748b;">+${res.reserve_generations} ${isId ? 'cadangan' : 'reserve'} (${res.budgeted_generations} total)</span>`
         : `<strong>${res.effective_quantity}</strong> ${getUnitNoun(sourceItem?.quantity_type ?? 'shot', isId, res.category)}<br/><span style="font-size:10px;color:#0284c7;">&times; ${attemptsCount} ${isId ? 'cadangan' : 'reserve'} = <strong>${res.budgeted_generations}x buat</strong></span>`;
@@ -310,9 +310,15 @@ export function generatePdfReportHtml(
                     sourceItem?.script_language === 'en' ? '🇬🇧 EN' : '🇮🇩 ID'
                   })`
                 : isMusic
-                ? `🎵 ${escapeHtml(sourceItem?.music_genre || 'Sinematik')} &bull; ${
-                    sourceItem?.is_instrumental !== false ? 'Instrumental' : 'Vokal'
-                  } &bull; ⏱️ ${res.duration_seconds || 120}s`
+                ? `🎵 ⏱️ ${res.duration_seconds || 120}s &bull; ${
+                    sourceItem?.stem_enabled
+                      ? sourceItem.stem_type === 'full_stems'
+                        ? 'Full Studio Stems (+50 Cr)'
+                        : '2-Stems Split (+20 Cr)'
+                      : isId
+                      ? 'Stereo Mix (0 Cr)'
+                      : 'Stereo Mix (0 Cr)'
+                  }`
                 : escapeHtml(paramSummary)
             }</span>
           </td>
@@ -556,7 +562,7 @@ export function generatePdfReportHtml(
   <div class="header-box">
     <div>
       <div style="font-size:11px;font-weight:700;color:#2563eb;letter-spacing:0.06em;margin-bottom:4px;">
-        AI VIDEO BUDGET CALCULATOR &bull; PRD v${APP_VERSION}
+        AI VIDEO BUDGET CALCULATOR &bull; STUDIO EDITION v${APP_VERSION}
       </div>
       <h1 class="title">${escapeHtml(project.project_name)}</h1>
       <p class="subtitle">
@@ -866,7 +872,7 @@ export function generatePdfReportHtml(
   ` : ''}
 
   <div class="footer">
-    <span>AI Video Budget Calculator v${APP_VERSION} &bull; Higgsfield Model Catalog Budgeting</span>
+    <span>AI Video Budget Calculator v${APP_VERSION} &bull; Higgsfield, ElevenLabs &amp; Suno AI Studio Budgeting</span>
     <span>${escapeHtml(buildSafePdfFilename(project.project_name, exportDateStr))}</span>
   </div>
 </body>

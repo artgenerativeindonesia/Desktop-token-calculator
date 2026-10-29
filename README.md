@@ -1,59 +1,68 @@
-# AI Video Budget Calculator (`v1.7.0`) — Windows & macOS
+# AI Video Budget Calculator (`v2.0.0`) — Studio Edition (Windows & macOS)
 
-Aplikasi desktop perencanaan anggaran produksi video AI berbasis katalog model **Higgsfield** dengan desain **Studio Glassmorphism UI** (Mode Gelap & Mode Terang) serta dukungan dwi-bahasa (**Bahasa Indonesia & English**).
+Aplikasi desktop profesional untuk perencanaan dan perhitungan anggaran produksi video AI studio terpadu: **Higgsfield (Video & Gambar)**, **ElevenLabs (Voice Over & Pengisi Suara)**, dan **Suno AI (Musik, Soundtrack & Pemisahan Stems)**. Dilengkapi antarmuka **Studio Glassmorphism UI** (Mode Gelap & Terang) serta dukungan dwi-bahasa (**Bahasa Indonesia & English**).
 
-> **Buku Panduan Lengkap**: Untuk penjelasan yang sangat rinci dari awal sampai akhir, silakan buka file **[PANDUAN-INSTALASI-DAN-PENGGUNAAN.md](PANDUAN-INSTALASI-DAN-PENGGUNAAN.md)**.
+> **Buku Panduan Lengkap**: Untuk penjelasan langkah demi langkah yang ramah pemula, silakan buka **[PANDUAN-INSTALASI-DAN-PENGGUNAAN.md](PANDUAN-INSTALASI-DAN-PENGGUNAAN.md)**.
+> **Buku Catatan Perubahan**: Untuk riwayat versi dan titik mesin waktu, buka **[CHANGELOG.md](CHANGELOG.md)**.
 
 ---
 
-## 1. Cara Instalasi & Menjalankan di Windows (Tetap Seperti Semula)
+## 4 Pilar Utama Versi 2.0.0 (Studio Edition)
 
-1. **Langsung Buka Tanpa Instalasi (*Zero-Install*):**
+1. **Alur Produksi Multi-Video (Tahap 1)**:
+   - Tentukan target jumlah video jadi di Langkah 2 (misal: 5 video).
+   - Langkah 3 memproyeksikan kebutuhan untuk *1 video utuh*. Total anggaran akhir otomatis dikalikan jumlah video secara transparan, lengkap dengan penjabaran matematika dan kotak *disclaimer* resmi di UI serta di dokumen cetak PDF.
+2. **Kalkulator Durasi Bersih Video (Tahap 2)**:
+   - Menghitung panjang durasi video pokok secara murni tanpa menggelembungkan waktu upscale dan tanpa cadangan coba-coba.
+   - Menyajikan perbandingan antara Target Durasi Bersih Post-Produksi dan Durasi Mentah Shot AI beserta *safety buffer* ruang potong editor video.
+3. **Kategori Voice Over Resmi ElevenLabs (Tahap 3)**:
+   - Terhubung dengan katalog model resmi ElevenLabs (*Multilingual v2*, *Flash v2.5*, *Turbo v2.5*, kuota karakter/kredit) dan paket langganan resmi (*Free*, *Starter*, *Creator*, *Pro*, *Scale*, *Business*).
+   - Input numerik karakter audio yang presisi tanpa mewajibkan naskah teks.
+4. **Kategori Musik & Soundtrack Resmi Suno AI (Tahap 4)**:
+   - Terhubung langsung dengan katalog resmi Suno AI (*v6 Flagship Studio*, *v6-wild*, *v6-mini*, *v4*, *v3.5*, *v3*) dengan konsumsi resmi 10 kredit per kali pembuatan (menghasilkan 2 variasi klip lagu siap pakai).
+   - Pengaturan pemisahan track audio (**Stems Separation**): *2-Stems Split* (+20 Cr) dan *Full Studio Stems* (+50 Cr) serta sinkronisasi durasi musik dengan timeline storyboard video.
+
+---
+
+## 1. Cara Menjalankan di Windows (Zero-Install & Installer)
+
+1. **Langsung Buka Tanpa Instalasi (*Zero-Install* — Paling Cepat):**
    - Cukup **Klik 2x (Double Click)** file **`Klik-Untuk-Testing-Tanpa-Install.bat`**.
-   - Jendela aplikasi akan langsung terbuka tanpa menginstal program ke Windows / Control Panel.
+   - Jendela aplikasi desktop akan langsung terbuka tanpa menginstal program ke Control Panel Windows.
 2. **Membuat File Installer Windows (`.exe` Setup & Portable):**
    - Klik 2x file **`Buat-Publish-Installer.bat`**.
-   - Buka folder **`release/`** untuk mendapatkan:
-     - **`AI Video Budget Calculator-1.7.0-portable.exe`** (Klik 2x langsung jalan tanpa instalasi).
-     - **`AI Video Budget Calculator-1.7.0-nsis.exe`** (Installer standar yang memasang ikon ke Desktop & Start Menu Windows).
-3. **Pemeriksaan Rumus Otomatis:**
-   - Klik 2x file **`Jalankan-Cek-Otomatis.bat`** untuk menjalankan 25 pengujian otomatis.
+   - Buka folder **`release/`** untuk mendapatkan file:
+     - **`AI Video Budget Calculator-2.0.0-portable.exe`** (Klik 2x langsung jalan dari mana saja / flashdisk).
+     - **`AI Video Budget Calculator-2.0.0-nsis.exe`** (Installer resmi yang memasang ikon ke Desktop & Start Menu Windows).
+3. **Pemeriksaan Rumus Otomatis (Anti-Bug Guarantee):**
+   - Klik 2x file **`Jalankan-Cek-Otomatis.bat`** untuk menjalankan seluruh uji otomatis Vitest (116 tes lulus 100%).
 
 ---
 
-## 2. Cara Instalasi & Menjalankan di Mac / macOS (Apple Silicon M1/M2/M3/M4 & Intel)
+## 2. Cara Menjalankan di Mac / macOS (Apple Silicon M1/M2/M3/M4 & Intel)
 
-Salin folder proyek ini ke komputer Mac Anda (pastikan **Node.js LTS** dari [nodejs.org](https://nodejs.org) sudah terpasang di Mac), lalu pilih salah satu dari **3 tombol khusus Mac (`.command`)** berikut:
+Salin folder proyek ini ke komputer Mac Anda (pastikan **Node.js LTS** dari [nodejs.org](https://nodejs.org) sudah terpasang di Mac), lalu gunakan salah satu tombol perintah 1-Klik (`.command`) berikut:
 
 1. **Pilihan Tercepat — Pasang Langsung ke Folder `/Applications` Mac (1-Klik):**
-   - **Klik 2x** file **`Install-Langsung-Ke-Mac.command`** (atau **Klik Kanan $\rightarrow$ Open** saat pertama kali).
-   - Script ini otomatis membungkus aplikasi menjadi `AI Video Budget Calculator.app`, memasangnya langsung ke folder **`/Applications`** (Launchpad) di Mac Anda, membuka kunci izin *Gatekeeper* Apple (`xattr -cr`), dan langsung menyalakan aplikasinya!
+   - **Klik 2x** file **`Install-Langsung-Ke-Mac.command`** (atau Klik Kanan $\rightarrow$ Open saat pertama kali).
+   - Script otomatis membungkus aplikasi menjadi `AI Video Budget Calculator.app`, memasangnya ke folder **`/Applications`** (Launchpad), membuka izin *Gatekeeper* Apple (`xattr -cr`), dan menyalakan aplikasinya.
 2. **Membuat File Installer `.DMG` & `.ZIP` untuk Mac:**
    - **Klik 2x** file **`Buat-Publish-Installer-Mac.command`**.
-   - Setelah selesai, folder **`release/`** akan otomatis terbuka berisi file **`.dmg`** dan **`.zip`** siap pakai untuk dibagikan ke komputer Mac mana saja.
+   - Folder **`release/`** akan otomatis terbuka berisi file **`.dmg`** dan **`.zip`** siap dibagikan ke Mac lain.
 3. **Langsung Buka Tanpa Instalasi di Mac (*Zero-Install*):**
-   - **Klik 2x** file **`Klik-Untuk-Testing-Tanpa-Install-Mac.command`** untuk langsung menjalankan aplikasi tanpa menginstalnya ke folder Applications.
+   - **Klik 2x** file **`Klik-Untuk-Testing-Tanpa-Install-Mac.command`**.
 4. **Pemeriksaan Rumus Otomatis di Mac:**
    - **Klik 2x** file **`Jalankan-Cek-Otomatis-Mac.command`**.
 
-*(Tips: Jika file `.command` tidak bisa diklik 2x setelah disalin dari flashdisk, buka Terminal di folder proyek lalu jalankan `chmod +x *.command` satu kali saja).*
+*(Tips: Jika file `.command` terkunci setelah disalin dari flashdisk, buka Terminal di folder proyek lalu jalankan `chmod +x *.command`).*
 
 ---
 
-## 3. Ringkasan Cara Penggunaan Aplikasi Versi Terbaru (`v1.7.0`)
+## 3. Alur Kerja 6 Langkah Aplikasi
 
-1. **Beranda (*Dashboard*)**:
-   - Lihat **Estimasi Total Anggaran** (Rupiah, USD, & Credits), rumus **`Total Kebutuhan × Cadangan = Total Kali Buat`**, serta rata-rata biaya per 1 video jadi dan per 1 menit durasi.
-   - Klik **"Muat Contoh Proyek Iklan"** untuk mencoba simulasi lengkap 7 tahapan produksi.
-2. **Langkah 1–2 (Pengaturan Proyek & Cadangan)**:
-   - Isi **Nama Proyek**, **Jumlah Video Jadi**, dan **Total Durasi (Menit)**.
-   - Pilih **Berapa Kali Cadangan per Adegan** (`1x`, `2x`, `3x`, `5x`, atau ketik sendiri). Angka cadangan ini otomatis mengalikan seluruh tahapan adegan Anda (`Total = Kebutuhan × Cadangan`).
-3. **Langkah 3 (Rencana Adegan)**:
-   - Pilih **Paket Langganan Higgsfield** (*Basic, Pro, Ultimate, Creator, atau Eceran*) di bagian atas.
-   - Klik **"Tambah Tahapan"** atau **"Atur Adegan"** untuk memilih model AI di jendela *popup*, mengisi jumlah adegan, durasi detik, atau mencentang fitur **Unlimited (Rp 0)**.
-4. **Langkah 4 (Ringkasan Biaya)**:
-   - Periksa total anggaran keseluruhan, rincian **`Kebutuhan × Cadangan = Total Kali Buat`**, biaya rata-rata per video & per menit, serta tabel rincian per tahapan.
-5. **Katalog & Kurs**:
-   - Perbarui kurs Dolar ke Rupiah secara otomatis dari internet atau masukkan kurs tetap secara manual, serta kelola daftar model AI.
-6. **Langkah 5 (Cetak PDF)**:
-   - Lengkapi identitas laporan, lihat pratinjau kertas ukuran A4 di sebelah kanan, lalu klik **"Simpan sebagai PDF"**.
+1. **Langkah 01 (Beranda / Dashboard)**: Intip ringkasan biaya proyek, formula multi-video, dan kredit multi-provider (Higgsfield, ElevenLabs, Suno).
+2. **Langkah 02 (Pengaturan & Cadangan Proyek)**: Atur nama proyek, target jumlah video jadi, durasi target video, dan pengali cadangan coba-coba (*re-roll*).
+3. **Langkah 03 (Daftar Pekerjaan AI / Production Planner)**: Susun shot video pokok (proyeksi 1 video), aset gambar, voice over ElevenLabs, dan musik Suno AI beserta pemisahan stems.
+4. **Langkah 04 (Ringkasan Biaya / Budget Summary)**: Analisis perbandingan biaya 1 video vs total seluruh video, unit economics, dan kartu ringkasan provider khusus.
+5. **Langkah 05 (Cetak Laporan PDF / Export PDF)**: Pratinjau dokumen ukuran A4 siap cetak dengan kotak *disclaimer* resmi multi-video dan simpan sebagai file PDF berkualitas tinggi.
+6. **Langkah 06 (Kurs Rupiah & Daftar Harga / Data Settings)**: Sinkronisasi kurs USD-IDR otomatis atau manual, kelola paket langganan Higgsfield, ElevenLabs, dan Suno AI, serta perbarui katalog model.
