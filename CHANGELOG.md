@@ -19,7 +19,9 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 ### Ditambahkan (Added)
 1. **Jaring Pengaman Pengecekan Tipe Statis Mandiri (`npm run typecheck`)**:
    - Menambahkan skrip pemeriksaan statis TypeScript terisolasi (`tsc --noEmit`) pada `package.json` untuk mendeteksi potensi salah ketik nama variabel atau parameter secara otomatis sebelum proses kompilasi berjalan.
-2. **Struktur Folder Modular Terorganisir**:
+2. **Penyempurnaan Skrip Penguji Mandiri 3-Lapis (`Jalankan-Cek-Otomatis.bat` & `.command`)**:
+   - Memutakhirkan skrip pengujian mandiri satu-klik dengan sistem proteksi 3 lapis bertahap: `[1/3] Pemeriksaan Tipe Data (Typecheck)`, `[2/3] Pengujian 116 Skenario Matematika & Fitur (Vitest)`, dan `[3/3] Pengujian Kompilasi Kemasan (Build)`.
+3. **Struktur Folder Modular Terorganisir**:
    - Membentuk arsitektur direktori berorientasi fitur yang bersih dan terisolasi: `src/renderer/components/planner/` (beserta `editors/`), `src/renderer/components/settings/`, `src/renderer/store/slices/`, dan `src/shared/examples/`.
 3. **Validasi Pengirim Pesan IPC Desktop (`validateIpcSender` di `main.ts`)**:
    - Menerapkan perlindungan keamanan resmi *Electron Security Checklist* dengan memeriksa `event.senderFrame` dan memvalidasi `event.sender === mainWindow.webContents` pada seluruh 10 jalur IPC untuk menutup celah eksploitasi Remote Code Execution (RCE).
