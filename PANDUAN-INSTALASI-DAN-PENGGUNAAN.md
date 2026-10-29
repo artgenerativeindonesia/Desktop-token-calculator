@@ -1,7 +1,7 @@
 # Buku Panduan Lengkap: Instalasi (Windows & Mac) dan Cara Penggunaan Aplikasi
-**AI Video Budget Calculator — Versi 2.1.4 (Studio Edition)**
+**AI Video Budget Calculator — Versi 2.1.7 (Studio Edition)**
 
-Selamat datang di **Buku Panduan Lengkap AI Video Budget Calculator (Versi 2.1.4 - Studio Edition)**!
+Selamat datang di **Buku Panduan Lengkap AI Video Budget Calculator (Versi 2.1.7 - Studio Edition)**!
 Dokumen ini disusun khusus dengan bahasa sehari-hari yang ramah pemula (tanpa istilah teknis yang membingungkan) agar Anda dapat:
 1. Memahami cara kerja aplikasi menggunakan analogi dunia nyata yang sederhana.
 2. Menginstal dan menjalankan aplikasi di komputer **Windows** maupun **Mac (macOS)** dengan mudah.
@@ -31,16 +31,16 @@ Gunakan cara ini jika Anda ingin langsung membuka aplikasi tanpa memasangnya ke 
 1. Buka folder proyek **Desktop Token Calculator app** di File Explorer Windows Anda.
 2. Cari file bernama **`Klik-Untuk-Testing-Tanpa-Install.bat`**.
 3. **Klik 2x (Double Click)** file tersebut.
-4. Jendela persiapan kecil akan muncul sebentar, lalu aplikasi **AI Video Budget Calculator Versi 2.1.4** akan langsung terbuka dan siap digunakan!
+4. Jendela persiapan kecil akan muncul sebentar, lalu aplikasi **AI Video Budget Calculator Versi 2.1.7** akan langsung terbuka dan siap digunakan!
 
 ### Pilihan B: Menggunakan File Portable (*Zero-Install Mandiri*)
 1. Klik 2x file **`Buat-Publish-Installer.bat`**.
 2. Buka folder **`release/`** yang muncul di dalam folder proyek.
-3. Cari file **`AI Video Budget Calculator-2.1.4-portable.exe`**.
+3. Cari file **`AI Video Budget Calculator-2.1.7-portable.exe`**.
 4. File ini bisa Anda simpan di Flashdisk atau folder mana saja. Cukup klik 2x, aplikasi langsung jalan tanpa instalasi.
 
 ### Pilihan C: Memasang Permanen di Windows (*Installer Standar .exe*)
-1. Dari folder **`release/`**, klik 2x file **`AI Video Budget Calculator-2.1.4-nsis.exe`**.
+1. Dari folder **`release/`**, klik 2x file **`AI Video Budget Calculator-2.1.7-nsis.exe`**.
 2. Pilih lokasi folder instalasi lalu klik **Install**.
 3. Setelah selesai, ikon aplikasi akan otomatis muncul di layar **Desktop** dan menu **Start Windows** Anda.
 
@@ -72,7 +72,7 @@ Di komputer **Mac** (baik MacBook/iMac dengan chip **Apple Silicon M1/M2/M3/M4**
 
 ---
 
-## BAGIAN 3: Panduan Lengkap 6 Langkah Alur Kerja Versi 2.1.4
+## BAGIAN 3: Panduan Lengkap 6 Langkah Alur Kerja Versi 2.1.7
 
 Aplikasi dirancang dengan **alur kerja 6 langkah terpadu** yang saling terhubung:
 

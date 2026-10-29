@@ -1,4 +1,4 @@
-# AI Video Budget Calculator (`v2.1.4`) — Studio Edition (Windows & macOS)
+# AI Video Budget Calculator (`v2.1.7`) — Studio Edition (Windows & macOS)
 
 Aplikasi desktop profesional untuk perencanaan dan perhitungan anggaran produksi video AI studio terpadu: **Higgsfield (Video & Gambar)**, **ElevenLabs (Voice Over & Pengisi Suara)**, dan **Suno AI (Musik, Soundtrack & Pemisahan Stems)**. Dilengkapi antarmuka **Studio Glassmorphism UI** (Mode Gelap & Terang) serta dukungan dwi-bahasa (**Bahasa Indonesia & English**).
 
@@ -7,7 +7,7 @@ Aplikasi desktop profesional untuk perencanaan dan perhitungan anggaran produksi
 
 ---
 
-## 4 Pilar Utama Versi 2.1.4 (Studio Edition)
+## 4 Pilar Utama Versi 2.1.7 (Studio Edition)
 
 1. **Alur Produksi Multi-Video (Tahap 1)**:
    - Tentukan target jumlah video jadi di Langkah 2 (misal: 5 video).
@@ -32,8 +32,8 @@ Aplikasi desktop profesional untuk perencanaan dan perhitungan anggaran produksi
 2. **Membuat File Installer Windows (`.exe` Setup & Portable):**
    - Klik 2x file **`Buat-Publish-Installer.bat`**.
    - Buka folder **`release/`** untuk mendapatkan file:
-     - **`AI Video Budget Calculator-2.1.4-portable.exe`** (Klik 2x langsung jalan dari mana saja / flashdisk).
-     - **`AI Video Budget Calculator-2.1.4-nsis.exe`** (Installer resmi yang memasang ikon ke Desktop & Start Menu Windows).
+     - **`AI Video Budget Calculator-2.1.7-portable.exe`** (Klik 2x langsung jalan dari mana saja / flashdisk).
+     - **`AI Video Budget Calculator-2.1.7-nsis.exe`** (Installer resmi yang memasang ikon ke Desktop & Start Menu Windows).
 3. **Pemeriksaan Rumus Otomatis (Anti-Bug Guarantee):**
    - Klik 2x file **`Jalankan-Cek-Otomatis.bat`** untuk menjalankan seluruh uji otomatis Vitest (116 tes lulus 100%).
 
