@@ -12,6 +12,32 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.1.1] - Modularisasi Komponen Rekapitulasi Anggaran (`BudgetSummaryView.tsx`) Menjadi Modul-Modul Terfokus
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.1.1`
+
+### Ditambahkan (Added)
+1. **Folder Direktori Modul Ringkasan Anggaran (`src/renderer/components/summary/`)**:
+   - Membentuk folder khusus untuk mengorganisir seluruh kartu dan tabel pada Langkah 04 secara terstruktur dan terisolasi.
+2. **Komponen-Komponen Ringkasan Terisolasi**:
+   - `summaryTypes.ts`: Helper durasi `formatMinSec` dan tipe antarmuka umum.
+   - `ExecutiveBudgetHeroCard.tsx`: Kartu Tier 1 utama yang memuat total anggaran, pembagian biaya pokok vs cadangan, serta tombol aksi ekspor dokumen PDF.
+   - `DurationReadinessCard.tsx`: Kartu Tier 1.5 komparasi durasi video rencana vs rekaman mentah AI, rasio trimming editor, dan akumulasi multi-video.
+   - `ElevenLabsSummaryCard.tsx`: Kartu Tier 1.8 ringkasan resmi narasi suara ElevenLabs (file, karakter, durasi suara, dan kredit).
+   - `SunoMusicSummaryCard.tsx`: Kartu Tier 1.95 ringkasan resmi musik latar Suno AI (lagu, variasi, pemisahan track stems, dan kredit).
+   - `UnitEconomicsAndShareCard.tsx`: Kartu Tier 2 rata-rata biaya per shot/generasi dan grafik porsi biaya 9 kategori AI.
+   - `StageSummaryTable.tsx`: Kartu Tier 3 ringkasan biaya per tahap pekerjaan serta jendela modal audit lengkap (*Frosted Glass Full Audit Modal*).
+
+### Diubah (Changed)
+1. **Penyederhanaan `BudgetSummaryView.tsx` Menjadi Orkestrator Ringan**:
+   - Berhasil memangkas ukuran file dari ~1.481 baris menjadi hanya 101 baris (reduksi 93.2%) tanpa mengubah satupun tampilan, fitur, maupun rumus keuangan.
+
+### Diperbaiki (Fixed)
+1. **Penataan Ulang Tipe Data TypeScript**:
+   - Memperbaiki deklarasi tipe parameter pada proses akumulasi data agar seluruh 116 skenario pengujian unit Vitest dan pemeriksaan tipe statis `typecheck` lulus 100% tanpa error.
+
+---
+
 ## Versi [2.1.0] - Pembaruan Arsitektur Standar Industri: Modularisasi Komponen Raksasa, Pemisahan Lemari State Store (Slices Pattern), & Penguatan Keamanan Desktop Electron
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.1.0`
