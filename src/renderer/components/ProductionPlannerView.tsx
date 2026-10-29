@@ -61,13 +61,13 @@ const VIDEO_CATEGORIES: ProcessCategory[] = [
   'text_to_video',
   'image_to_video',
   'video_to_video',
+  'upscale_video',
 ];
 
 const STILLS_CATEGORIES: ProcessCategory[] = [
   'text_to_image',
   'image_to_image',
   'upscale_image',
-  'upscale_video',
 ];
 
 /** Format durasi ganda: contoh "1m 30s (90s)" atau "45s (45s)" */
@@ -166,6 +166,7 @@ export const ProductionPlannerView: React.FC = () => {
   >('all');
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [showManualPriceSection, setShowManualPriceSection] = useState(false);
+  const [showQuickAddMenu, setShowQuickAddMenu] = useState(false);
 
   const t = UI_TEXT[language];
   const isId = language === 'id';
@@ -244,6 +245,7 @@ export const ProductionPlannerView: React.FC = () => {
       : null;
 
   const handleAddAndOpenModal = (cat: ProcessCategory = 'text_to_video') => {
+    setShowQuickAddMenu(false);
     addProductionItem(cat);
     // Open modal for the newly added item at the end of the list
     setTimeout(() => {
@@ -254,6 +256,15 @@ export const ProductionPlannerView: React.FC = () => {
         setEditingItemId(newest.item_id);
       }
     }, 0);
+  };
+
+  const getDefaultAddCategoryForDept = (
+    dept: DepartmentTab
+  ): ProcessCategory => {
+    if (dept === 'stills') return 'text_to_image';
+    if (dept === 'voiceover') return 'voice_over';
+    if (dept === 'music') return 'music';
+    return 'text_to_video';
   };
 
   return (
@@ -349,20 +360,145 @@ export const ProductionPlannerView: React.FC = () => {
               )}
               <div className="text-xs font-semibold tabular-nums text-[#0099ff]">
                 {formatCurrencyUsd(calculation.total_cost_usd, language)} &bull;{' '}
-                {calculation.total_credit !== null
-                  ? `${calculation.total_credit.toLocaleString()} Credits`
-                  : ''}
+                {[
+                  calculation.total_credit !== null
+                    ? `${calculation.total_credit.toLocaleString()} Cr Higgsfield`
+                    : null,
+                  calculation.total_elevenlabs_credit !== null
+                    ? `${calculation.total_elevenlabs_credit.toLocaleString()} Cr ElevenLabs`
+                    : null,
+                  calculation.total_suno_credit !== null
+                    ? `${calculation.total_suno_credit.toLocaleString()} Cr Suno`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' • ') || (isId ? '0 Credit' : '0 Credits')}
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => handleAddAndOpenModal('text_to_video')}
-              className="vv-btn-accent px-5 py-2.5 text-xs font-semibold"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{t.addStageBtn}</span>
-            </button>
+            {activeDepartment === 'all' ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowQuickAddMenu((prev) => !prev)}
+                  className="vv-btn-accent px-5 py-2.5 text-xs font-semibold flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t.addStageBtn}</span>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                </button>
+
+                {showQuickAddMenu && (
+                  <div className="absolute right-0 mt-2 w-64 rounded-[14px] p-2 bg-[#0c1322]/95 border border-[var(--vv-border-strong)] shadow-2xl z-30 space-y-1 backdrop-blur-xl">
+                    <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--vv-text-subtle)]">
+                      {isId
+                        ? 'Pilih Jenis Tahap Produksi:'
+                        : 'Select Production Stage Type:'}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAddAndOpenModal('text_to_video')}
+                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-[#0099ff]/20 text-[var(--vv-text-primary)] transition"
+                    >
+                      <span>🎬</span>
+                      <div>
+                        <div>
+                          {isId
+                            ? '+ Shot Video & Animasi AI'
+                            : '+ AI Video & Animation Shot'}
+                        </div>
+                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                          Higgsfield (Text/Image/Video to Video)
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddAndOpenModal('text_to_image')}
+                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-amber-500/20 text-[var(--vv-text-primary)] transition"
+                    >
+                      <span>🖼️</span>
+                      <div>
+                        <div>
+                          {isId
+                            ? '+ Gambar & Konsep Visual'
+                            : '+ Image & Visual Concept'}
+                        </div>
+                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                          Higgsfield (Text/Image to Image & Upscale)
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddAndOpenModal('voice_over')}
+                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-sky-500/20 text-sky-300 transition"
+                    >
+                      <span>🎙️</span>
+                      <div>
+                        <div>
+                          {isId
+                            ? '+ File Audio Voice Over'
+                            : '+ Voice Over Audio File'}
+                        </div>
+                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                          ElevenLabs Official (Durasi & Karakter)
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAddAndOpenModal('music')}
+                      className="w-full px-3 py-2 rounded-[9px] text-xs font-semibold text-left flex items-center gap-2.5 hover:bg-purple-500/20 text-purple-300 transition"
+                    >
+                      <span>🎵</span>
+                      <div>
+                        <div>
+                          {isId
+                            ? '+ Track Musik & Soundtrack'
+                            : '+ Music & Soundtrack'}
+                        </div>
+                        <div className="text-[10px] font-normal text-[var(--vv-text-muted)]">
+                          Suno AI Official (Lagu & Pemisahan Stems)
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() =>
+                  handleAddAndOpenModal(
+                    getDefaultAddCategoryForDept(activeDepartment)
+                  )
+                }
+                className="vv-btn-accent px-5 py-2.5 text-xs font-semibold"
+              >
+                <Plus className="w-4 h-4" />
+                <span>
+                  {activeDepartment === 'video'
+                    ? isId
+                      ? '+ Tambah Shot Video'
+                      : '+ Add Video Shot'
+                    : activeDepartment === 'stills'
+                    ? isId
+                      ? '+ Tambah Gambar Visual'
+                      : '+ Add Visual Image'
+                    : activeDepartment === 'voiceover'
+                    ? isId
+                      ? '+ Tambah File Audio'
+                      : '+ Add Audio File'
+                    : isId
+                    ? '+ Tambah Track Musik'
+                    : '+ Add Music Track'}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -440,11 +576,10 @@ export const ProductionPlannerView: React.FC = () => {
       </div>
 
       {/* =====================================================================
-       * WORKFLOW DEPARTMENTS: Video, Gambar, Voice Over, Musik, & Semua
+       * WORKFLOW DEPARTMENTS: 1 Baris Bersih (5 Tab Departemen + Status Sinkron)
        * ===================================================================== */}
-      <div className={`${cardClass} rounded-[16px] p-3.5 space-y-3`}>
-        {/* Tier 1: Sineas Department Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--vv-border)] pb-2.5">
+      <div className={`${cardClass} rounded-[16px] p-3.5`}>
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-1.5">
             {[
               {
@@ -488,6 +623,7 @@ export const ProductionPlannerView: React.FC = () => {
                   onClick={() => {
                     setActiveDepartment(dept.id);
                     setSelectedCategoryFilter('all');
+                    setShowQuickAddMenu(false);
                   }}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition flex items-center gap-1.5 ${
                     isActive
@@ -530,89 +666,6 @@ export const ProductionPlannerView: React.FC = () => {
             </span>
           </div>
         </div>
-
-        {/* Tier 2: Category Filter Pills & Quick Add Buttons */}
-        {(activeDepartment === 'all' ||
-          activeDepartment === 'video' ||
-          activeDepartment === 'stills' ||
-          activeDepartment === 'voiceover' ||
-          activeDepartment === 'music') && (
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-0.5">
-            {/* Filter Pills */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setSelectedCategoryFilter('all')}
-                className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition ${
-                  selectedCategoryFilter === 'all'
-                    ? 'bg-[#0068ad] text-white'
-                    : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
-                }`}
-              >
-                {isId ? 'Semua Subkategori' : 'All Subcategories'}
-              </button>
-              {(activeDepartment === 'video'
-                ? VIDEO_CATEGORIES
-                : activeDepartment === 'stills'
-                ? STILLS_CATEGORIES
-                : activeDepartment === 'voiceover'
-                ? (['voice_over'] as ProcessCategory[])
-                : activeDepartment === 'music'
-                ? (['music'] as ProcessCategory[])
-                : ALL_CATEGORIES
-              ).map((cat) => {
-                const count = items.filter((i) => i.category === cat).length;
-                return (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategoryFilter(cat)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition flex items-center gap-1.5 ${
-                      selectedCategoryFilter === cat
-                        ? 'bg-[#0068ad] text-white'
-                        : 'bg-[var(--vv-tint-weak)] text-[var(--vv-text-muted)] hover:text-[var(--vv-text-primary)]'
-                    }`}
-                  >
-                    <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
-                    {count > 0 && (
-                      <span className="font-mono text-[10px] opacity-80">
-                        ({count})
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Quick Add by Category */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] text-[var(--vv-text-subtle)] mr-1 hidden xl:inline">
-                {isId ? 'Tambah Cepat:' : 'Quick Add:'}
-              </span>
-              {(activeDepartment === 'video'
-                ? VIDEO_CATEGORIES
-                : activeDepartment === 'stills'
-                ? STILLS_CATEGORIES
-                : activeDepartment === 'voiceover'
-                ? (['voice_over'] as ProcessCategory[])
-                : activeDepartment === 'music'
-                ? (['music'] as ProcessCategory[])
-                : ALL_CATEGORIES
-              ).map((cat) => (
-                <button
-                  key={`add_${cat}`}
-                  type="button"
-                  onClick={() => handleAddAndOpenModal(cat)}
-                  className="vv-btn-secondary px-2.5 py-1 text-[11px]"
-                  title={`${isId ? 'Tambah' : 'Add'} ${CATEGORY_LABELS[cat][language]}`}
-                >
-                  <Plus className="w-3 h-3 text-[#0099ff]" />
-                  <span>{SHORT_CATEGORY_LABELS[cat][language]}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Voice Over AI Department Guide Panel */}
@@ -845,11 +898,29 @@ export const ProductionPlannerView: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => handleAddAndOpenModal('text_to_video')}
+            onClick={() =>
+              handleAddAndOpenModal(
+                getDefaultAddCategoryForDept(activeDepartment)
+              )
+            }
             className="vv-btn-primary px-5 py-2.5 text-xs"
           >
             <Plus className="w-4 h-4" />
-            <span>{t.addStageBtn}</span>
+            <span>
+              {activeDepartment === 'stills'
+                ? isId
+                  ? '+ Tambah Gambar Visual'
+                  : '+ Add Visual Image'
+                : activeDepartment === 'voiceover'
+                ? isId
+                  ? '+ Tambah File Audio'
+                  : '+ Add Audio File'
+                : activeDepartment === 'music'
+                ? isId
+                  ? '+ Tambah Track Musik'
+                  : '+ Add Music Track'
+                : t.addStageBtn}
+            </span>
           </button>
         </div>
       ) : (
@@ -1333,9 +1404,20 @@ export const ProductionPlannerView: React.FC = () => {
               </div>
               <div className="text-xs text-[var(--vv-text-muted)] tabular-nums">
                 {formatCurrencyUsd(calculation.total_cost_usd, language)}
-                {calculation.total_credit !== null
-                  ? ` • ${calculation.total_credit.toLocaleString()} Credits`
-                  : ''}
+                {' • '}
+                {[
+                  calculation.total_credit !== null
+                    ? `${calculation.total_credit.toLocaleString()} Cr Higgsfield`
+                    : null,
+                  calculation.total_elevenlabs_credit !== null
+                    ? `${calculation.total_elevenlabs_credit.toLocaleString()} Cr ElevenLabs`
+                    : null,
+                  calculation.total_suno_credit !== null
+                    ? `${calculation.total_suno_credit.toLocaleString()} Cr Suno`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' • ') || (isId ? '0 Credit' : '0 Credits')}
                 {' '}&bull; {calculation.budgeted_generations}{' '}
                 {isId ? 'kali coba' : 'runs'}
               </div>
@@ -1660,12 +1742,19 @@ export const ProductionPlannerView: React.FC = () => {
                   ) : (
                     <div>
                       <label className="block text-xs font-semibold text-[var(--vv-text-strong)] mb-1.5">
-                        {isId
-                          ? '2. Pilih Jenis Pembuatan AI'
-                          : '2. Select AI Creation Type'}
+                        {VIDEO_CATEGORIES.includes(item.category)
+                          ? isId
+                            ? '2. Pilih Jenis Pembuatan Video AI (Higgsfield)'
+                            : '2. Select AI Video Creation Type (Higgsfield)'
+                          : isId
+                          ? '2. Pilih Jenis Pembuatan Gambar AI (Higgsfield)'
+                          : '2. Select AI Image Creation Type (Higgsfield)'}
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {ALL_CATEGORIES.map((cat) => (
+                        {(VIDEO_CATEGORIES.includes(item.category)
+                          ? VIDEO_CATEGORIES
+                          : STILLS_CATEGORIES
+                        ).map((cat) => (
                           <button
                             key={cat}
                             type="button"

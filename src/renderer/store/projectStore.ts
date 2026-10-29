@@ -948,8 +948,59 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
       const pricing = resolveModelPricing(model, defaultParams);
       const isPrimary = category === 'text_to_video' || category === 'image_to_video';
 
-      const items = state.project.items.map((item) => {
+      const items: ProductionItem[] = state.project.items.map((item): ProductionItem => {
         if (item.item_id !== itemId) return item;
+
+        // Jika berpindah ke voice_over atau music, pastikan properti spesifik diinisialisasi bersih
+        if (category === 'voice_over') {
+          const voDur = item.duration_seconds > 0 ? item.duration_seconds : 10;
+          return {
+            ...item,
+            category: 'voice_over',
+            is_primary_shot: false,
+            quantity_type: 'asset',
+            duration_seconds: voDur,
+            script_language: item.script_language || 'id',
+            character_count:
+              item.character_count && item.character_count > 0
+                ? item.character_count
+                : Math.round(voDur * 14.5),
+            script_text: '',
+            model_selection: {
+              provider: model.provider,
+              model_id: model.model_id,
+              model_name: model.model_name,
+              category: 'voice_over',
+              parameter_values: defaultParams,
+            },
+            pricing,
+          };
+        }
+
+        if (category === 'music') {
+          return {
+            ...item,
+            category: 'music',
+            is_primary_shot: false,
+            quantity_type: 'asset',
+            duration_seconds: 120,
+            stem_enabled: item.stem_enabled ?? false,
+            stem_type: item.stem_type ?? 'two_stems',
+            stem_separation_mode: item.stem_separation_mode ?? 'none',
+            stem_runs: 1,
+            stem_reserve: 0,
+            music_reserve_override: undefined,
+            model_selection: {
+              provider: model.provider,
+              model_id: model.model_id,
+              model_name: model.model_name,
+              category: 'music',
+              parameter_values: defaultParams,
+            },
+            pricing,
+          };
+        }
+
         return {
           ...item,
           category,
@@ -1388,7 +1439,13 @@ export const useProjectStore = create<ProjectStoreState>((set, get) => ({
         rate
       );
       const updatedItems = state.project.items.map((item) => {
-        if (item.pricing.status === 'manual') return item;
+        if (
+          item.pricing.status === 'manual' ||
+          item.category === 'voice_over' ||
+          item.category === 'music'
+        ) {
+          return item;
+        }
         const model = updatedCatalog.find(
           (m) => m.model_id === item.model_selection.model_id
         );

@@ -12,6 +12,30 @@ Buku ini berfungsi seperti "daftar isi perjalanan" aplikasi Anda. Setiap kali ad
 
 ---
 
+## Versi [2.0.2] - Penyederhanaan Navigasi 1 Baris (Eliminasi 20 Tombol Berlebihan), Isolasi Subkategori Lintas-Provider, & Proteksi State Katalog
+- **Tanggal Perubahan**: 29 Oktober 2026
+- **Label Mesin Waktu (Git Tag)**: `v2.0.2`
+
+### Diubah (Changed)
+1. **Perampingan Baris Kategori Langkah 03 Menjadi 1 Baris Bersih (`ProductionPlannerView.tsx`)**:
+   - Menghapus **20 tombol bertumpuk** di baris ke-2 (*10 tombol filter subkategori*) dan baris ke-3 (*9 tombol Tambah Cepat*) yang sebelumnya membuat tampilan terlalu padat dan membingungkan.
+   - Kini hanya menampilkan **1 baris bersih** berisi **5 Tab Departemen Utama**: *Semua Tahapan*, *Video & Animasi AI*, *Gambar & Konsep Visual*, *Voice Over & Dialog*, dan *Musik & Soundtrack*.
+2. **Tombol `+ Tambah` Cerdas & Menu Pilihan Cepat 4 Departemen (`ProductionPlannerView.tsx`)**:
+   - Saat berada di tab **Semua Tahapan**, menekan tombol **`+ Tambah Shot / Gambar Baru`** akan menampilkan menu pilihan cepat berisi 4 opsi jelas: **🎬 + Shot Video & Animasi AI**, **🖼️ + Gambar & Konsep Visual**, **🎙️ + File Audio Voice Over**, dan **🎵 + Track Musik & Soundtrack**.
+   - Saat berada di salah satu tab spesifik (misal tab *Musik & Soundtrack*), tombol otomatis menyesuaikan secara kontekstual menjadi **`+ Tambah Track Musik`** dan langsung membuka pengaturannya.
+3. **Pengelompokan Logis `Upscale Video` & Isolasi Subkategori di Dalam Jendela Pop-Up (`ProductionPlannerView.tsx`)**:
+   - Memindahkan subkategori `Upscale Video` ke dalam departemen **Video & Animasi AI** (sebelumnya tercampur di dalam tab *Gambar*).
+   - Di dalam jendela pengaturan (*modal*), pilihan *"2. Pilih Jenis Pembuatan AI"* kini **hanya menampilkan subkategori milik departemennya sendiri** (4 pilihan Video saat mengedit Video, 3 pilihan Gambar saat mengedit Gambar), sehingga pengguna tidak bisa secara tidak sengaja mengubah item Video menjadi Musik/Voice Over yang berbeda struktur data.
+
+### Diperbaiki (Fixed)
+1. **Proteksi State Lintas-Provider pada `changeItemCategory` & `applyCreditSubscriptionPlan` (`projectStore.ts`)**:
+   - Memperbaiki fungsi `changeItemCategory` agar menginisialisasi ulang seluruh properti spesifik (`character_count`, `script_language`, `stem_enabled`, `quantity_type`) secara bersih setiap kali kategori diubah.
+   - Memperbaiki `applyCreditSubscriptionPlan` agar melewati item `voice_over` dan `music` saat pengguna mengganti paket langganan kredit Higgsfield.
+2. **Tampilan Kredit Multi-Provider pada Header & Footer Langkah 03 (`ProductionPlannerView.tsx`)**:
+   - Menampilkan rincian kredit **Higgsfield**, **ElevenLabs**, dan **Suno** secara lengkap pada kartu total anggaran di bagian atas dan bawah Langkah 03 (sebelumnya hanya menampilkan kredit Higgsfield).
+
+---
+
 ## Versi [2.0.1] - Audit Presisi Mesin Kalkulasi, Penyederhanaan Input Musik Suno AI, & Dwi-Input Angka Voice Over ElevenLabs
 - **Tanggal Perubahan**: 29 Oktober 2026
 - **Label Mesin Waktu (Git Tag)**: `v2.0.1`
