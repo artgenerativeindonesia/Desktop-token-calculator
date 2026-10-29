@@ -55,7 +55,7 @@ export const PlannerHeroHeader: React.FC<PlannerHeroHeaderProps> = ({
 
   return (
     <div
-      className={`${heroCardClass} relative z-20 rounded-[18px] p-6 md:p-7 flex flex-col gap-5`}
+      className={`${heroCardClass} relative z-30 rounded-[18px] p-6 md:p-7 flex flex-col gap-5`}
     >
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
@@ -159,7 +159,7 @@ export const PlannerHeroHeader: React.FC<PlannerHeroHeaderProps> = ({
           </div>
 
           {activeDepartment === 'all' ? (
-            <div className="relative z-40">
+            <div className="relative z-50">
               <button
                 type="button"
                 onClick={() => setShowQuickAddMenu((prev) => !prev)}
@@ -173,10 +173,10 @@ export const PlannerHeroHeader: React.FC<PlannerHeroHeaderProps> = ({
               {showQuickAddMenu && (
                 <>
                   <div
-                    className="fixed inset-0 z-30"
+                    className="fixed inset-0 z-40"
                     onClick={() => setShowQuickAddMenu(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-64 rounded-[14px] p-2 bg-[#0c1322] border border-[var(--vv-border-strong)] shadow-2xl z-40 space-y-1 backdrop-blur-xl">
+                  <div className="absolute right-0 mt-2 w-64 rounded-[14px] p-2 bg-[#0c1322] border border-[var(--vv-border-strong)] shadow-2xl z-50 space-y-1 backdrop-blur-xl">
                     <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--vv-text-subtle)]">
                       {isId
                         ? 'Pilih Jenis Tahap Produksi:'
@@ -265,7 +265,7 @@ export const PlannerHeroHeader: React.FC<PlannerHeroHeaderProps> = ({
                   getDefaultAddCategoryForDept(activeDepartment)
                 )
               }
-              className="vv-btn-accent px-5 py-2.5 text-xs font-semibold"
+              className="vv-btn-accent px-5 py-2.5 text-xs font-semibold flex items-center gap-1.5"
             >
               <Plus className="w-4 h-4" />
               <span>
